@@ -152,14 +152,6 @@ struct AboutView: View {
                 VStack(spacing: 20) {
                     Spacer(minLength: 16)
 
-                    if let appIcon = NSImage(named: "AppIcon") {
-                        Image(nsImage: appIcon)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 128, height: 128)
-                            .shadow(color: .sakiBlue.opacity(0.3), radius: 12, y: 6)
-                    }
-
                     VStack(spacing: 6) {
                         Text("SakiAgentSSH Client")
                             .font(.saki(22))
@@ -241,7 +233,25 @@ struct FeatureRow: View {
 
 struct CopyrightView: View {
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 10) {
+            if let img = NSImage(contentsOfFile: Bundle.main.path(forResource: "avan", ofType: "png") ?? "") {
+                Image(nsImage: img)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            VStack(spacing: 2) {
+                Text("咲ちゃん（Saki）")
+                    .font(.saki(14))
+                    .fontWeight(.semibold)
+                Text("Saki Studio")
+                    .font(.saki(12))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.sakiPurple, .sakiBlue],
+                                     startPoint: .leading, endPoint: .trailing)
+                    )
+            }
             Text("© 2026 Saki Studio. All rights reserved.")
                 .font(.saki(11))
                 .foregroundStyle(.tertiary)

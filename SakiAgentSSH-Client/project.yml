@@ -33,6 +33,7 @@ targets:
       - path: Resources/GenJyuuGothicX-Regular.ttf
         buildPhase: resources
       - path: Resources/AppIcon.icns
+      - path: Resources/avan.png
       - path: Resources/help_zh-Hant.md
       - path: Resources/help_en-US.md
       - path: Resources/help_ja-JP.md
@@ -59,4 +60,5 @@ targets:
           cp "${SRCROOT}/Resources/help_en-US.md" "${RES_DIR}/" 2>/dev/null || true
           cp "${SRCROOT}/Resources/help_ja-JP.md" "${RES_DIR}/" 2>/dev/null || true
           cp "${SRCROOT}/Resources/AppIcon.icns" "${RES_DIR}/" 2>/dev/null || true
+          cp "${SRCROOT}/Resources/avan.png" "${RES_DIR}/" 2>/dev/null || true
         basedOnDependencyAnalysis: false

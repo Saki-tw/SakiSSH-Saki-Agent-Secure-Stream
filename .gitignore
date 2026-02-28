@@ -34,8 +34,6 @@ docs/*
 !docs/pages/
 bin/
 tools/
-ARCHITECTURE.md
-GITHUB_DESCRIPTION.md
 SakiSSH/
 
 # Release binaries (go to GitHub Releases)
