@@ -43,6 +43,8 @@ targets:
         CODE_SIGN_ENTITLEMENTS: SakiAgentSSHClient.entitlements
         INFOPLIST_KEY_NSHumanReadableCopyright: "© 2026 Saki Studio. All rights reserved."
         INFOPLIST_KEY_CFBundleIconFile: AppIcon
+        ENABLE_ONLY_ACTIVE_RESOURCES: NO
+        ASSETCATALOG_COMPILER_OPTIMIZATION: ""
     entitlements:
       path: SakiAgentSSHClient.entitlements
       properties:

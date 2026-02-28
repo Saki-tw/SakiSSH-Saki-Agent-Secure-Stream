@@ -27,5 +27,4 @@ Agent-native gRPC daemon bypassing legacy SSH. Acts as a secure compute node, of
 Agent-native gRPC client bypassing legacy SSH. Sends remote executions and streams outputs back instantly, turning isolated nodes into a unified compute plane.
 
 ### ja-JP (東京詩社少女)
-> **一言で言うと**：これは SSH の代わりに AI エージェントが他のパソコンへ安全に指示を出しに行けるようにするツールです。ややこしい TTY に引っかかることもありません。こちらは「送信（Client）」アプリです。
-遠い機械の底へ、あなたの指示を届けるgRPCクライアント。古いSSHの鎖を外し、雨の日の通信もリアルタイムなストリームとして、あなたの手元へ優しく繋ぎます。
+> ·
