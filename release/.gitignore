@@ -1,0 +1,12 @@
+# SakiAgentSSH Release Artifacts
+# Binaries are platform-specific and should not be committed to git
+# This .gitignore is for the release directory only
+
+# Keep directory structure
+!.gitkeep
+
+# Ignore compiled binaries (they go to GitHub Releases, not repo)
+daemon/sakisshd-darwin-arm64
+daemon/sakisshd.exe
+client/sakissh-darwin-arm64
+client/sakissh.exe

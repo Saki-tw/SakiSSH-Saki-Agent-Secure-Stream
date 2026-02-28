@@ -1,0 +1,47 @@
+# Build artifacts
+target/
+build/
+build_out/
+DerivedData/
+*.xcarchive
+*.o
+*.d
+
+# Xcode generated
+*.xcodeproj
+xcuserdata/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Runtime / Secrets
+config.json
+.env
+
+# Internal development docs (Saki Studio internal only)
+Scientia/
+TaskLog/
+ImplementationLog/
+WalkthroughLog/
+docs/*
+!docs/pages/
+bin/
+tools/
+ARCHITECTURE.md
+GITHUB_DESCRIPTION.md
+SakiSSH/
+
+# Release binaries (go to GitHub Releases)
+release/daemon/sakisshd*
+release/client/sakissh*
+
+# GUI release DMGs and .app (go to GitHub Releases)
+release/gui/*.dmg
+release/gui/*.app

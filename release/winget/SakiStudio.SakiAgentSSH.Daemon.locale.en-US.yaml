@@ -1,0 +1,27 @@
+# Created using winget-pkgs YAML schema
+PackageIdentifier: SakiStudio.SakiAgentSSH.Daemon
+PackageVersion: 0.2.0
+PackageLocale: en-US
+Publisher: Saki Studio
+PublisherUrl: http://saki-studio.com.tw
+PublisherSupportUrl: https://github.com/saki-tw/SakiAgentSSH/issues
+Author: Chang Hua
+PackageName: SakiAgentSSH Daemon
+PackageUrl: https://github.com/saki-tw/SakiAgentSSH
+License: MIT
+LicenseUrl: https://github.com/saki-tw/SakiAgentSSH/blob/main/release/LICENSE
+ShortDescription: Agent-native cross-machine execution daemon over gRPC
+Description: |-
+  SakiAgentSSH Daemon listens for gRPC commands from AI agents, enabling secure
+  cross-machine execution without SSH. Features CIDR whitelist ACL, bidirectional
+  stdout/stderr streaming, and zero-dependency portable binary.
+  From the same developer as SakiStudio.SakiVi (VI-SakiWin64).
+Tags:
+  - agent
+  - grpc
+  - remote-execution
+  - daemon
+  - ssh-alternative
+  - cli
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

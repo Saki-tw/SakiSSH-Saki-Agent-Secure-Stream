@@ -1,0 +1,35 @@
+[package]
+name = "saki-ssh-client"
+version = "0.2.0"
+edition = "2021"
+description = "SakiAgentSSH Client — Agent-native remote execution CLI"
+authors = ["Saki Studio <sakistudio@saki.tw>"]
+license = "LicenseRef-SakiStudio"
+homepage = "https://github.com/saki-tw/SakiAgentSSH"
+
+[dependencies]
+tonic = "0.12"
+prost = "0.13"
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+anyhow = "1.0"
+clap = { version = "4.4", features = ["derive", "env"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ctrlc = "3"
+uuid = { version = "1", features = ["v4"] }
+
+[build-dependencies]
+tonic-build = "0.12"
+
+[[bin]]
+name = "sakissh"
+path = "src/main.rs"
+
+[profile.release]
+strip = "symbols"
+lto = true
+codegen-units = 1
+panic = "abort"
+opt-level = "z"
+

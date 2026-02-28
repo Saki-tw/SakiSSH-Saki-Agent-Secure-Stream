@@ -1,0 +1,18 @@
+# Created using winget-pkgs YAML schema
+PackageIdentifier: SakiStudio.SakiAgentSSH.Daemon
+PackageVersion: 0.2.0
+PackageLocale: zh-Hant
+Publisher: Saki Studio
+PackageName: SakiAgentSSH 守護進程
+ShortDescription: Agent 原生跨機器執行守護進程 (gRPC)
+Description: |-
+  SakiAgentSSH Daemon 監聽來自 AI Agent 的 gRPC 指令，實現無需 SSH 的安全跨機器執行。
+  支援 CIDR 白名單存取控制、雙向 stdout/stderr 串流、零依賴可攜式二進位。
+  來自 SakiStudio.SakiVi (VI-SakiWin64) 同一開發者。
+Tags:
+  - agent
+  - grpc
+  - 遠端執行
+  - daemon
+ManifestType: locale
+ManifestVersion: 1.6.0

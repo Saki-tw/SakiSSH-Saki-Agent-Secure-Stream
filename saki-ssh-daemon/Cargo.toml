@@ -1,0 +1,38 @@
+[package]
+name = "saki-ssh-daemon"
+version = "0.2.0"
+edition = "2021"
+description = "SakiAgentSSH Daemon — Agent-native cross-machine execution protocol over gRPC"
+authors = ["Saki Studio <sakistudio@saki.tw>"]
+license = "LicenseRef-SakiStudio"
+homepage = "https://github.com/saki-tw/SakiAgentSSH"
+
+[dependencies]
+tonic = "0.12"
+prost = "0.13"
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+futures-core = "0.3"
+futures-util = "0.3"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ipnet = "2"
+uuid = { version = "1", features = ["v4"] }
+chrono = "0.4"
+
+[build-dependencies]
+tonic-build = "0.12"
+
+[[bin]]
+name = "sakisshd"
+path = "src/main.rs"
+
+[profile.release]
+strip = "symbols"
+lto = true
+codegen-units = 1
+panic = "abort"
+opt-level = "z"
+

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SakiAgentSSH — Agent ネイティブ クロスマシン実行プロトコル</title>
+  <meta name="description" content="SakiAgentSSH は gRPC ベースの Agent ネイティブなクロスマシン実行プロトコルです。SSH の TTY バインドモデルに代わる新しいアプローチ。">
+  <link rel="icon" href="../../release/icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="hero">
+    <img src="../../release/icon.png" alt="SakiAgentSSH">
+    <h1>SakiAgentSSH</h1>
+    <p class="subtitle">Agent ネイティブ クロスマシン実行プロトコル · gRPC/HTTP2</p>
+    <div class="lang-switch">
+      <a href="index.html">🇹🇼 繁體中文</a>
+      <a href="index_en.html">🇺🇸 English</a>
+      <a href="index_ja.html" class="active">🇯🇵 日本語</a>
+    </div>
+  </div>
+
+  <nav>
+    <a href="#features">特徴</a>
+    <a href="#install">インストール</a>
+    <a href="#usage">使い方</a>
+    <a href="#architecture">アーキテクチャ</a>
+    <a href="#agent">Agent 連携</a>
+    <a href="#download">ダウンロード</a>
+  </nav>
+
+  <main>
+    <section id="features">
+      <h2>✨ 特徴</h2>
+      <div class="features">
+        <div class="feature-card">
+          <div class="icon">🔗</div>
+          <h3>gRPC 双方向ストリーミング</h3>
+          <p>HTTP/2 ベースの双方向ストリーミングで stdout/stderr をリアルタイム転送</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🛡️</div>
+          <h3>CIDR ホワイトリスト ACL</h3>
+          <p>サブネットレベルのアクセス制御 — SSH キー管理不要</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🤖</div>
+          <h3>Agent ネイティブ設計</h3>
+          <p>AI Agent 専用設計 — CLI 直接呼び出し、TTY 依存ゼロ</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🖥️</div>
+          <h3>クロスプラットフォーム</h3>
+          <p>macOS (ARM64) + Windows (x64)、シングルバイナリデプロイ</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <h2>📦 インストール</h2>
+
+      <h3>macOS — Homebrew Cask</h3>
+      <pre><code>brew tap saki-tw/tools
+brew install --cask sakiagentssh-daemon
+brew install --cask sakiagentssh-client</code></pre>
+
+      <h3>Windows — Scoop</h3>
+      <pre><code>scoop bucket add sakistudio https://github.com/Saki-tw/Scoop-SakiStudio
+scoop install sakiagentssh-daemon
+scoop install sakiagentssh-client</code></pre>
+
+      <h3>Windows — Winget</h3>
+      <pre><code>winget install SakiStudio.SakiAgentSSH.Daemon
+winget install SakiStudio.SakiAgentSSH.Client</code></pre>
+
+      <div class="btn-group">
+        <a href="https://github.com/saki-tw/SakiAgentSSH/releases" class="btn btn-primary">📥 GitHub Releases</a>
+        <a href="https://github.com/saki-tw/SakiAgentSSH" class="btn btn-secondary">🔗 ソースコード</a>
+      </div>
+    </section>
+
+    <section id="usage">
+      <h2>🚀 クイックスタート</h2>
+      <h3>1. Daemon を起動（ターゲットマシン）</h3>
+      <pre><code>./sakisshd --config config.json</code></pre>
+      <h3>2. Client から接続（コントロールマシン）</h3>
+      <pre><code>sakissh --addr http://&lt;target&gt;:19284 ping
+sakissh --addr http://&lt;target&gt;:19284 exec -- 'echo hello'</code></pre>
+    </section>
+
+    <section id="architecture">
+      <h2>🏗️ アーキテクチャ</h2>
+      <table>
+        <tr><th></th><th>SSH</th><th>SakiAgentSSH</th></tr>
+        <tr><td>プロトコル</td><td>TCP + SSH handshake</td><td>gRPC/HTTP2</td></tr>
+        <tr><td>ストリーミング</td><td>Terminal PTY</td><td>双方向ストリーム</td></tr>
+        <tr><td>セキュリティ</td><td>Key-based auth</td><td>CIDR ホワイトリスト</td></tr>
+        <tr><td>Agent 連携</td><td>expect/pexpect が必要</td><td>ネイティブ CLI</td></tr>
+      </table>
+    </section>
+
+    <section id="agent">
+      <h2>🤖 Agent 連携</h2>
+      <p>SakiAgentSSH は AI Agent 専用に設計されています。Agent は CLI 経由でリモートマシンを直接操作できます：</p>
+      <pre><code>def remote_execute(host, command):
+    result = subprocess.run(
+        ["sakissh", "--addr", f"http://{host}:19284", "exec", "--", command],
+        capture_output=True, text=True
+    )
+    return result.stdout</code></pre>
+    </section>
+
+    <section id="download">
+      <h2>📥 ダウンロード</h2>
+      <table>
+        <tr><th>プラットフォーム</th><th>Daemon</th><th>Client</th></tr>
+        <tr>
+          <td>macOS (ARM64)</td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakisshd-darwin-arm64">sakisshd</a></td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakissh-darwin-arm64">sakissh</a></td>
+        </tr>
+        <tr>
+          <td>Windows (x64)</td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakisshd.exe">sakisshd.exe</a></td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakissh.exe">sakissh.exe</a></td>
+        </tr>
+        <tr>
+          <td>macOS GUI (.dmg)</td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/SakiAgentSSHDaemon.dmg">Daemon.dmg</a></td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/SakiAgentSSHClient.dmg">Client.dmg</a></td>
+        </tr>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 <a href="http://saki-studio.com.tw">Saki Studio</a> · <a href="https://github.com/saki-tw">GitHub</a></p>
+    <p style="margin-top:0.5rem;font-style:italic;color:#666">遠い機械の底へ、静かな息吹が届くといいですね。</p>
+  </footer>
+</body>
+</html>

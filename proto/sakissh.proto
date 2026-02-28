@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package sakissh;
+
+service SakiSSH {
+  // 執行指令並返回單次結果 (用於快速指令)
+  rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+  
+  // 流式執行指令 (用於需要實時輸出或互動的場景)
+  rpc ExecuteStream(ExecuteRequest) returns (stream StreamResponse);
+
+  // 取消執行中的進程 (無 timeout，取消即殺)
+  rpc Cancel(CancelRequest) returns (CancelResponse);
+
+  // 對執行中的進程發送 POSIX 信號
+  rpc Signal(SignalRequest) returns (SignalResponse);
+
+  // 連線狀態自檢 (Client 單向 request)
+  rpc Ping(PingRequest) returns (PingResponse);
+
+  // 檔案上傳 (Client → Daemon 串流)
+  rpc FileUpload(stream FileChunk) returns (FileTransferResponse);
+
+  // 檔案下載 (Daemon → Client 串流)
+  rpc FileDownload(FileDownloadRequest) returns (stream FileChunk);
+}
+
+// ============================================================
+// 指令執行
+// ============================================================
+
+message ExecuteRequest {
+  string command = 1;
+  repeated string args = 2;
+  string cwd = 3;
+  map<string, string> env = 4;
+  // 執行 ID，用於 Cancel/Signal 定位。Client 端生成 (UUID)。
+  string execution_id = 5;
+}
+
+message ExecuteResponse {
+  int32 exit_code = 1;
+  bytes stdout = 2;
+  bytes stderr = 3;
+  string execution_id = 4;
+}
+
+message StreamResponse {
+  enum Source {
+    STDOUT = 0;
+    STDERR = 1;
+  }
+  Source source = 1;
+  bytes data = 2;
+  optional int32 exit_code = 3;
+}
+
+// ============================================================
+// 進程管理
+// ============================================================
+
+message CancelRequest {
+  string execution_id = 1;
+}
+
+message CancelResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// POSIX 信號映射
+enum PosixSignal {
+  SIGINT = 0;    // Ctrl+C (Windows: CTRL_C_EVENT)
+  SIGTERM = 1;   // 正常終止 (Windows: TerminateProcess)
+  SIGKILL = 2;   // 強制終止 (Windows: TerminateProcess)
+  SIGHUP = 3;    // 掛起 (Windows: 忽略或終止)
+}
+
+message SignalRequest {
+  string execution_id = 1;
+  PosixSignal signal = 2;
+}
+
+message SignalResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// ============================================================
+// 連線自檢
+// ============================================================
+
+message PingRequest {}
+
+message PingResponse {
+  string daemon_version = 1;
+  uint64 uptime_seconds = 2;
+  string shell_type = 3;
+  string shell_path = 4;
+  string os = 5;
+  uint32 active_processes = 6;
+}
+
+// ============================================================
+// 檔案傳輸
+// ============================================================
+
+message FileChunk {
+  // 首個 chunk 必須包含 metadata
+  oneof payload {
+    FileMetadata metadata = 1;
+    bytes data = 2;
+  }
+}
+
+message FileMetadata {
+  string remote_path = 1;
+  uint64 total_size = 2;
+  // 斷點續傳：從此 offset 開始寫入
+  uint64 offset = 3;
+}
+
+message FileTransferResponse {
+  bool success = 1;
+  string message = 2;
+  uint64 bytes_written = 3;
+}
+
+message FileDownloadRequest {
+  string remote_path = 1;
+  // 斷點續傳：從此 offset 開始讀取
+  uint64 offset = 2;
+}

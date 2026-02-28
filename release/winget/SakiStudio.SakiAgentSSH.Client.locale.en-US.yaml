@@ -1,0 +1,27 @@
+# Created using winget-pkgs YAML schema
+PackageIdentifier: SakiStudio.SakiAgentSSH.Client
+PackageVersion: 0.2.0
+PackageLocale: en-US
+Publisher: Saki Studio
+PublisherUrl: http://saki-studio.com.tw
+PublisherSupportUrl: https://github.com/saki-tw/SakiAgentSSH/issues
+Author: Chang Hua
+PackageName: SakiAgentSSH Client
+PackageUrl: https://github.com/saki-tw/SakiAgentSSH
+License: MIT
+LicenseUrl: https://github.com/saki-tw/SakiAgentSSH/blob/main/release/LICENSE
+ShortDescription: Agent-native remote execution CLI over gRPC
+Description: |-
+  SakiAgentSSH Client connects to a SakiAgentSSH Daemon over gRPC to execute
+  commands on remote machines. Features bidirectional stdout/stderr streaming,
+  zero-dependency portable binary, and agent-native CLI design.
+  From the same developer as SakiStudio.SakiVi (VI-SakiWin64).
+Tags:
+  - agent
+  - grpc
+  - remote-execution
+  - client
+  - ssh-alternative
+  - cli
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0
