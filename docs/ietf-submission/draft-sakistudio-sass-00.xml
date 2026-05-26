@@ -2086,9 +2086,16 @@ bytes client_ekm_hmac = 2; // HMAC of exported keying material
     <section anchor="reference-impl">
       <name>Reference Implementations</name>
       <t>
-        Primary Rust daemon (saki-ssh-daemon) and client
-        (saki-ssh-client) coexist with primary Go
-        implementation (go-sakissh).
+        Reference implementation (development codename:
+        SakiAgentSSH) is available at:
+      </t>
+      <t>
+        https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream
+      </t>
+      <t>
+        Primary Rust daemon (saki-ssh-daemon/) and client
+        (saki-ssh-client/) coexist with primary Go
+        implementation (go-sakissh/).
       </t>
       <table>
         <thead>

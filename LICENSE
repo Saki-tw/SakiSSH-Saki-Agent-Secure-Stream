@@ -1,0 +1,313 @@
+================================================================================
+  SakiAgentSSH — SASS Protocol v1.4
+  版權聲明與使用條款 / Copyright & License / 権利と誓い
+  最後更新日期：2026-05-26
+================================================================================
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║   一、繁體中文版 (Traditional Chinese)                                       ║
+║                                                                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. 版權所有 (Copyright Ownership)
+
+   本專案（SakiAgentSSH）之原始程式碼、編譯後二進位檔案、介面設計、文檔
+   及標誌，其智慧財產權均歸屬於 Saki Studio (Saki-Studio.com.tw) 所有。
+
+   Copyright © 2026 Saki Studio. All Rights Reserved.
+
+   未經書面許可，禁止任何形式的商業轉載、販售、反向工程或修改後再發布。
+
+
+2. 授權範圍分類
+
+   本專案包含不同性質之智慧財產，適用不同之授權條款：
+
+   2.1 協議規格文件 (docs/draft-*)
+
+       本專案所收錄之 IETF Internet-Draft「draft-sakistudio-sass-00」及後續
+       版本之文字內容，同時受以下兩項授權約束：
+
+       (a) IETF Trust 授權：
+           依據 BCP 78（RFC 5378）及 IETF Trust 對 IETF 文件之法律條款
+           (https://trustee.ietf.org/license-info)，該規格文件之文字內容
+           受 IETF Trust 授權保護。任何對該文件之貢獻均視為依據 BCP 78
+           條款授予 IETF Trust 之權利。
+
+       (b) Saki Studio 版權：
+           該規格文件之原創設計理念、架構概念、安全機制設計（包括但不限
+           於 6-Response State Machine、Safety Gradient、Transparent
+           Branching、Vi Swap、Tarpit 等機制之原始構想）之智慧財產權歸屬
+           Saki Studio 所有。
+
+       使用者得依據 IETF Trust 之授權條款引用、實作該規格文件所描述之協
+       議。然而，對原始設計概念之商業性衍生利用，需取得 Saki Studio 之書
+       面許可。
+
+   2.2 實作程式碼 (saki-ssh-daemon/, saki-ssh-client/, go-sakissh/,
+       SakiAgentSSH-Daemon/, SakiAgentSSH-Client/, SakiSSH/,
+       saki-ssh-wasm-payload/, sakissh-ca/, proto/)
+
+       所有實作程式碼（包括 Rust、Go、Swift、Protocol Buffers 定義檔）之
+       著作權歸屬 Saki Studio 所有。
+
+       Saki Studio 授予使用者一份非獨佔、不可轉讓、可撤銷之有限授權，允
+       許使用者於個人學習、研究或非商業開發用途下使用本程式碼。
+
+   2.3 二進位發行版 (release/, bin/)
+
+       所有預編譯之二進位檔案、安裝套件（DMG、MSI）、套件管理器描述檔
+       （Homebrew Cask、Scoop、Winget）之著作權歸屬 Saki Studio 所有。
+       未經授權不得重新散佈。
+
+
+3. 開源組件 (Open Source Components)
+
+   本軟體可能包含部分開源程式碼或第三方函式庫。這些組件分別受其原始授權
+   協議（如 MIT、Apache 2.0 等）保護。
+
+   若開源組件之授權條款與本授權衝突，就該特定組件而言，以開源授權條款為
+   準。
+
+
+4. 免責聲明 (Disclaimer)
+
+   本軟體按「現狀」(AS-IS) 提供，不附帶任何明示或默示的保證。
+
+   Saki Studio 不保證本軟體完全無誤、不中斷，或能完全滿足您的特定需求。
+   在任何情況下，Saki Studio 對於因使用或無法使用本軟體而導致的任何直接、
+   間接、附帶或後果性損害（包括但不限於資料遺失、業務中斷），概不負責。
+
+   IETF Internet-Draft 所述之協議規格係實驗性質之工作文件，不構成任何標
+   準，亦不保證其完整性或正確性。
+
+
+5. 聯絡資訊 (Contact)
+
+   若您需要商業授權，或對版權聲明有任何疑問，請聯繫：
+
+   Email:   Saki@saki-studio.com.tw
+   網站:    https://saki-studio.com.tw
+
+Saki Studio 保留隨時修改本條款之權利，修改後的條款將於發布時生效。
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║   II. English Version                                                      ║
+║                                                                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. Intellectual Property & Copyright
+
+   The SakiAgentSSH project, including its source code, compiled binaries,
+   user interface designs, documentation, and logos, is the exclusive
+   intellectual property of Saki Studio (Saki-Studio.com.tw).
+
+   Copyright (c) 2026 Saki Studio. All Rights Reserved.
+
+   Without explicit written consent from Saki Studio, the following actions
+   are strictly prohibited: commercial redistribution, resale, reverse
+   engineering, or modified redistribution.
+
+
+2. License Scope Classification
+
+   This project contains intellectual property of different natures, each
+   governed by distinct licensing terms:
+
+   2.1 Protocol Specification Documents (docs/draft-*)
+
+       The textual content of the IETF Internet-Draft
+       "draft-sakistudio-sass-00" and subsequent versions included in this
+       project is subject to dual licensing:
+
+       (a) IETF Trust License:
+           Pursuant to BCP 78 (RFC 5378) and the IETF Trust's Legal
+           Provisions Relating to IETF Documents
+           (https://trustee.ietf.org/license-info), the textual content
+           of these specification documents is protected under the IETF
+           Trust license. Any contributions to these documents are
+           considered rights granted to the IETF Trust under BCP 78.
+
+       (b) Saki Studio Copyright:
+           The original design concepts, architectural ideas, and
+           security mechanism designs described therein (including but
+           not limited to the 6-Response State Machine, Safety Gradient,
+           Transparent Branching, Vi Swap, Tarpit, and related
+           innovations) remain the intellectual property of Saki Studio.
+
+       Users may reference and implement the protocol described in these
+       specification documents in accordance with the IETF Trust's
+       licensing terms. However, commercial derivative use of the
+       original design concepts requires written permission from
+       Saki Studio.
+
+   2.2 Implementation Source Code (saki-ssh-daemon/, saki-ssh-client/,
+       go-sakissh/, SakiAgentSSH-Daemon/, SakiAgentSSH-Client/, SakiSSH/,
+       saki-ssh-wasm-payload/, sakissh-ca/, proto/)
+
+       All implementation source code (including Rust, Go, Swift, and
+       Protocol Buffers definition files) is copyrighted by Saki Studio.
+
+       Saki Studio grants users a non-exclusive, non-transferable,
+       revocable limited license to use this source code for personal
+       learning, research, or non-commercial development purposes.
+
+   2.3 Binary Distributions (release/, bin/)
+
+       All pre-compiled binaries, installation packages (DMG, MSI),
+       and package manager manifests (Homebrew Cask, Scoop, Winget)
+       are copyrighted by Saki Studio. Unauthorized redistribution
+       is prohibited.
+
+
+3. Open Source Components
+
+   This software may incorporate open-source code or third-party libraries.
+   These components are governed by their respective original licenses
+   (e.g., MIT, Apache 2.0).
+
+   In the event of a conflict between an open-source component's license
+   and this license, the open-source license shall prevail with respect
+   to that specific component.
+
+
+4. Disclaimer of Warranties ("AS-IS")
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+   NON-INFRINGEMENT.
+
+   IN NO EVENT SHALL SAKI STUDIO BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+   OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE,
+   ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+   OR OTHER DEALINGS IN THE SOFTWARE.
+
+   The protocol specifications described in the IETF Internet-Draft are
+   experimental working documents. They do not constitute any standard,
+   nor is their completeness or correctness guaranteed.
+
+
+5. Contact & Legal Notices
+
+   For commercial licensing inquiries or legal clarifications:
+
+   Email:   Saki@saki-studio.com.tw
+   Web:     https://saki-studio.com.tw
+
+Saki Studio reserves the right to amend these terms at any time.
+Continued use of the software constitutes acceptance of any modifications.
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║   Ⅲ. 日本語版 (Japanese)                                                   ║
+║                                                                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+1. 知的財産権について (Intellectual Property)
+
+   本プロジェクト（SakiAgentSSH）を構成するすべての要素——ソースコードと
+   いう名の設計図、コンパイル済みバイナリという名の結晶、ドキュメントと
+   いう名の航海図——は、Saki Studio (Saki-Studio.com.tw) の排他的な財産
+   です。
+
+   Copyright © 2026 Saki Studio. All Rights Reserved.
+
+   書面による特別な許諾なき限り、商用再配布、販売、リバースエンジニアリ
+   ング、または改変後の再配布は固くお断りいたします。
+
+
+2. ライセンス範囲の分類
+
+   本プロジェクトには異なる性質の知的財産が含まれており、それぞれ異なる
+   ライセンス条項が適用されます：
+
+   2.1 プロトコル仕様書 (docs/draft-*)
+
+       本プロジェクトに収録された IETF Internet-Draft
+       「draft-sakistudio-sass-00」およびその後続バージョンのテキスト内
+       容は、二重ライセンスの下に置かれます：
+
+       (a) IETF Trust ライセンス：
+           BCP 78（RFC 5378）および IETF Trust の IETF 文書に関する法的
+           規定 (https://trustee.ietf.org/license-info) に基づき、これら
+           の仕様書のテキスト内容は IETF Trust ライセンスにより保護されま
+           す。これらの文書への貢献は、BCP 78 の条項に基づき IETF Trust
+           に付与された権利とみなされます。
+
+       (b) Saki Studio 著作権：
+           仕様書に記載された独自の設計理念、アーキテクチャ概念、セキュリ
+           ティメカニズムの設計（6-Response State Machine、Safety
+           Gradient、Transparent Branching、Vi Swap、Tarpit 等の革新的な
+           構想を含むがこれに限らない）の知的財産権は、Saki Studio に帰属
+           します。
+
+       利用者は、IETF Trust のライセンス条項に従い、仕様書に記載されたプ
+       ロトコルを参照・実装することができます。ただし、原創的な設計概念の
+       商業的な派生利用には、Saki Studio の書面による許可が必要です。
+
+   2.2 実装ソースコード (saki-ssh-daemon/, saki-ssh-client/, go-sakissh/,
+       SakiAgentSSH-Daemon/, SakiAgentSSH-Client/, SakiSSH/,
+       saki-ssh-wasm-payload/, sakissh-ca/, proto/)
+
+       すべての実装ソースコード（Rust、Go、Swift、Protocol Buffers 定義
+       ファイルを含む）の著作権は Saki Studio に帰属します。
+
+       Saki Studio は利用者に対し、個人的な学習、研究、または非商用開発
+       目的での使用に限り、非独占的かつ譲渡不能な取消可能な限定ライセン
+       スを付与します。
+
+   2.3 バイナリ配布物 (release/, bin/)
+
+       すべてのプリコンパイル済みバイナリ、インストールパッケージ（DMG、
+       MSI）、パッケージマネージャマニフェスト（Homebrew Cask、Scoop、
+       Winget）の著作権は Saki Studio に帰属します。無断での再配布は禁
+       止されています。
+
+
+3. オープンソースコンポーネント
+
+   本ソフトウェアには、オープンソースのコードやサードパーティライブラリが
+   含まれている場合があります。これらのコンポーネントは、それぞれの元のラ
+   イセンス（MIT、Apache 2.0 等）に従います。
+
+   オープンソースコンポーネントのライセンスと本ライセンスの間に矛盾が生
+   じた場合、当該コンポーネントに関してはオープンソースライセンスが優先し
+   ます。
+
+
+4. 免責事項 (Disclaimer)
+
+   本ソフトウェアは「現状有姿 (AS-IS)」で提供されます。
+
+   季節が移ろうように、ソフトウェアもまた不完全なものです。Saki Studio は、
+   本ソフトウェアにバグが存在しないこと、あるいは貴方のすべての期待に応え
+   ることを保証いたしません。
+
+   本ソフトウェアの使用によって生じたいかなる損害（データの喪失、業務の停
+   止、その他一切の直接的・間接的損害）についても、Saki Studio は責任を負
+   いかねます。
+
+   IETF Internet-Draft に記載されたプロトコル仕様は実験的な作業文書であり、
+   いかなる標準も構成せず、その完全性や正確性も保証されません。
+
+
+5. お問い合わせ (Contact)
+
+   商用ライセンスに関するお問い合わせ、または法的な確認をご希望の場合：
+
+   電子郵便:     Saki@saki-studio.com.tw
+   ウェブサイト:  https://saki-studio.com.tw
+
+Saki Studio は、この規約を予告なく改訂する権利を留保します。
+それは、より良い関係を築くための更新です。
+
+
+================================================================================
+  END OF LICENSE
+================================================================================
