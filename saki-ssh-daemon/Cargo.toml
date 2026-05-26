@@ -8,19 +8,50 @@ license = "LicenseRef-SakiStudio"
 homepage = "https://github.com/saki-tw/SakiAgentSSH"
 
 [dependencies]
-tonic = "0.12"
+# === 核心框架 ===
+tonic = { version = "0.12", features = ["tls"] }
 prost = "0.13"
 tokio = { version = "1", features = ["full"] }
 tokio-stream = "0.1"
 futures-core = "0.3"
 futures-util = "0.3"
+async-trait = "0.1"
+
+# === 日誌與追蹤 ===
 tracing = "0.1"
 tracing-subscriber = "0.3"
+
+# === 序列化 ===
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+serde_yaml = "0.9"
+
+# === 網路與識別 ===
 ipnet = "2"
 uuid = { version = "1", features = ["v4"] }
 chrono = "0.4"
+
+# === 密碼學與認證（Phase 0→2: 死碼模組 + 認知挑戰 + TLS Exporter 綁定）===
+chacha20poly1305 = "0.10"
+ed25519-dalek = { version = "2", features = ["rand_core", "pkcs8", "pem"] }
+sha2 = "0.10"
+hmac = "0.12"
+subtle = "2"
+hex = "0.4"
+rand = "0.8"
+
+# === 壓縮與編碼（Phase 0: codec.rs）===
+zstd = "0.13"
+base64 = "0.22"
+
+# === 檔案系統與工具（Phase 0: 多模組）===
+glob = "0.3"
+dirs = "5"
+
+# === TLS（Phase 1: mTLS 啟用預備）===
+rustls = "0.23"
+rustls-pemfile = "2"
+tokio-rustls = "0.26"
 
 [build-dependencies]
 tonic-build = "0.12"

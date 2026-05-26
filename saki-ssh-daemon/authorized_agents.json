@@ -1,0 +1,22 @@
+{
+  "agents": [
+    {
+      "name": "antigravity-test@m1-mac",
+      "public_key_hex": "1eec631445d54682b798caacaec6a6dfd638b1b8b822b025161390abcfe819cc",
+      "capabilities": {
+        "allowed_commands": ["echo *", "ls *", "cat *", "uname *", "whoami", "date"],
+        "denied_commands": ["rm *", "sudo *", "kill *"],
+        "allowed_paths": ["/Users/hc1034/Saki_Studio/Claude", "/tmp"],
+        "denied_paths": ["/Users/hc1034/.ssh", "/Users/hc1034/.gnupg"],
+        "max_concurrent": 5,
+        "timeout_seconds": 60,
+        "max_file_size_bytes": 10485760,
+        "inherit_env": false,
+        "allowed_env_vars": ["PATH", "HOME", "LANG", "TERM"],
+        "max_session_duration": 3600,
+        "idle_timeout": 600,
+        "max_sessions": 3
+      }
+    }
+  ]
+}

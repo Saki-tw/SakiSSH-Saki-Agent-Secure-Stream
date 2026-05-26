@@ -19,6 +19,11 @@ pub struct DaemonConfig {
     /// 檔案傳輸設定
     #[serde(default)]
     pub file_transfer: FileTransferConfig,
+
+    /// TLS 配置（Phase 1: mTLS 傳輸層）
+    /// None = 明文 gRPC（向後相容）
+    #[serde(default)]
+    pub tls: Option<TlsConfig>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -58,6 +63,25 @@ pub struct FileTransferConfig {
     pub max_chunk_size: u64,
 }
 
+/// TLS 傳輸層配置
+/// Phase 1: mTLS 啟用 — TLS 1.3 + 可選客戶端證書驗證
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TlsConfig {
+    /// 伺服器證書路徑（PEM 格式）
+    pub cert_path: String,
+
+    /// 伺服器私鑰路徑（PEM 格式）
+    pub key_path: String,
+
+    /// CA 證書路徑（PEM 格式，用於驗證客戶端證書）
+    /// None = 不驗證客戶端證書（僅單向 TLS）
+    pub ca_cert_path: Option<String>,
+
+    /// 是否要求客戶端提供證書（mTLS）
+    #[serde(default)]
+    pub require_client_cert: bool,
+}
+
 fn default_bind_address() -> String {
     "[::0]:19284".to_string()
 }
@@ -81,6 +105,7 @@ impl Default for DaemonConfig {
             shell: ShellConfig::default(),
             acl: AclConfig::default(),
             file_transfer: FileTransferConfig::default(),
+            tls: None,
         }
     }
 }

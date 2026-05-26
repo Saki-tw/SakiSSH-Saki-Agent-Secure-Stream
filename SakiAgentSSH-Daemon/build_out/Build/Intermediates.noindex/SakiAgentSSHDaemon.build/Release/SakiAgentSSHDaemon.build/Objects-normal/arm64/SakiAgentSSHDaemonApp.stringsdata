@@ -1,0 +1,136 @@
+{
+  "source": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/Sources/SakiAgentSSHDaemonApp.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "SakiAgentSSH 說明書",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 12
+        }
+      },
+      {
+        "comment": "",
+        "key": "SakiAgentSSH Help",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 72
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 80
+        }
+      },
+      {
+        "comment": "",
+        "key": "About SakiAgentSSH Daemon",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 132
+        }
+      },
+      {
+        "comment": "",
+        "key": "說明書 (⌘?)",
+        "location": {
+          "startingColumn": 23,
+          "startingLine": 143
+        }
+      },
+      {
+        "comment": "",
+        "key": "Agent 原生跨機器執行協議\n基於 gRPC 的安全遠端指令服務",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 168
+        }
+      },
+      {
+        "comment": "",
+        "key": "SakiAgentSSH Daemon",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 156
+        }
+      },
+      {
+        "comment": "",
+        "key": "v%@ (Build %@)",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 163
+        }
+      },
+      {
+        "comment": "",
+        "key": "Windows 版本下載",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 186
+        }
+      },
+      {
+        "comment": "",
+        "key": "sakisshd.exe (GitHub Release)",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 189
+        }
+      },
+      {
+        "comment": "",
+        "key": "© 2026 Saki Studio. All rights reserved.",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 255
+        }
+      },
+      {
+        "comment": "",
+        "key": "Saki@saki-studio.com.tw",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 264
+        }
+      },
+      {
+        "comment": "",
+        "key": "咲ちゃん（Saki）",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 245
+        }
+      },
+      {
+        "comment": "",
+        "key": "Saki Studio",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 248
+        }
+      },
+      {
+        "comment": "",
+        "key": "saki-studio.com.tw",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 259
+        }
+      },
+      {
+        "comment": "",
+        "key": "GitHub",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 261
+        }
+      }
+    ]
+  },
+  "version": 1
+}

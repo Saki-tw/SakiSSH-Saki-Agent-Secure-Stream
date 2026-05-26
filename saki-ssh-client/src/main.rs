@@ -27,6 +27,18 @@ struct Cli {
     #[arg(short, long, env = "SAKISSH_ADDR")]
     addr: String,
 
+    /// TLS: CA 證書路徑（PEM 格式，啟用 TLS 時必須提供）
+    #[arg(long, env = "SAKISSH_TLS_CA")]
+    tls_ca: Option<String>,
+
+    /// TLS: 客戶端證書路徑（PEM 格式，mTLS 時使用）
+    #[arg(long, env = "SAKISSH_TLS_CERT")]
+    tls_cert: Option<String>,
+
+    /// TLS: 客戶端私鑰路徑（PEM 格式，mTLS 時使用）
+    #[arg(long, env = "SAKISSH_TLS_KEY")]
+    tls_key: Option<String>,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -72,38 +84,110 @@ enum Commands {
 }
 
 // ============================================================
-// 多路徑 Failover 連線
+// TLS 配置參數
 // ============================================================
 
-async fn connect_with_failover(addrs: &str) -> Result<SakiSshClient<tonic::transport::Channel>> {
+struct TlsArgs {
+    ca_path: String,
+    cert_path: Option<String>,
+    key_path: Option<String>,
+}
+
+// ============================================================
+// 多路徑 Failover 連線（支援 TLS/mTLS）
+// ============================================================
+
+async fn connect_with_failover(
+    addrs: &str,
+    tls_args: Option<&TlsArgs>,
+) -> Result<SakiSshClient<tonic::transport::Channel>> {
     let addresses: Vec<&str> = addrs.split(',').map(|s| s.trim()).collect();
 
     for (i, addr) in addresses.iter().enumerate() {
-        let addr = if !addr.starts_with("http") {
-            format!("http://{}", addr)
+        let addr = if tls_args.is_some() {
+            // TLS 模式: 確保使用 https://
+            if addr.starts_with("http://") {
+                addr.replace("http://", "https://")
+            } else if !addr.starts_with("https") {
+                format!("https://{}", addr)
+            } else {
+                addr.to_string()
+            }
         } else {
-            addr.to_string()
+            // 明文模式: 保持原有行為
+            if !addr.starts_with("http") {
+                format!("http://{}", addr)
+            } else {
+                addr.to_string()
+            }
         };
 
-        match tokio::time::timeout(
-            std::time::Duration::from_secs(3),
-            SakiSshClient::connect(addr.clone()),
-        )
-        .await
-        {
-            Ok(Ok(client)) => {
-                if i > 0 {
-                    eprintln!("[sakissh] Connected via fallback path: {}", addr);
+        if let Some(tls) = tls_args {
+            // 建立 TLS Channel
+            use tonic::transport::{Certificate, ClientTlsConfig, Identity};
+
+            let ca_pem = std::fs::read_to_string(&tls.ca_path)
+                .with_context(|| format!("無法讀取 CA 證書: {}", tls.ca_path))?;
+            let ca_cert = Certificate::from_pem(ca_pem);
+
+            let mut client_tls = ClientTlsConfig::new().ca_certificate(ca_cert);
+
+            // mTLS: 若提供客戶端證書，啟用雙向驗證
+            if let (Some(cert_path), Some(key_path)) = (&tls.cert_path, &tls.key_path) {
+                let cert_pem = std::fs::read_to_string(cert_path)
+                    .with_context(|| format!("無法讀取客戶端證書: {}", cert_path))?;
+                let key_pem = std::fs::read_to_string(key_path)
+                    .with_context(|| format!("無法讀取客戶端私鑰: {}", key_path))?;
+                let client_identity = Identity::from_pem(cert_pem, key_pem);
+                client_tls = client_tls.identity(client_identity);
+            }
+
+            let endpoint = tonic::transport::Channel::from_shared(addr.clone())
+                .map_err(|e| anyhow::anyhow!("無效的位址 {}: {}", addr, e))?
+                .tls_config(client_tls)
+                .map_err(|e| anyhow::anyhow!("TLS 配置錯誤: {}", e))?;
+
+            match tokio::time::timeout(
+                std::time::Duration::from_secs(3),
+                endpoint.connect(),
+            )
+            .await
+            {
+                Ok(Ok(channel)) => {
+                    if i > 0 {
+                        eprintln!("[sakissh] Connected via fallback path: {}", addr);
+                    }
+                    return Ok(SakiSshClient::new(channel));
                 }
-                return Ok(client);
+                Ok(Err(e)) => {
+                    eprintln!("[sakissh] Failed to connect to {}: {}", addr, e);
+                }
+                Err(_) => {
+                    eprintln!("[sakissh] Connection timeout for {}", addr);
+                }
             }
-            Ok(Err(e)) => {
-                eprintln!("[sakissh] Failed to connect to {}: {}", addr, e);
+        } else {
+            // 明文連線
+            match tokio::time::timeout(
+                std::time::Duration::from_secs(3),
+                SakiSshClient::connect(addr.clone()),
+            )
+            .await
+            {
+                Ok(Ok(client)) => {
+                    if i > 0 {
+                        eprintln!("[sakissh] Connected via fallback path: {}", addr);
+                    }
+                    return Ok(client);
+                }
+                Ok(Err(e)) => {
+                    eprintln!("[sakissh] Failed to connect to {}: {}", addr, e);
+                }
+                Err(_) => {
+                    eprintln!("[sakissh] Connection timeout for {}", addr);
+                }
             }
-            Err(_) => {
-                eprintln!("[sakissh] Connection timeout for {}", addr);
-            }
-        }
+        };
     }
 
     anyhow::bail!(
@@ -143,6 +227,9 @@ async fn exec_command(
         cwd: cwd.unwrap_or_default(),
         env: env_map,
         execution_id: execution_id.clone(),
+        session_id: String::new(),
+        is_reattach: false,
+        resume_offset: 0,
     });
 
     let mut stream = client.execute_stream(request).await?.into_inner();
@@ -399,7 +486,15 @@ async fn download_file(
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    let mut client = connect_with_failover(&cli.addr).await?;
+
+    // 建立 TLS 參數（若有提供）
+    let tls_args = cli.tls_ca.as_ref().map(|ca| TlsArgs {
+        ca_path: ca.clone(),
+        cert_path: cli.tls_cert.clone(),
+        key_path: cli.tls_key.clone(),
+    });
+
+    let mut client = connect_with_failover(&cli.addr, tls_args.as_ref()).await?;
 
     match cli.command {
         Commands::Exec { cwd, env, command } => {

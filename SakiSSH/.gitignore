@@ -1,0 +1,30 @@
+# Build artifacts
+target/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Runtime / Secrets
+config.json
+.env
+
+# Internal development docs (Saki Studio internal only)
+Scientia/
+TaskLog/
+ImplementationLog/
+WalkthroughLog/
+docs/
+bin/
+tools/
+ARCHITECTURE.md
+
+# Release binaries (go to GitHub Releases)
+release/daemon/sakisshd*
+release/client/sakissh*

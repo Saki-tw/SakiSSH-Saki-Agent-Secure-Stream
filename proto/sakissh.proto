@@ -23,6 +23,15 @@ service SakiSSH {
 
   // 檔案下載 (Daemon → Client 串流)
   rpc FileDownload(FileDownloadRequest) returns (stream FileChunk);
+
+  // v6: 認證握手 (Ed25519 + ChaCha20-Poly1305 挑戰)
+  rpc Authenticate(AuthRequest) returns (AuthResponse);
+
+  // v6: 認知挑戰 (ChaCha20 解密驗證)
+  rpc CognitiveChallenge(ChallengeRequest) returns (ChallengeResponse);
+
+  // v6: 安全狀態查詢 (tarpit / session / blocked IP 統計)
+  rpc SecurityStatus(SecurityStatusRequest) returns (SecurityStatusResponse);
 }
 
 // ============================================================
@@ -36,6 +45,12 @@ message ExecuteRequest {
   map<string, string> env = 4;
   // 執行 ID，用於 Cancel/Signal 定位。Client 端生成 (UUID)。
   string execution_id = 5;
+  // v6: Session 綁定（認證後取得的 session_id）
+  string session_id = 6;
+  // v6: 斷線重連旗標
+  bool is_reattach = 7;
+  // v6: 從此 offset 開始續傳 PTY 輸出
+  uint64 resume_offset = 8;
 }
 
 message ExecuteResponse {
@@ -49,10 +64,18 @@ message StreamResponse {
   enum Source {
     STDOUT = 0;
     STDERR = 1;
+    // v6: 系統訊息（排隊通知、認證事件等）
+    SYSTEM = 2;
   }
   Source source = 1;
   bytes data = 2;
   optional int32 exit_code = 3;
+  // v6: 指令是否進入排隊等待
+  bool is_queued = 4;
+  // v6: 排隊位置（0 = 未排隊）
+  int32 queue_position = 5;
+  // v6: PTY Ring Buffer 斷點續傳用 offset
+  uint64 offset = 6;
 }
 
 // ============================================================
@@ -130,4 +153,44 @@ message FileDownloadRequest {
   string remote_path = 1;
   // 斷點續傳：從此 offset 開始讀取
   uint64 offset = 2;
+}
+
+// ============================================================
+// v6: 認證與安全
+// ============================================================
+
+message AuthRequest {
+  string agent_name = 1;
+  bytes public_key = 2;
+  bytes signature = 3;
+  bytes nonce = 4;
+}
+
+message AuthResponse {
+  bool success = 1;
+  string session_id = 2;
+  string capability_hash = 3;
+  bytes chacha_challenge_nonce = 4;
+  bytes chacha_challenge_ciphertext = 5;
+  string message = 6;
+}
+
+message ChallengeRequest {
+  bytes decrypted_plaintext = 1;
+  bytes client_ekm_hmac = 2;
+}
+
+message ChallengeResponse {
+  bool passed = 1;
+  string session_token = 2;
+  string message = 3;
+}
+
+message SecurityStatusRequest {}
+
+message SecurityStatusResponse {
+  uint32 active_tarpits = 1;
+  uint32 active_sessions = 2;
+  uint32 blocked_ips = 3;
+  string policy_version = 4;
 }

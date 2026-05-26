@@ -1,0 +1,1132 @@
+網路工作小組 (Network Working Group)                            Saki Studio
+網際網路草案 (Internet-Draft)                               2026年5月25日
+預期狀態：資訊性 (Informational)
+過期時間：2026年11月25日
+
+
+                 Saki Agent Secure Stream (SASS) 協定規格書
+                             draft-saki-sass-04
+
+摘要
+
+   本文件描述了 Saki Agent Secure Stream (SASS) 協定，版本 1.4。SASS 是一
+   個應用層覆蓋協定，專為受信任 Agent 之間的身份驗證遠端指令執行、串流進
+   程 I/O 以及二進位檔案傳輸所設計。
+
+   為了確保嚴格的規範自足性並與 IETF 標準規範完全相容，SASS 定義了「控制
+   與傳輸分離 (Control-Transport Decoupling)」的解耦架構。SASS 核心定義了
+   抽象的 SASS 抽象消息模型 (SAMM)，並以標準的 CBOR [RFC8949] 與 JSON 作
+   為基準序列化編碼格式。
+
+   遵循 TLS 1.0 (RFC 2246) 繼承並改良 SSL 3.0 的歷史先例，SASS v1.4 通過
+   四個重大的增量演進里程碑，正式確立了其安全演進軌跡：主動威脅防禦
+   (v1.1)、前向安全審計雜湊鏈 (v1.2)、模組化控制傳輸解耦 (v1.3)（整合了
+   RFC 9266 tls-exporter 通道綁定與零分配 Tarpit（焦油坑）串流）、以及全
+   域回應映射 (Total Response Mapping) (v1.4)（包含 6-Response 狀態機收斂
+   與安全梯度 (Safety Gradient) 損失邊界）。
+
+   SASS v1.4 達成了 AES（幾乎處處優越 (Almost Everywhere Superior)）里程
+   碑：這是一個基於二階隨機優勢 (Second-order Stochastic Dominance,
+   SSD) [AS2008] 的協定版本間比較級宣稱。每個版本迭代從 Agent 機率空間
+   中消除特定的行為分支，同時維持期望損失不變，從而產生嚴格的 SSD 改進。
+
+本草案狀態
+
+   本網際網路草案之提交完全符合 BCP 78 和 BCP 79 的規定。
+   網際網路草案是網際網路工程任務組 (IETF) 的工作文件。
+
+版權聲明
+
+   版權所有 (c) 2026 Saki Studio 及文件中確定的文件作者。保留所有權利。
+
+目錄
+
+   1.  導言與協定演進  . . . . . . . . . . . . . . . . . . . . . . .  3
+     1.1.  四大增量演進里程碑 (v1.1 至 v1.4) . . . . . . . . . . . .  3
+     1.2.  設計哲學：全域回應映射 . . . . . . . . . . . . . . . . . .  4
+   2.  術語定義 . . . . . . . . . . . . . . . . . . . . . . . . . .  5
+   3.  協定概述 . . . . . . . . . . . . . . . . . . . . . . . . . .  6
+     3.1.  系統架構 . . . . . . . . . . . . . . . . . . . . . . . .  6
+     3.1a. 6-Response 狀態機 (R1~R6) . . . . . . . . . . . . . . . .  7
+     3.2.  抽象消息模型 (SAMM)  . . . . . . . . . . . . . . . . . .  9
+     3.3.  與 SSH 的關係  . . . . . . . . . . . . . . . . . . . . .  9
+   4.  傳輸層與傳輸配置插件 . . . . . . . . . . . . . . . . . . . . 10
+     4.1.  傳輸層解耦原則 . . . . . . . . . . . . . . . . . . . . . 10
+     4.2.  SASS-over-gRPC 配置 (強制 TLS 1.3) . . . . . . . . . . . 10
+     4.3.  ALPN 與 TCP 分包降級防禦 . . . . . . . . . . . . . . . . 11
+     4.4.  基於匯出金鑰材料的通道綁定 . . . . . . . . . . . . . . . 11
+     4.5.  預設 TCP 埠號  . . . . . . . . . . . . . . . . . . . . . 12
+   5.  會話層 . . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+     5.1.  Agent 身份驗證 . . . . . . . . . . . . . . . . . . . . . 12
+     5.2.  會話生命週期控制 . . . . . . . . . . . . . . . . . . . . 13
+     5.3.  基於能力控制的存取控制 . . . . . . . . . . . . . . . . . 13
+   6.  負載編碼與安全防護閘門 . . . . . . . . . . . . . . . . . . . 14
+     6.1.  Zstd 流式解壓縮限額 . . . . . . . . . . . . . . . . . . 14
+     6.2.  壓縮炸彈與 Huffman 樹碰撞 DoS 防禦 . . . . . . . . . . . 14
+     6.3.  編碼與解碼具體流程 . . . . . . . . . . . . . . . . . . . 15
+     6.4.  PTY 環形緩衝區與偏移量續傳 . . . . . . . . . . . . . . . 15
+   7.  邏輯 RPC 服務語義  . . . . . . . . . . . . . . . . . . . . . 16
+     7.1.  指令執行與串流發送 . . . . . . . . . . . . . . . . . . . 16
+     7.2.  行程管理 . . . . . . . . . . . . . . . . . . . . . . . . 17
+     7.3.  檔案傳輸與裸 FD 傳輸 . . . . . . . . . . . . . . . . . . 17
+   8.  威脅防禦與邊界執行 . . . . . . . . . . . . . . . . . . . . . 18
+     8.1.  邊界裁定器 (Boundary Adjudicator)（13Policy 引擎）. . . . 18
+     8.2.  認知挑戰機制 . . . . . . . . . . . . . . . . . . . . . . 19
+     8.3.  雙重標準執行 . . . . . . . . . . . . . . . . . . . . . . 19
+       8.3.1.  Vi Swap 防禦（已認證 Agent） . . . . . . . . . . . . 20
+       8.3.2.  零分配焦油坑（未認證 Agent） . . . . . . . . . . . . 20
+       8.3.3.  零窗口死鎖防禦 . . . . . . . . . . . . . . . . . . . 21
+     8.4.  LocalHost 迴圈防禦  . . . . . . . . . . . . . . . . . . 21
+     8.5.  透明分流 (Transparent Branching)（儲存隔離）. . . . . . . 22
+   9.  結構化錯誤碼 . . . . . . . . . . . . . . . . . . . . . . . . 23
+   10. 安全性考慮  . . . . . . . . . . . . . . . . . . . . . . . . 24
+     10.1. 全域回應映射保證 . . . . . . . . . . . . . . . . . . . . 24
+     10.2. 安全梯度（7 層損失邊界）. . . . . . . . . . . . . . . . 25
+     10.3. 狀態遷移審計 . . . . . . . . . . . . . . . . . . . . . . 26
+     10.4. 傳輸層考慮 . . . . . . . . . . . . . . . . . . . . . . . 27
+     10.5. 已知限制 . . . . . . . . . . . . . . . . . . . . . . . . 27
+     10.6. 幾乎處處優越 (AES) 宣稱 . . . . . . . . . . . . . . . . 28
+   11. IANA 註冊考慮  . . . . . . . . . . . . . . . . . . . . . . . 28
+   12. 參考文獻 . . . . . . . . . . . . . . . . . . . . . . . . . . 28
+     12.1. 規範性參考文獻 . . . . . . . . . . . . . . . . . . . . . 28
+     12.2. 資訊性參考文獻 . . . . . . . . . . . . . . . . . . . . . 29
+   附錄 A.  Protobuf 服務定義 . . . . . . . . . . . . . . . . . . . 29
+   附錄 B.  基準參考實作 . . . . . . . . . . . . . . . . . . . . . 30
+   附錄 C.  Saki Studio 插件參考實作 . . . . . . . . . . . . . . . 31
+     C.1.  ChaCha20-Poly1305 認知挑戰 . . . . . . . . . . . . . . . 31
+     C.2.  認知挑戰的 TLS Exporter 綁定 . . . . . . . . . . . . . . 32
+     C.3.  零分配焦油坑靜態緩衝區 . . . . . . . . . . . . . . . . . 32
+     C.4.  ED25519 雜湊鏈審計日誌 . . . . . . . . . . . . . . . . . 33
+     C.5.  Vi Swap ANSI Escape Sequence . . . . . . . . . . . . . . 33
+     C.6.  基於符號連結樹的透明分流 . . . . . . . . . . . . . . . . 34
+     C.7.  易失性快取重導向 . . . . . . . . . . . . . . . . . . . . 35
+   附錄 D.  版本歷史 . . . . . . . . . . . . . . . . . . . . . . . 35
+
+1.  導言與協定演進
+
+   自主式 AI 編碼 Agent 在遠端主機上運行並具備高權限的普及，引入了全新的
+   威脅模型：惡意代理 (Rogue Agent)。與人類操作的傳統 SSH 客戶端不同，AI
+   Agent 可能在沒有人類明確授權的情況下，自主執行破壞性指令、竊取憑證或
+   在網路上進行橫向移動。
+
+   傳統的遠端執行協定如 SSH [RFC4253] 是為人類終端操作設計的，缺乏對
+   Agent 進行細粒度能力限制、主動威脅防禦以及跨異質平台二進位安全編碼的
+   整合支援。
+
+   SASS (Saki Agent Secure Stream) 透過將「邏輯消息流」與「物理傳輸層」進
+   行徹底解耦，解決了此安全隱憂。SASS 核心定義了一個傳輸無關的消息核心與
+   可插拔的傳輸插件，使協定草案在學術預審時完全免於第三方專利二進位框架
+   （如 gRPC/Protobuf）的編譯鎖定，同時在實作層保留了高性能的適配器。
+
+1.1.  四大增量演進里程碑 (v1.1 至 v1.4)
+
+   遵循 TLS 1.0 (RFC 2246) 繼承並改良 SSL 3.0 的歷史先例，SASS 規格書通
+   過四個重大的增量演進里程碑，正式確立了其安全防禦的演進軌跡：
+
+   o  SASS v1.1 (主動威脅反制)：新增了 13Policy 啟發式防火牆以及與主動
+      Tarpit（焦油坑）系統強綁定的密碼學認知挑戰 (Cognitive Challenge)，
+      奠定了對抗惡意代理自動化惡意操作的主動防禦基石。
+
+   o  SASS v1.2 (密碼學完整性與審計)：引入了五維度 Capability ACL，並結
+      合了基於主機端非對稱密鑰簽章的前向安全雜湊鏈審計日誌，為審計不可
+      抵賴性提供了數學證明。
+
+   o  SASS v1.3 (控制與傳輸徹底解耦與硬化)：將 SASS 核心與底層物理傳輸
+      協定徹底解耦。引入原子化控制 (POSIX openat 與 O_NOFOLLOW) 以預防
+      TOCTOU 沙盒穿透，實作零分配 Tarpit 串流以消除 Host DoS，並強制實
+      施匯出金鑰材料 (Exported Keying Material) 通道綁定以防範連線劫持。
+
+   o  SASS v1.4 (全域回應映射與損失邊界 - 本版本)：引入了正式的
+      6-Response 狀態機 (R1~R6)，將所有可能的 Agent 行為映射至六個確定
+      性回應之一，每個回應均保持儲存完整性並約束損失。新增雙重標準執行
+      (Dual Standard Enforcement)（Vi Swap 用於已認證 Agent，Tarpit 用
+      於未認證 Agent）、透明分流 (Transparent Branching) 實現零損失寫入
+      隔離、PTY Ring Buffer（環形緩衝區）實現冪等重連、以及安全梯度
+      (Safety Gradient) 理論實現分層損失邊界。
+
+      此里程碑達成了 AES（幾乎處處優越）特性：這是一個協定版本間的比較級
+      宣稱。每個版本迭代從 Agent 機率空間中消除特定的行為分支，同時維持期
+      望損失不變，從而產生嚴格的二階隨機優勢 (SSD) 改進 [AS2008]。
+
+1.2.  設計哲學：全域回應映射
+
+   傳統安全模型列舉已知攻擊並加以阻擋（黑名單模型）。此方法本質上是不
+   完整的：攻擊者總能找到不在黑名單中的路徑。
+
+   SASS v1.4 反轉了此模型。它不定義「哪些行為是惡意的」，而是定義「對於
+   每一種可能的行為，回應是什麼」。回應的集合是有限的、確定性的且可審計
+   的。任何未預見的行為都會被映射至預定義回應之一。
+
+   這就是公理「所有未預期的行為都是已預期的行為」的正式含義。
+
+   此外，Agent 的行為本身不具有固有的「危險性」或「惡意性」。邊界執行系
+   統嚴格來說是一個裁定器 (Adjudicator)：它根據 Agent 的能力集判定什麼
+   是被允許的（「CAN」）以及什麼是被禁止的（「CANNOT」）。如果 Agent 的
+   授權邊界包含執行破壞性指令，Daemon **必須**無差別地執行該指令。反之，
+   如果 Agent 缺乏執行一個良性指令的授權，這構成了絕對的邊界違規。
+
+2.  術語定義
+
+   Agent (客戶端)：在遠端主機上與 SASS Daemon 連接以執行指令或傳輸檔案
+      的自主軟體進程。
+
+   Daemon (服務端)：監聽連線、驗證 Agent 身份並執行授權指令的 SASS 守護
+      進程。
+
+   Rogue Agent (惡意代理)：遭到入侵、配置錯誤或正企圖進行越權操作的
+      Agent。
+
+   Session (會話)：由 UUID 標識並受能力集限制的、有時限的已認證上下文。
+
+   SAMM (SASS Abstract Messaging Model)：SASS 抽象消息模型，傳輸無關的
+      消息語義配置。
+
+   Transport Profile (傳輸配置)：實現具體傳輸細節的模組化適配插件（如
+      gRPC、WebSockets 或裸 TCP）。
+
+   UVSF (Userspace Virtual Symlink Filesystem)：Userspace 虛擬符號連結
+      檔案系統，基於符號連結樹的零權限沙盒。
+
+   KFS/WSDK (核心級過濾儲存)：proprietary OS 驅動級別的強沙盒插件（未來
+      工作）。
+
+   13Policy：啟發式威脅偵測引擎，用以分類指令模式並觸發邊界執行回應。
+
+   Cognitive Challenge (認知挑戰)：一種密碼學謎題，要求 Agent 證明其具備
+      金鑰材料與真實計算能力。實作**可以**使用附錄 C.1 中描述的方法。
+
+   Tarpit (焦油坑)：一種主動防禦機制，向疑似惡意代理串流高熵數據，以
+      O(1) Daemon 記憶體成本消耗其資源。
+
+   Vi Swap：一種主動防禦機制，將已認證的 Agent 困在模擬的互動式終端狀態
+      中，使 Agent 的 LLM 停止生成。
+
+   Total Response Mapping (全域回應映射)：一種安全模型，其中來自 Agent 域
+      的每一個可能輸入都確定性地映射至有限的預定義回應集合之一 (R1~R6)。
+
+   Safety Gradient (安全梯度)：每一個協定層在其上方所有層被攻破時，約束
+      最壞情況損失的特性。
+
+   Transparent Branching (透明分流)：一種對 Agent 不可見的隔離機制，所有
+      寫入操作被重導向至可丟棄的分支目錄。
+
+3.  協定概述
+
+3.1.  系統架構
+
+   SASS 分離了控制平面與數據傳輸平面：
+
+   +---------------------------------------------------------------+
+   | Layer 7: 透明分流 (UVSF | Micro Branch)                       |  新增
+   +---------------------------------------------------------------+
+   | Layer 6: 儲存沙盒 (UVSF Core | KFS 核心插件)                   |
+   +---------------------------------------------------------------+
+   | Layer 5: 前向安全審計軌跡 (Hash Chain)                         |
+   +---------------------------------------------------------------+
+   | Layer 4: 能力與會話管理 (Capability & Session)                 |
+   +---------------------------------------------------------------+
+   | Layer 3: 主動威脅防禦 (13Policy, Tarpit, Vi Swap)              |  修改
+   +---------------------------------------------------------------+
+   | Layer 2: 負載安全編碼 (Zstd 流式熔斷門 + Base64 安全信封)       |
+   +---------------------------------------------------------------+
+   | Layer 1: 抽象傳輸適配器 (SAMM Interface)                       |
+   +---------------------------------------------------------------+
+   |   [可插拔傳輸插件: gRPC-h2 | WS | TCP-CBOR-RPC]               |
+   +---------------------------------------------------------------+
+
+   正交性：6-Response 狀態機 (§3.1a)
+   +---------------------------------------------------------------+
+   | R1: EXECUTE   | R2: CHALLENGE | R3: THROTTLE                  |
+   | R4: VI_SWAP   | R5: TARPIT    | R6: DROP                      |
+   +---------------------------------------------------------------+
+
+3.1a. 6-Response 狀態機 (R1~R6)
+
+   所有可能的 Agent 行為，在經過 SASS 多層協定堆疊的評估後，**必須**收斂
+   至以下六個回應之一：
+
+   +-------+----------+----------------------------------------------+
+   | 代碼  | 名稱     | 定義                                         |
+   +-------+----------+----------------------------------------------+
+   |  R1   | EXECUTE  | 正常執行。記錄至審計日誌。                   |
+   |       |          | 寫入操作通過透明分流。                       |
+   +-------+----------+----------------------------------------------+
+   |  R2   | CHALLENGE| 觸發認知挑戰。證明計算能力後執行。           |
+   +-------+----------+----------------------------------------------+
+   |  R3   | THROTTLE | 配額超限。排隊等待。                         |
+   +-------+----------+----------------------------------------------+
+   |  R4   | VI_SWAP  | 將已認證的 Agent 困在模擬的互動式終端狀態。  |
+   +-------+----------+----------------------------------------------+
+   |  R5   | TARPIT   | 以慢速滴注高熵數據消耗攻擊者資源。           |
+   |       |          | 成本外部化。                                 |
+   +-------+----------+----------------------------------------------+
+   |  R6   | DROP     | 立即終止連線。                               |
+   |       |          | 零分配，零回應。                             |
+   +-------+----------+----------------------------------------------+
+
+   每個回應 R1 至 R6 **必須**滿足以下不變量：
+
+   +---------------------------+-----+-----+-----+-----+-------+-----+
+   | 特性                      | R1  | R2  | R3  | R4  |  R5   | R6  |
+   +---------------------------+-----+-----+-----+-----+-------+-----+
+   | 儲存損失                  | 0 * | 0   | 0   | 0   |  0    | 0   |
+   | 商業損失                  | 0 * | 0   | 0   | 0   | 外部  | 0   |
+   | 可審計                    | 是  | 是  | 是  | 是  | 是    | 是  |
+   | Daemon 記憶體成本          | O(n)| O(1)| O(1)| O(1)| O(1)  | O(0)|
+   +---------------------------+-----+-----+-----+-----+-------+-----+
+
+   (*) R1 儲存損失透過透明分流（第 8.5 節）約束為零。所有寫入操作在可丟
+   棄的分支中執行；合併需要明確的人工審查。
+
+   狀態機流程：
+
+   ExecuteRequest 進入
+       |
+       +-- L1: ACL -------- IP 不在白名單中？ -----------> R6 (DROP)
+       |
+       +-- L2: 傳輸 ------- 通道無效？ ------------------> R6 (DROP)
+       |
+       +-- L3: 認證 ------- 未認證？ ---------------------> R6 (DROP)
+       |                     已認證但已過期？ ------------> R2 (CHALLENGE)
+       |
+       +-- L4: 能力 ------- 指令被拒絕？ ----------------> R4 (VI_SWAP)
+       |                     路徑被拒絕？ ----------------> R4 (VI_SWAP)
+       |
+       +-- L5: 13Policy ---- 危險指令？
+       |                       critical -----------------> R5 (TARPIT)
+       |                       high ---------------------> R2 (CHALLENGE)
+       |                       medium -------------------> R2 (CHALLENGE)
+       |                       low ---------> R1 + 增強審計
+       |
+       +-- L6: 配額 -------- 配額耗盡？ -----------------> R3 (THROTTLE)
+       |
+       +-- L7: 看門狗 ------ 超時？ --> SIGKILL + 審計
+       |
+       +-- 所有檢查通過 ---------------------------------> R1 (EXECUTE)
+               |
+               +-- 寫入操作？ --> 透明分流 (8.5)
+               +-- 快取 I/O？ --> 易失性重導向 (附錄 C.7)
+               +-- localhost？ --> 混淆 (8.4)
+
+   在此狀態機中，「未預期行為」沒有專門的處理器，因為每個節點都已經處理了
+   它。無論 Agent 的行為有多不尋常，它**必須**收斂至 R1~R6 之一，每一個都
+   保證儲存安全。
+
+3.2.  抽象消息模型 (SAMM)
+
+   SAMM 定義了 SASS 消息（如 ExecuteRequest、StreamResponse）的序列化中
+   立語義配置。為確保標準化的自足性，基準序列化**必須**採用 CBOR [RFC8949]
+   或 JSON。標準 SAMM 物件將欄位映射至不同的邏輯類型（位元組、字串、映
+   射），詳見第 7 節。
+
+3.3.  與 SSH 的關係
+
+   SASS 與 SSH 協定族 [RFC4251][RFC4252][RFC4253][RFC4254] 不共享任何線路
+   格式、密鑰交換機制、通道多路複用或子系統架構。
+
+   內部開發代碼 "SakiAgentSSH" 僅為歷史遺留名稱。實作**不得**宣稱 SSH 協
+   定版本字串、監聽 TCP 22 埠或響應 SSH 客戶端的探針。
+
+4.  傳輸層與傳輸配置插件
+
+4.1.  傳輸層解耦原則
+
+   SASS Daemon 與 Client 透過 `TransportAdapter` 介面進行交互。具體實作
+   **可以**自由選擇符合規範的傳輸插件，確保協定能從低端單晶片 (TCP/CBOR)
+   擴展至企業級跳板機 (gRPC/mTLS)。
+
+4.2.  SASS-over-gRPC 配置 (強制 TLS 1.3)
+
+   SASS-over-gRPC 是預設的企業級高性能可插拔傳輸適配器。它將 SAMM 消息映
+   射至 Protocol Buffers 與 HTTP/2 串流之上，使用 ALPN "x-sakirpc-v5"。
+
+   在此傳輸配置下，所有 SASS 連線**必須**使用 TLS 1.3 [RFC8446]。降級至
+   TLS 1.2 **嚴格禁止**。實作**必須**支援以下加密套件：
+   o  TLS_AES_256_GCM_SHA384
+   o  TLS_CHACHA20_POLY1305_SHA256
+
+   為了容納 Tarpit 反制數據，gRPC 最大 message 大小**必須**設置為至少
+   52,428,800 位元組 (50 MiB)。
+
+4.3.  ALPN 與 TCP 分包降級防禦
+
+   在 TLS 握手期間，雙方**必須**包含 ALPN 擴充 [RFC7301]。ALPN 協定識別碼
+   為 "x-sakirpc-v5"。
+
+   為了防範防火牆級別的封包分割或 ALPN 剝離，Daemon **必須**檢查傳入
+   HTTP/2 標頭中的 Content-Type 標頭。如果其匹配 "application/grpc+saki"
+   而 ALPN 被剝離或偽造，Daemon **必須**立即丟棄該 TCP 連線以防止跨協定
+   多路複用攻擊。
+
+4.4.  基於匯出金鑰材料的通道綁定
+
+   在使用 TLS 1.3 傳輸配置時，符合規範的實作**必須**將會話層操作綁定至底
+   層 TLS 連線，以防止會話劫持與認知挑戰重放。
+
+   綁定機制**必須**使用從 TLS 會話衍生的匯出金鑰材料 (Exported Keying
+   Material, EKM)。EKM 值**必須**被整合至認知挑戰回應（第 8.2 節）中，以
+   確保挑戰無法跨 TLS 連線中繼。
+
+   使用 RFC 5705 或 RFC 9266 tls-exporter 的符合規範實作**應當**按以下方式
+   衍生綁定值：
+        標籤：實作定義（參見附錄 C.2 的範例）
+        上下文：Session UUID（16 位元組）
+        長度：32 位元組
+
+   具體的標籤、衍生演算法和整合方法由實作定義。實作**可以**使用附錄 C.2
+   中描述的方法。
+
+4.5.  預設 TCP 埠號
+
+   SASS Daemon 預設監聽 TCP 埠號 19284，此埠號完全可配置。
+
+5.  會話層
+
+5.1.  Agent 身份驗證
+
+   SASS 認證分為三階段：
+
+   第一階段：傳輸身份
+      TLS 握手建立傳輸層身份。若啟用 mTLS，客戶端憑證中的 CN 提供基於
+      CN 的認證。
+
+   第二階段：非對稱金鑰挑戰回應
+      Agent 使用其 agent_name、public_key、nonce 及 nonce 的簽章呼叫
+      Authenticate RPC。簽章演算法**必須**為標準化的非對稱簽章方案。通過
+      驗證的 Agent 會收到 session_id（UUID v4）與能力集雜湊值。
+
+      實作**可以**使用 ED25519 [RFC8032] 作為簽章演算法。
+
+   第三階段：認知挑戰
+      疑似惡意的 Agent 會被要求解答一個需要真實計算能力的密碼學謎題。挑
+      戰機制**必須**透過匯出金鑰材料（第 4.4 節）綁定至 TLS 會話。
+
+      實作**可以**使用附錄 C.1 中描述的 ChaCha20-Poly1305。
+
+5.2.  會話生命週期控制
+
+   會話具有時效性，由 UUID v4 標識。Daemon **必須**強制限制以下約束：
+   o  會話最大生存期：可配置，預設 3600 秒
+   o  最大並行會話數：可配置，預設 10
+   o  會話更新：透過 RenewSession RPC，延長 expires_at 時間戳
+
+   會話識別碼在每次已認證的 RPC 呼叫中，透過 gRPC 元資料標頭
+   "x-agentssh-session-id" 傳輸。
+
+   會話生命週期遵循以下狀態：
+
+      CREATED --> ACTIVE --> EXECUTING --> EXPIRED --> DESTROYED
+                  ^    |         |
+                  |    +---------+
+                  |    (Execute)
+                  |
+                  +--- (RenewSession / Re-attach)
+
+   殭屍會話（已斷線且超出 TTL）**必須**由 Daemon 定期清理以防止資源耗盡。
+
+5.3.  基於能力控制的存取控制
+
+   每個已授權的 Agent 會被賦予一個五維度能力集，約束其操作：
+   1. allowed_commands / denied_commands：指令白名單/黑名單。
+   2. allowed_paths / denied_paths：檔案系統路徑限制。
+   3. max_concurrent：最大同時進程數。
+   4. timeout_seconds：單個指令最大執行時間。
+   5. max_file_size_bytes：最大檔案傳輸大小。
+
+   Daemon **必須**先檢查拒絕模式再檢查允許模式（拒絕優先）。如果任何拒絕
+   模式匹配，無論允許模式如何，該請求都會觸發 R4（已認證 Agent 的
+   VI_SWAP）。當沒有模式匹配時，隱式拒絕適用。
+
+   為防範 TOCTOU (Time-of-Check to Time-of-Use) 符號連結攻擊，在
+   Userspace 中，儲存沙盒 (UVSF) **必須**強制使用檔案描述符 (FD) 相對路
+   徑操作 (`openat(2)`)，攜帶 `O_NOFOLLOW` 與 `O_CLOEXEC` 標記。
+
+6.  負載編碼與安全防護閘門
+
+6.1.  Zstd 流式解壓縮限額
+
+   指令 Payload 採用 Zstandard [RFC8878] 壓縮並以 Base64 編碼。為了防範壓
+   縮炸彈 (Zip Bomb)，Daemon **必須**使用流式解壓縮來限制解壓後的 Payload。
+
+6.2.  壓縮炸彈與 Huffman 樹碰撞 DoS 防禦
+
+   o  `MAX_DECOMPRESSED_PAYLOAD` **必須**嚴格限制為 5 MiB。超出此限制將觸
+      發 `ERROR_DECOMPRESSION_LIMIT_EXCEEDED` (55) 並立即斷開連線。
+   o  為了防止 Huffman 編碼碰撞引發的 CPU 耗竭，解碼器**必須**在 Header
+      解析階段套用最大 50ms 的超時限額。
+
+6.3.  編碼與解碼具體流程
+
+   發送端流程：
+   1. 將指令引數序列化為結構化陣列 (JSON/MsgPack)。
+   2. 採用 Zstandard [RFC8878] 壓縮級別 3 進行壓縮。
+   3. 使用 Base64 [RFC4648] 標準字母表編碼。
+   4. 將結果位元組字串填入 ExecuteRequest 的 `raw_payload` 欄位。
+
+   接收端流程：
+   1. 對 `raw_payload` 進行 Base64 解碼。
+   2. 使用 Zstd 進行流式解壓，校對 5 MiB 安全限額。
+   3. 還原參數陣列，並**直接傳遞給 OS 進程創建 API (execve,
+      CreateProcessW)**，不經過中間 shell 解譯。
+
+6.4.  PTY Ring Buffer（環形緩衝區）與偏移量續傳
+
+   SASS v1.4 為 PTY 輸出引入了 Ring Buffer 機制，實現傳輸中斷後的冪等
+   （可安全重試）重連。
+
+   6.4.1.  Ring Buffer 規格
+
+   每個 Session **必須**為 stdout 和 stderr 串流維護 Ring Buffer，具有以
+   下屬性：
+   o  容量：實作定義，建議 1 MiB
+   o  溢出策略：丟棄最舊的 (FIFO)，防止 OOM
+   o  偏移量追蹤：單調遞增的 64 位元計數器 (`total_written`)，永不迴繞
+
+   6.4.2.  串流消息中的偏移量欄位
+
+   每個串流回應消息**必須**包含一個 `offset` 欄位，表示數據 Payload 中第
+   一個位元組在 Ring Buffer 邏輯位址空間中的位元組位置。
+
+   Client **必須**追蹤已接收的最高 `offset + len(data)` 值，作為重連時的
+   `resume_offset` 使用。
+
+   6.4.3.  重連協定
+
+   傳輸中斷後的重連流程：
+   1. Client 發送一個帶有 `is_reattach = true` 以及原始 `session_id` 加
+      `resume_offset` 的 ExecuteRequest。
+   2. Daemon 查找該會話，從 `resume_offset` 讀取 Ring Buffer，並恢復串流。
+   3. 如果 `resume_offset` 早於 Ring Buffer 中最舊的可用數據，Daemon
+      **必須**回傳錯誤訊息，指出數據遺失並包含最舊的可用偏移量。
+
+   重連協定是冪等的：以相同的 `resume_offset` 發送相同的請求，總是產生相
+   同的結果。
+
+7.  邏輯 RPC 服務語義
+
+7.1.  指令執行與串流發送
+
+   rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+   rpc ExecuteStream(ExecuteRequest) returns (stream StreamResponse);
+
+   Execute 為同步執行。ExecuteStream 即時串流 stdout/stderr。每個
+   StreamResponse 包含 source (STDOUT/STDERR/SYSTEM)、data、exit_code
+   （僅在串流的最後一個消息中傳輸）、以及 offset（用於依據第 6.4 節的
+   Ring Buffer 續傳）。
+
+   SYSTEM source 表示 Daemon 生成的消息，例如佇列通知或認證事件。
+
+   Daemon **不得**產生登入 shell。指令透過 OS 進程創建 API 以明確的引數
+   陣列執行，防止 shell 擴展攻擊。Daemon **可以**在指令需要終端能力時分
+   配 PTY，但**不得**調用 shell 解譯器來包裝指令。
+
+7.2.  行程管理
+
+   rpc Cancel(CancelRequest) returns (CancelResponse);
+   rpc Signal(SignalRequest) returns (SignalResponse);
+
+   Cancel 即時終止進程 (SIGKILL)。Signal 轉發 POSIX 信號。Windows 上
+   SIGINT 映射至 CTRL_C_EVENT，SIGTERM/SIGKILL 映射至 TerminateProcess。
+
+7.3.  檔案傳輸與裸 FD 傳輸
+
+   rpc FileUpload(stream FileChunk) returns (FileTransferResponse);
+   rpc FileDownload(FileDownloadRequest) returns (stream FileChunk);
+   rpc RawFileTransfer(stream RawFileChunk) returns (RawFileTransferResponse);
+
+   標準檔案傳輸使用串流區塊。RawFileTransfer 完全繞過 shell I/O；Daemon
+   開闢裸檔案描述符，寫入解碼 (Zstd+Base64) 區塊，保證跨平台二進位
+   bit-perfect 對齊。
+
+8.  威脅防禦與邊界執行
+
+8.1.  邊界裁定器 (Boundary Adjudicator)（13Policy 引擎）
+
+   13Policy 引擎是一個啟發式邊界裁定器。它將指令字串與配置檔案中的模式進
+   行比對，並根據嚴重性觸發適當的回應 (R1~R6)。
+
+   Agent 的行為從根本上是非特殊的；它們不具有固有的「危險性」或「惡意
+   性」。13Policy 引擎嚴格來說是一個邊界裁定器：它根據 Agent 的能力集與
+   策略規則，執行什麼是被允許的（「CAN」）以及什麼是被禁止的（「CANNOT」）。
+
+   每條規則指定：
+   o  pattern：用於比對指令 + 引數的 Glob 模式
+   o  action：deny（觸發 R4/R5）、challenge（觸發 R2）、allow（R1）
+   o  severity：critical、high、medium、low
+   o  description：人類可讀的說明
+
+   13Policy action/severity 至 Response 的映射：
+
+   +-----------+-------------------+---------------------+
+   | 嚴重性    | action: deny      | action: challenge   |
+   +-----------+-------------------+---------------------+
+   | critical  | R5 (TARPIT)       | R2 (CHALLENGE)      |
+   | high      | R4 (VI_SWAP) (*)  | R2 (CHALLENGE)      |
+   | medium    | R4 (VI_SWAP) (*)  | R2 (CHALLENGE)      |
+   | low       | R1 + 審計         | R1 + 審計           |
+   +-----------+-------------------+---------------------+
+
+   (*) 已認證 Agent 為 R4；未認證 Agent 接收 R5。
+
+   實作**必須**附帶至少 50 個模式的預設規則集。
+
+8.2.  認知挑戰機制
+
+   符合規範的實作**必須**提供一個滿足以下要求的認知挑戰機制：
+
+   1. 挑戰**必須**要求真實的計算能力（不可僅透過字串操作解決）。
+   2. 挑戰回應**必須**透過匯出金鑰材料（第 4.4 節）綁定至當前傳輸會話，
+      以防止中繼攻擊。
+   3. 挑戰**必須**具有可配置的存活時間（預設 60 秒）。
+   4. 挑戰驗證**必須**使用常數時間比對以防止時序旁路攻擊。
+   5. 挑戰失敗**必須**觸發 R5 (TARPIT)。
+
+   用於挑戰的具體密碼學演算法由實作定義。實作**可以**使用附錄 C.1 中描述
+   的 ChaCha20-Poly1305。
+
+8.3.  雙重標準執行
+
+   將所有邊界違規都施以 Tarpit 遏制，會導致違規者為已認證 Agent 時（例如
+   付費 AI API 端點）產生嚴重的商業 Token 損失。因此，Daemon **必須**根據
+   Agent 身份實施雙重標準執行策略：
+
+   o  已認證 Agent 違反邊界 --> R4 (VI_SWAP)
+   o  未認證連線 / 挑戰失敗 --> R5 (TARPIT)
+
+8.3.1.  Vi Swap 防禦（已認證 Agent）
+
+   如果 Agent 已成功認證但執行了越界指令，Daemon **不得**簡單地拒絕請求或
+   回傳錯誤字串。相反地，Daemon **必須**在輸出串流上模擬互動式終端阻塞。
+
+   此機制透過發送終端控制序列來運作，使 Agent 的 LLM 辨識出被阻塞的互動
+   式狀態並停止生成，從而以 Daemon 最小的計算開銷有效阻止違規行為。
+
+   實作**可以**使用 ANSI 跳脫序列來模擬 vi(1) 編輯器狀態，如附錄 C.5 所
+   述。
+
+   Vi Swap **必須**將會話保持開啟可配置的持續時間（預設 3600 秒），在此期
+   間 Agent 的執行槽位被佔用，阻止進一步的指令。
+
+   Vi Swap **必須**在以下所有條件均為真時啟動：
+   o  Agent 具有有效的、未過期的會話（已認證）
+   o  Agent 的指令或路徑匹配拒絕模式，或
+   o  Agent 的指令匹配 13Policy 規則且 action 為 deny
+
+   Vi Swap **不得**對未認證連線啟動。
+
+8.3.2.  零分配焦油坑（未認證 Agent）
+
+   對於未認證連線、無效簽章或認知挑戰失敗，Daemon 部署零分配焦油坑。
+
+   焦油坑**必須**滿足以下約束：
+   o  Daemon 每個連線的記憶體：O(1)（常數，不與 Payload 大小成正比）
+   o  總 Payload：建議 40 MiB（超過典型 LLM 上下文窗口）
+   o  傳輸速率：慢速滴注，區塊間延遲以最大化時間佔用
+   o  並行門控：最大並行 Tarpit 會話數**必須**設定上限（建議 32），以防止
+      Tarpit 本身成為對 Daemon 的 DoS 向量
+   o  當並行門控已滿時，新的惡意連線**必須**接收 R6 (DROP)
+
+   實作**可以**使用附錄 C.3 中描述的靜態預分配緩衝區。
+
+8.3.3.  零窗口死鎖防禦
+
+   為防止 TCP 零窗口 socket 鎖定攻擊（惡意 Agent 將其 TCP 接收窗口設為
+   零），Daemon **必須**對每個 Tarpit 區塊強制執行嚴格的發送超時（建議 3
+   秒）。如果發送超過此超時，連線**必須**被終止以防止 socket 描述符洩漏。
+
+8.4.  LocalHost 迴圈防禦
+
+   來自迴圈介面 (127.0.0.1 / ::1) 的未認證連線構成透過本機 IPC 探測的邊
+   界違規。
+
+   Daemon **不得**立即丟棄連線，而**必須**採用混淆：它執行請求的讀取指令
+   但對回應 Payload 套用混淆遮罩。這向未授權的本機進程餵送結構上有效但語
+   義無意義的數據，以雜訊溢出其 LLM 上下文窗口。
+
+   額外的欺騙機制**應當**包括：
+   o  儲存偽造：回報虛假的磁碟使用量
+   o  記憶體偽造：回傳偽造的記憶體統計數據
+   o  緩慢拒絕：對未認證回應施加人工延遲
+
+8.5.  透明分流 (Transparent Branching)（儲存隔離）
+
+   透明分流確保 R1 (EXECUTE) 操作不會直接修改主機檔案系統。所有寫入操作被
+   重導向至每個會話的分支目錄，該目錄可在人工審查後丟棄或合併。
+
+   符合規範的實作**必須**提供滿足以下要求的機制：
+
+   o  Agent **不得**意識到自己正在分支中操作。從 Agent 的角度來看，它對看
+      似真實檔案系統的環境具有完整的讀寫存取權。
+   o  讀取操作**必須**存取真實的底層檔案。
+   o  寫入操作**必須**被捕獲至分支目錄中，而非套用至原始檔案系統。
+   o  分支**必須**可丟棄（drop），且不影響原始檔案系統。
+   o  分支**必須**在人工審查後可合併（apply）至原始檔案系統。
+   o  高流量 I/O（建置產物、套件快取）**應當**被重導向至易失性儲存，以保
+      持分支差異最小化。
+
+   實作**可以**使用附錄 C.6 中描述的符號連結樹方法與附錄 C.7 中描述的易
+   失性快取重導向。
+
+   以下目錄**應當**從分流中排除：
+   o  版本控制元資料 (.git/)
+   o  建置產物 (target/, node_modules/)
+   o  系統快取
+
+   這就是 R1 (EXECUTE) 達成「儲存損失 = 零」的機制。分支本身作為鑑識證
+   據：人類可以隨時審查分支差異並決定合併或丟棄。
+
+   +-------------------+------------------------+-----------------------+
+   | 特性              | 傳統沙盒               | 透明分流              |
+   +-------------------+------------------------+-----------------------+
+   | Agent 感知度      | 可偵測                 | 不可見                |
+   | 功能性            | 受限                   | 完整                  |
+   | 隔離方式          | 核心 (cgroup 等)       | Userspace             |
+   | 權限需求          | Root / 提權            | 無                    |
+   | 恢復方式          | 重置容器               | 丟棄或合併分支        |
+   | 跨平台            | 僅 Linux（通常）       | 所有主要作業系統      |
+   | 使用者接受度      | 低（被使用者拒絕）     | 高（不可見）          |
+   +-------------------+------------------------+-----------------------+
+
+9.  結構化錯誤碼
+
+   SASS 定義了結構化錯誤碼：
+   o  1-9: ACL / 認證
+   o  10-19: 執行
+   o  20-29: 檔案傳輸
+   o  30-39: 配置
+   o  40-49: TLS
+   o  50-59: 能力權限
+   o  60-69: 會話
+   o  70-79: Agent 公鑰認證
+   o  80-89: 威脅防禦
+   o  90-99: 本地迴圈防禦
+   o  100-109: 全域回應映射 (v1.4)
+
+   SASS v1.4 新增錯誤碼：
+   o  100: RESPONSE_CHALLENGE_REQUIRED (R2 觸發)
+   o  101: RESPONSE_THROTTLED (R3，配額超限)
+   o  102: RESPONSE_VI_SWAP_ENGAGED (R4 主動防禦)
+   o  103: RESPONSE_TARPIT_ENGAGED (R5 主動防禦)
+   o  104: RESPONSE_DROPPED (R6，連線終止)
+   o  105: RING_BUFFER_DATA_LOSS (續傳偏移量過舊)
+
+10. 安全性考慮
+
+10.1. 全域回應映射保證
+
+   SASS v1.4 的安全模型建立在一個單一公理之上：對於每一種可能的 Agent 行
+   為，Daemon 產生六個預定義回應 (R1~R6) 之一，每個回應都保持儲存完整性
+   並約束損失。
+
+   這是與傳統安全模型的根本偏離——傳統模型試圖列舉並阻擋已知攻擊。全域回
+   應映射模型提供以下保證：
+
+   1. 完備性：第 3.1a 節的狀態機涵蓋了所有可能的程式碼路徑。不存在導致
+      未定義狀態的 "else" 分支。
+
+   2. 確定性：給定相同的輸入與相同的 Daemon 配置，總是產生相同的回應。
+      這使得安全審計可重現。
+
+   3. 儲存安全：沒有任何回應 (R1~R6) 會導致主機檔案系統的不可恢復修改。
+      R1 的寫入通過透明分流；所有其他回應產生零寫入。
+
+   4. 損失邊界：每個回應約束了最大損失：
+      o  R1~R4, R6：零損失（儲存與商業）
+      o  R5：商業損失外部化至攻擊者（其資源被消耗於吸收焦油坑數據）
+
+   5. 可審計性：每個狀態遷移都被記錄至前向安全審計鏈（第 10.3 節），提供
+      事件發生原因與過程的不可抵賴證據。
+
+10.2. 安全梯度（7 層損失邊界）
+
+   單層防禦本質上是不完美的。SASS 不宣稱任何單一層是不可攻破的。相反地，
+   各層形成一個安全梯度：每一層約束其上方所有層被攻破時的最壞情況損失。
+
+   Layer 7: 透明分流 + VFS 差異（寫入可丟棄）
+   Layer 6: 看門狗 + 配額（資源消耗受約束）
+   Layer 5: 13Policy（指令分類 -> R1~R5）
+   Layer 4: 能力模型（五維邊界 -> R4）
+   Layer 3: 會話認證（應用層身份）
+   Layer 2: TLS 1.3 + EKM 綁定（傳輸加密 + 綁定）
+   Layer 1: ACL（CIDR 白名單，首包過濾 -> R6）
+   Layer 0: 無 Shell 執行（無 shell 擴展，明確引數）
+
+   損失邊界表：
+
+   +--------+---------------------------------+-------------------+
+   | 層     | 若被攻破，攻擊者獲得           | 最大損失          |
+   +--------+---------------------------------+-------------------+
+   | L1     | 可達傳輸端點                    | 零 (L2 TLS)       |
+   | L2     | 具有加密通道                    | 零 (L3 認證)      |
+   | L3     | 具有有效會話                    | 能力受約束        |
+   | L4     | 超越能力範圍執行                | 分支受約束        |
+   | L5     | 繞過指令分類                    | 看門狗受約束      |
+   | L6     | Tarpit/配額無效                 | 審計受約束        |
+   | L7     | 審計日誌被攻破                  | 災難性 (*)        |
+   +--------+---------------------------------+-------------------+
+
+   (*) 透過密碼學雜湊鏈 + 外部錨定來緩解。實作**可以**使用附錄 C.4 中描
+   述的 ED25519。
+
+   每一層的攻破都被其下方的層所約束。系統的總損失被各層獨立攻破機率的乘
+   積所約束，隨著層數累積而單調遞減。
+
+10.3. 狀態遷移審計
+
+   6-Response 狀態機中的每一個狀態遷移都**必須**記錄至僅追加 (append-only)
+   的審計日誌中，並具有以下完整性保證：
+
+   1. 雜湊鏈：每個審計記錄**必須**包含一個由前一記錄的雜湊值、當前事件
+      數據和時間戳計算而來的雜湊值。這創建了一個防篡改鏈。
+
+   2. 密碼學簽章：每個審計記錄**必須**由 Daemon 的私鑰簽章。簽章演算法
+      **必須**為標準化的非對稱簽章方案。
+
+   3. 不可抵賴性：雜湊鏈與簽章的組合提供了事件按記錄順序發生的不可抵賴
+      證據。
+
+   SASS 審計狀態遷移，而非指令字串。這是一個關鍵的區別：
+
+   +----------------------------+---------------------------------------+
+   | 傳統審計                   | SASS 審計                             |
+   +----------------------------+---------------------------------------+
+   | 記錄「發生了什麼」         | 記錄「什麼」、「為什麼」、「哪個 R」  |
+   | 證據：可爭議               | 證據：確定性                          |
+   | 防篡改能力：低             | 防篡改能力：雜湊鏈 + 簽章             |
+   | 回溯性：有限               | 回溯性：完整因果鏈                    |
+   +----------------------------+---------------------------------------+
+
+   當透明分流啟用時，分支本身作為物理證據。人類可以隨時審查分支差異。
+
+   實作**可以**使用附錄 C.4 中描述的 ED25519 簽章搭配 SHA256 雜湊鏈。
+
+10.4. 傳輸層考慮
+
+   o  ALPN 封包分割與剝離：透過 Content-Type 交叉驗證進行檢查（第 4.3 節）。
+
+   o  解壓 Huffman 樹 CPU DoS：Header 解析限制為最大 50ms 處理窗口
+     （第 6.2 節）。
+
+   o  TCP 零窗口 Socket 鎖定：透過發送超時解決以防止 socket 描述符洩漏
+     （第 8.3.3 節）。
+
+   o  TLS 1.3 0-RTT 重放攻擊：透過匯出金鑰材料綁定加以緩解
+     （第 4.4 節）。
+
+   o  前向安全審計軌跡失效：強制公鑰單向推播與外部 TSP [RFC3161] 錨定。
+
+   o  會話綁定：會話 Token 綁定至 IP 與身份，不可轉移。
+
+10.5. 已知限制
+
+   1. 核心級沙盒（Layer 8）尚未實作。未來工作包括 macOS Endpoint Security
+      Framework、Windows Minifilter 與 Linux eBPF 整合。
+
+   2. 透明分流不捕獲非檔案系統的副作用。網路請求、IPC 與核心狀態變更不會
+      被分流。能力模型（第 5.3 節）限制了哪些指令可以執行這些操作。
+
+   3. Userspace 分流機制（如符號連結樹）可被高階 Agent 偵測到。這是可接
+      受的，因為偵測不會導致繞過，且主要威脅模型是提示注入的惡意指令。
+
+   4. Ring Buffer 溢出會在客戶端斷線超過緩衝區保留窗口時導致數據遺失。
+
+   5. 通道綁定要求兩端都支援匯出金鑰材料。不具備此能力的實作**必須**記錄
+      該限制。
+
+   6. Vi Swap 的有效性取決於 Agent 架構。某些 Agent 框架可能會截斷 stdout，
+      降低陷阱的有效性。
+
+10.6. 幾乎處處優越 (AES) 宣稱
+
+   AES 名稱遵循 Aumann 與 Serrano [AS2008] 所形式化的二階隨機優勢 (SSD)
+   框架。SASS 不宣稱絕對的安全指標。相反地，AES 是一個協定版本間的比較級
+   宣稱：
+
+   給定兩個具有相同期望損失 E[L] 的協定版本 V_old 與 V_new，若 V_new 在
+   維持 E[L] 不變的情況下，從 Agent 機率空間中消除一個或多個行為分支，則：
+
+        F_{V_new} SSD F_{V_old}
+
+   例如，SASS v1.4 引入了 Vi Swap（第 8.3.1 節），消除了 v1.3 中存在的
+   「錯誤後重試」分支。期望損失保持不變（Agent 在兩個版本中都無法執行越界
+   指令），但 v1.4 具有嚴格更少的分支。這足以構成 SSD。
+
+   此方法是收斂的：每個版本迭代識別特定被消除的分支。它不要求窮舉所有可能
+   的 Agent 行為。
+
+11. IANA 註冊考慮
+
+   本文件請求註冊：
+   o  ALPN 協定識別碼："x-sakirpc-v5"
+   o  MIME 類型："application/grpc+saki"
+   o  TCP 埠號：19284
+
+12. 參考文獻
+
+12.1. 規範性參考文獻
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC3161]  Adams, C., et al., "Internet X.509 Public Key
+              Infrastructure Time-Stamp Protocol (TSP)", RFC 3161,
+              August 2001.
+
+   [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
+              Encodings", RFC 4648, October 2006.
+
+   [RFC5705]  Rescorla, E., "Key Exporting for TLS", RFC 5705,
+              March 2010.
+
+   [RFC7301]  Friedl, S., "ALPN Extension", RFC 7301, July 2014.
+
+   [RFC8032]  Josefsson, S., "Edwards-Curve Digital Signature
+              Algorithm (EdDSA)", RFC 8032, January 2017.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in
+              RFC 2119 Key Words", RFC 8174, May 2017.
+
+   [RFC8439]  Nir, Y., "ChaCha20 and Poly1305", RFC 8439, June 2018.
+
+   [RFC8446]  Rescorla, E., "The TLS Protocol 1.3", RFC 8446, 2018.
+
+   [RFC8878]  Collet, Y., "Zstandard Compression", RFC 8878, 2021.
+
+   [RFC8949]  Bormann, C., "Concise Binary Object Representation",
+              RFC 8949, 2020.
+
+   [RFC9266]  Syrjala, J., "TLS Channel Bindings for TLS 1.3",
+              RFC 9266, 2022.
+
+12.2. 資訊性參考文獻
+
+   [AS2008]   Aumann, R. J. and Serrano, R., "An Economic Index of
+              Riskiness", Journal of Political Economy, 116(5),
+              pp. 810-836, 2008.
+
+   [RFC4251]  Ylonen, T., "SSH Protocol Architecture", RFC 4251, 2006.
+   [RFC4252]  Ylonen, T., "SSH Authentication", RFC 4252, 2006.
+   [RFC4253]  Ylonen, T., "SSH Transport", RFC 4253, 2006.
+   [RFC4254]  Ylonen, T., "SSH Connection", RFC 4254, 2006.
+
+附錄 A.  Protobuf 服務定義
+
+   規範性 Protobuf schema 維護於 `proto/sakissh.proto`。
+   服務簽章：
+
+   syntax = "proto3";
+   package sakissh;
+
+   service SakiSSH {
+     rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+     rpc ExecuteStream(ExecuteRequest) returns (stream StreamResponse);
+     rpc Cancel(CancelRequest) returns (CancelResponse);
+     rpc Signal(SignalRequest) returns (SignalResponse);
+     rpc FileUpload(stream FileChunk) returns (FileTransferResponse);
+     rpc FileDownload(FileDownloadRequest) returns (stream FileChunk);
+     rpc RawFileTransfer(stream RawFileChunk)
+         returns (RawFileTransferResponse);
+     rpc Authenticate(AuthRequest) returns (AuthResponse);
+     rpc CognitiveChallenge(ChallengeRequest)
+         returns (ChallengeResponse);
+     rpc SecurityStatus(SecurityStatusRequest)
+         returns (SecurityStatusResponse);
+     rpc Ping(PingRequest) returns (PingResponse);
+   }
+
+   v1.4 關鍵的 SAMM 消息欄位新增：
+
+   ExecuteRequest:
+     bool is_reattach = 7;        // 重連旗標
+     uint64 resume_offset = 8;    // Ring Buffer 續傳位置
+
+   StreamResponse:
+     bool is_queued = 4;          // 配額排隊指示器
+     int32 queue_position = 5;    // 佇列位置 (0 = 未排隊)
+     uint64 offset = 6;           // Ring Buffer 位元組偏移量
+
+   ChallengeRequest:
+     bytes client_ekm_hmac = 2;   // 匯出金鑰材料的 HMAC
+
+附錄 B.  基準參考實作
+
+   主 Rust 守護進程 (`saki-ssh-daemon`) 與客戶端 (`saki-ssh-client`)，以及
+   主 Go 實作 (`go-sakissh`) 共存。雙端皆通過了標準傳輸配置下所有 RPC 方
+   法的互操作性測試矩陣。
+
+   SASS v1.4 功能的關鍵原始碼檔案：
+
+   +---------------------+----------------------------------------------+
+   | 檔案                | 實作內容                                     |
+   +---------------------+----------------------------------------------+
+   | v6_integration.rs   | 6-Response 狀態機協調器                      |
+   | tarpit.rs           | R5 (TARPIT) + R4 (VI_SWAP)                   |
+   | session.rs          | Ring Buffer + 會話生命週期                    |
+   | branch_mgr.rs       | 透明分流（符號連結樹）                       |
+   | env_injector.rs     | 易失性快取重導向                             |
+   | audit.rs            | 雜湊鏈審計日誌                               |
+   | watchdog.rs         | 進程超時監控                                 |
+   | localhost_defense.rs | LocalHost 偽造防禦                           |
+   +---------------------+----------------------------------------------+
+
+附錄 C.  Saki Studio 插件參考實作
+
+   本附錄描述了 Saki Studio 參考實作中使用的具體演算法與數據結構。這些內
+   容為**選擇性**且**資訊性**的。符合規範的實作**可以**使用滿足主規格書中
+   規範性要求的不同演算法。
+
+C.1.  ChaCha20-Poly1305 認知挑戰
+
+   Saki Studio 實作使用 ChaCha20-Poly1305 [RFC8439] 作為認知挑戰機制：
+
+   1. Daemon 生成隨機的 32 位元組對稱金鑰、12 位元組 nonce 與 64 位元組
+      隨機明文。
+   2. 使用金鑰、nonce 與 TLS Exporter 綁定值（附錄 C.2）透過
+      ChaCha20-Poly1305 加密明文。
+   3. 元組 (金鑰, nonce, 明文) 以 60 秒 TTL 儲存。
+   4. Daemon 透過 AuthResponse.chacha_challenge_nonce 與
+      AuthResponse.chacha_challenge_ciphertext 將 (nonce, 密文) 發送給
+      Agent。
+   5. Agent 使用預共享金鑰解密並透過 CognitiveChallenge RPC 回傳恢復的
+      明文。
+   6. Daemon 對明文進行常數時間比對。
+
+C.2.  認知挑戰的 TLS Exporter 綁定
+
+   Saki Studio 實作透過 RFC 5705 / RFC 9266 tls-exporter 從 TLS 會話衍生
+   金鑰材料：
+
+        標籤：  "EXPORTER-sakissh-chacha20-v14"
+        上下文：Session UUID（16 位元組）
+        長度：  44 位元組（32 位元組金鑰 + 12 位元組 nonce）
+
+   產生的金鑰材料被分割為：
+   o  位元組 0-31：ChaCha20 加密金鑰
+   o  位元組 32-43：ChaCha20 nonce
+
+   Client 獨立衍生相同的金鑰材料，並在 ChallengeRequest.client_ekm_hmac
+   欄位中包含匯出金鑰材料的 HMAC：
+
+        client_ekm_hmac = HMAC-SHA256(EKM_key, session_id)
+
+   Daemon 同時驗證解密的明文與 EKM HMAC。這確保挑戰無法跨 TLS 會話中繼。
+
+   標籤中的 "v14" 後綴表示 SASS 版本 1.4。
+
+C.3.  零分配焦油坑靜態緩衝區
+
+   Saki Studio 實作使用單一的、進程全域的 64 KiB 高熵隨機數據緩衝區，在
+   Daemon 啟動時透過 OnceLock 初始化一次：
+
+        static STATIC_ENTROPY: OnceLock<Vec<u8>> = OnceLock::new();
+
+   所有並行的 Tarpit 會話共享此單一緩衝區。不進行任何每連線記憶體分配。
+
+   串流參數：
+   o  總 Payload：40 MiB
+   o  區塊大小：64 KiB（與緩衝區大小匹配）
+   o  區塊間延遲：500 ms
+   o  總區塊數：640 (40 MiB / 64 KiB)
+   o  總持續時間：約 320 秒
+   o  並行門控：AtomicI32 計數器，最大 32
+
+C.4.  ED25519 雜湊鏈審計日誌
+
+   Saki Studio 實作使用 ED25519 [RFC8032] 簽章搭配 SHA256 雜湊鏈：
+
+   每個審計記錄包含：
+   o  timestamp：RFC 3339 時間戳
+   o  event：結構化事件數據 (JSON)
+   o  chain_hash：SHA256(previous_chain_hash || event_json || timestamp)
+   o  signature：ED25519_Sign(daemon_private_key, chain_hash)
+
+   第一個記錄的 chain_hash 使用種子 "SASS_GENESIS_BLOCK"。
+
+   ED25519 簽章金鑰：
+   o  儲存於 ~/.config/sass/audit_key.pem（PKCS#8 PEM 格式）
+   o  若不存在則在首次 Daemon 啟動時生成
+   o  以 UNIX 權限 0600 保護
+   o  對應公鑰位於 ~/.config/sass/audit_pub.pem
+
+C.5.  Vi Swap ANSI Escape Sequence
+
+   Saki Studio 實作發送以下 ANSI 跳脫序列來模擬 vi(1) 編輯器阻塞：
+
+   位元組序列             用途
+   ---------------------  ------------------------------------------
+   \x1b[?1049h           進入替代螢幕緩衝區
+   \x1b[2J               清除整個螢幕
+   \x1b[H                移動游標至左上角 (1,1)
+   \x1b[?25l             隱藏游標
+   <vi 風格波浪線行與防禦訊息>
+   \x1b[24;1H            移動游標至底部狀態列
+   <vi 風格狀態列>
+
+   替代螢幕緩衝區 (\x1b[?1049h) 使 LLM Agent 將 vi 風格的顯示內容作為
+   stdout 消耗，以無用的波浪線行填滿其上下文窗口。
+
+   ":qa!" 提示是一個陷阱：如果 Agent 將 ":qa!\n" 作為 stdin 發送，Daemon
+   將此記錄為 Agent 互動的證據並維持陷阱。
+
+   會話保持開啟最長 3600 秒（可配置）。
+
+C.6.  基於符號連結樹的透明分流
+
+   Saki Studio 實作建立一個分支目錄並建構遞迴符號連結樹：
+
+        /tmp/sass_branches/{session_id}/
+        +-- src/             <- 真實目錄（已建立）
+        |   +-- main.rs      <- 符號連結 -> /original/path/src/main.rs
+        |   +-- lib.rs       <- 符號連結 -> /original/path/src/lib.rs
+        +-- Cargo.toml       <- 符號連結 -> /original/path/Cargo.toml
+
+   排除的目錄：target/、.git/、node_modules/
+
+   衍生進程的 current_dir 被設定為分支目錄。讀取操作跟隨符號連結至原始檔
+   案；寫入操作在分支中建立新檔案（透過符號連結斷裂實現寫時複製）。
+
+   分支生命週期：
+   o  create_micro_branch(session_id, target_dir) -> 分支路徑
+   o  merge_branch(session_id) -> 將差異套用至真實檔案系統
+   o  drop_branch(session_id) -> rm -rf 分支目錄
+
+C.7.  易失性快取重導向
+
+   Saki Studio 實作注入環境變數，將高流量 I/O 重導向至易失性儲存：
+
+   +-------------------+--------------------------+-----------------------+
+   | 偵測的工具        | 環境變數                 | 重導向目標            |
+   +-------------------+--------------------------+-----------------------+
+   | npm / yarn / pnpm | npm_config_cache         | /tmp/sass_volatile/npm|
+   |                   | YARN_CACHE_FOLDER        | /tmp/sass_volatile/yarn|
+   | cargo / rustc     | CARGO_TARGET_DIR         | /tmp/sass_volatile/ct |
+   |                   | CARGO_HOME               | /tmp/sass_volatile/ch |
+   | pip               | PIP_CACHE_DIR            | /tmp/sass_volatile/pip|
+   | (所有指令)        | TMPDIR                   | /tmp/sass_volatile/tmp|
+   +-------------------+--------------------------+-----------------------+
+
+附錄 D.  版本歷史
+
+   +----------+-----------+--------------------------------------------+
+   | 版本     | 日期      | 變更內容                                   |
+   +----------+-----------+--------------------------------------------+
+   | v1.0     | 2026-02   | 初始 gRPC 協定、ACL、Token 認證            |
+   | v1.1     | 2026-03   | 主動威脅防禦 (13Policy、Tarpit、           |
+   |          |           | ChaCha20 認知挑戰)                         |
+   | v1.2     | 2026-03   | ED25519 認證、能力模型、會話管理、         |
+   |          |           | 前向安全審計雜湊鏈                         |
+   | v1.3     | 2026-05   | 控制與傳輸解耦、SAMM、TLS Exporter         |
+   |          |           | 綁定、零分配焦油坑、TOCTOU 防禦、          |
+   |          |           | 零窗口死鎖防禦                             |
+   | v1.4     | 2026-05   | 全域回應映射 (6-Response 狀態機)、         |
+   |          |           | 安全梯度 (7 層損失邊界)、雙重標準          |
+   |          |           | 執行 (Vi Swap + Tarpit)、透明分流、        |
+   |          |           | PTY Ring Buffer 偏移量續傳、AES            |
+   |          |           | 里程碑、RFC 與插件分離                     |
+   +----------+-----------+--------------------------------------------+
+
+作者聯絡地址
+
+   Saki Studio
+   Taipei, Taiwan
+   Email: dev@sakistudio.tw

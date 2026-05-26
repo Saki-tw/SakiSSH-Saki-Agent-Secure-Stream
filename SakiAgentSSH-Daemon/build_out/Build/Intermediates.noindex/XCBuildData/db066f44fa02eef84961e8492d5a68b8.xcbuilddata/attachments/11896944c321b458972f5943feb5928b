@@ -1,0 +1,21 @@
+{
+  "" : {
+    "const-values" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/SakiAgentSSHDaemon-primary.swiftconstvalues",
+    "dependencies" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/SakiAgentSSHDaemon-primary.d",
+    "diagnostics" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/SakiAgentSSHDaemon-primary.dia",
+    "emit-module-dependencies" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/SakiAgentSSHDaemon-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/SakiAgentSSHDaemon-primary-emit-module.dia",
+    "pch" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/SakiAgentSSHDaemon-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/SakiAgentSSHDaemon-primary.swiftdeps"
+  },
+  "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/Sources/SakiAgentSSHDaemonApp.swift" : {
+    "index-unit-output-path" : "/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/SakiAgentSSHDaemonApp.o",
+    "llvm-bc" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/SakiAgentSSHDaemonApp.bc",
+    "object" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/SakiAgentSSHDaemonApp.o"
+  },
+  "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Daemon/build_out/Build/Intermediates.noindex/SakiAgentSSHDaemon.build/Release/SakiAgentSSHDaemon.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

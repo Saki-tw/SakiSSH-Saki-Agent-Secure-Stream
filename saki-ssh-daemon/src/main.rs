@@ -1,4 +1,21 @@
 mod config;
+mod auth;
+mod audit;
+mod capability;
+mod challenge_store;
+mod codec;
+mod env_injector;
+mod kernel_bridge;
+mod localhost_defense;
+mod policy;
+mod quota;
+mod session;
+mod snapshot;
+mod tarpit;
+mod threat_defense;
+mod v6_integration;
+mod watchdog;
+mod branch_mgr;
 
 use config::DaemonConfig;
 use std::collections::HashMap;
@@ -13,14 +30,64 @@ use tokio_stream::wrappers::ReceiverStream;
 use tonic::{transport::Server, Request, Response, Status, Streaming};
 use tracing::{info, warn};
 
+use auth::{AuthenticatedAgent, AgentAuthenticator, load_authorized_agents};
+use audit::AuditLogger;
+use challenge_store::ChallengeStore;
+use policy::Policy13;
+use quota::ResourceQuotaManager;
+use session::SessionManager;
+
+// ============================================================
+// SASS 錯誤型別
+// ============================================================
+
+#[derive(Debug)]
+pub enum AgentSshError {
+    Auth(String),
+    Capability(String),
+    Session(String),
+    Internal(String),
+}
+
+impl std::fmt::Display for AgentSshError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AgentSshError::Auth(msg) => write!(f, "Auth error: {}", msg),
+            AgentSshError::Capability(msg) => write!(f, "Capability error: {}", msg),
+            AgentSshError::Session(msg) => write!(f, "Session error: {}", msg),
+            AgentSshError::Internal(msg) => write!(f, "Internal error: {}", msg),
+        }
+    }
+}
+
+impl From<AgentSshError> for Status {
+    fn from(e: AgentSshError) -> Self {
+        match e {
+            AgentSshError::Auth(msg) => Status::unauthenticated(msg),
+            AgentSshError::Capability(msg) => Status::permission_denied(msg),
+            AgentSshError::Session(msg) => Status::not_found(msg),
+            AgentSshError::Internal(msg) => Status::internal(msg),
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! agentssh_error {
+    ($variant:ident, $($arg:tt)*) => {
+        AgentSshError::$variant(format!($($arg)*))
+    };
+}
+
 pub mod sakissh {
     tonic::include_proto!("sakissh");
 }
 
 use sakissh::saki_ssh_server::{SakiSsh, SakiSshServer};
 use sakissh::{
-    CancelRequest, CancelResponse, ExecuteRequest, ExecuteResponse, FileChunk,
-    FileDownloadRequest, FileTransferResponse, PingRequest, PingResponse, PosixSignal,
+    AuthRequest, AuthResponse, CancelRequest, CancelResponse,
+    ChallengeRequest, ChallengeResponse, ExecuteRequest, ExecuteResponse,
+    FileChunk, FileDownloadRequest, FileTransferResponse, PingRequest,
+    PingResponse, PosixSignal, SecurityStatusRequest, SecurityStatusResponse,
     SignalRequest, SignalResponse, StreamResponse,
 };
 
@@ -28,7 +95,8 @@ use sakissh::{
 // CIDR ACL 攔截器
 // ============================================================
 
-fn check_acl(
+#[allow(dead_code)]
+pub fn check_acl(
     remote_addr: Option<SocketAddr>,
     allowed_cidrs: &[ipnet::IpNet],
 ) -> Result<(), Status> {
@@ -69,6 +137,14 @@ pub struct MySsh {
     processes: ProcessMap,
     start_time: chrono::DateTime<chrono::Utc>,
     parsed_cidrs: Vec<ipnet::IpNet>,
+    // === SASS v1.4: 6-Response 狀態機所需的元件 ===
+    pub session_mgr: SessionManager,
+    pub quota_mgr: ResourceQuotaManager,
+    pub policy13: Policy13,
+    pub audit: AuditLogger,
+    // === Phase 2: 認知挑戰與 Agent 認證 ===
+    pub challenge_store: ChallengeStore,
+    pub authenticator: AgentAuthenticator,
 }
 
 impl MySsh {
@@ -86,11 +162,42 @@ impl MySsh {
             info!("ACL disabled (empty allowed_cidrs = allow all)");
         }
 
+        // 載入 13Policy
+        let config_dir = DaemonConfig::default_path();
+        let config_parent = config_dir.parent().unwrap_or(Path::new("."));
+        let policy13 = Policy13::load_or_create(config_parent);
+
+        // 初始化 Session Manager
+        let session_mgr = SessionManager::new(100, 1024 * 1024); // 最大 100 sessions, 1MiB ring buffer
+
+        // 初始化 Quota Manager
+        let quota_mgr = ResourceQuotaManager::new(4, 64); // 每 identity 最多 4 PTY, 佇列深度 64
+
+        // 初始化 Audit Logger（同步）
+        let audit = AuditLogger::new(config_parent);
+
+        // Phase 2: 初始化 ChaCha20 認知挑戰儲存器（TTL 60 秒）
+        let challenge_store = ChallengeStore::new(60);
+        // 啟動背景清理任務
+        challenge_store.clone().spawn_cleanup_task();
+        info!("Phase 2: ChallengeStore 初始化完成 (TTL=60s)");
+
+        // Phase 2: 載入 Agent 認證配置
+        let agents_config = load_authorized_agents(config_parent);
+        let authenticator = AgentAuthenticator::new(agents_config);
+        info!("Phase 2: AgentAuthenticator 初始化完成");
+
         Self {
             config,
             processes: Arc::new(RwLock::new(HashMap::new())),
             start_time: chrono::Utc::now(),
             parsed_cidrs,
+            session_mgr,
+            quota_mgr,
+            policy13,
+            audit,
+            challenge_store,
+            authenticator,
         }
     }
 
@@ -114,6 +221,22 @@ impl std::fmt::Debug for MySsh {
         f.debug_struct("MySsh")
             .field("shell", &self.config.shell.r#type)
             .finish()
+    }
+}
+
+impl MySsh {
+    /// Stub: 檢查 gRPC metadata 中的 session token
+    #[allow(dead_code)]
+    fn check_token<T>(&self, _request: &Request<T>) -> Result<(), Status> {
+        // Phase 2 實作：從 metadata 取出 token 驗證
+        Ok(())
+    }
+
+    /// Stub: 檢查並取得已認證的 Agent Session
+    #[allow(dead_code)]
+    async fn check_session<T>(&self, _request: &Request<T>) -> Result<Option<Arc<AuthenticatedAgent>>, Status> {
+        // Phase 2 實作：從 metadata 取出 session_id 查詢 SessionMap
+        Ok(None)
     }
 }
 
@@ -163,6 +286,7 @@ impl SakiSsh for MySsh {
 
     // --------------------------------------------------------
     // ExecuteStream (串流回傳)
+    // SASS v1.4: 預設走 v6_integration 狀態機 (6-Response Total Response Mapping)
     // --------------------------------------------------------
     type ExecuteStreamStream = ReceiverStream<Result<StreamResponse, Status>>;
 
@@ -170,115 +294,9 @@ impl SakiSsh for MySsh {
         &self,
         request: Request<ExecuteRequest>,
     ) -> Result<Response<Self::ExecuteStreamStream>, Status> {
-        let remote_addr = request.remote_addr();
-        check_acl(remote_addr, &self.parsed_cidrs)?;
-
-        let req = request.into_inner();
-        let exec_id = if req.execution_id.is_empty() {
-            uuid::Uuid::new_v4().to_string()
-        } else {
-            req.execution_id.clone()
-        };
-
-        let (mut cmd, cmd_desc) = self.build_command(&req.command);
-        cmd.args(&req.args)
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::piped());
-
-        if !req.cwd.is_empty() {
-            cmd.current_dir(&req.cwd);
-        }
-        for (k, v) in &req.env {
-            cmd.env(k, v);
-        }
-
-        info!("[{}] ExecuteStream: {}", exec_id, cmd_desc);
-
-        let child = cmd
-            .spawn()
-            .map_err(|e| Status::internal(format!("Failed to spawn '{}': {}", cmd_desc, e)))?;
-
-        let (tx, rx) = tokio::sync::mpsc::channel(128);
-        let exec_id_clone = exec_id.clone();
-        let processes = self.processes.clone();
-
-        // 拆出 stdout/stderr，保留 child 用於追蹤
-        let mut child = child;
-        let stdout = child.stdout.take();
-        let stderr = child.stderr.take();
-
-        // 註冊進程
-        {
-            let mut map = processes.write().await;
-            map.insert(exec_id.clone(), TrackedProcess { child });
-        }
-
-        // stdout 串流
-        if let Some(mut stdout) = stdout {
-            let tx_stdout = tx.clone();
-            tokio::spawn(async move {
-                let mut buf = [0u8; 4096];
-                while let Ok(n) = stdout.read(&mut buf).await {
-                    if n == 0 {
-                        break;
-                    }
-                    let _ = tx_stdout
-                        .send(Ok(StreamResponse {
-                            source: 0, // STDOUT
-                            data: buf[..n].to_vec(),
-                            exit_code: None,
-                        }))
-                        .await;
-                }
-            });
-        }
-
-        // stderr 串流
-        if let Some(mut stderr) = stderr {
-            let tx_stderr = tx.clone();
-            tokio::spawn(async move {
-                let mut buf = [0u8; 4096];
-                while let Ok(n) = stderr.read(&mut buf).await {
-                    if n == 0 {
-                        break;
-                    }
-                    let _ = tx_stderr
-                        .send(Ok(StreamResponse {
-                            source: 1, // STDERR
-                            data: buf[..n].to_vec(),
-                            exit_code: None,
-                        }))
-                        .await;
-                }
-            });
-        }
-
-        // 等待進程結束
-        let processes_wait = processes.clone();
-        let exec_id_wait = exec_id_clone;
-        tokio::spawn(async move {
-            let exit_code = {
-                let mut map = processes_wait.write().await;
-                if let Some(tracked) = map.get_mut(&exec_id_wait) {
-                    let status = tracked.child.wait().await;
-                    let code = status.map(|s| s.code().unwrap_or(-1)).unwrap_or(-1);
-                    map.remove(&exec_id_wait);
-                    code
-                } else {
-                    -1
-                }
-            };
-
-            let _ = tx
-                .send(Ok(StreamResponse {
-                    source: 0,
-                    data: Vec::new(),
-                    exit_code: Some(exit_code),
-                }))
-                .await;
-        });
-
-        Ok(Response::new(ReceiverStream::new(rx)))
+        // SASS v1.4: 所有請求經過 6-Response 狀態機
+        // R1(EXECUTE) / R2(CHALLENGE) / R3(THROTTLE) / R4(VI_SWAP) / R5(TARPIT) / R6(DROP)
+        self.execute_stream_v6(request).await
     }
 
     // --------------------------------------------------------
@@ -607,6 +625,183 @@ impl SakiSsh for MySsh {
 
         Ok(Response::new(ReceiverStream::new(rx)))
     }
+
+    // --------------------------------------------------------
+    // v6: Authenticate (Phase 2: Ed25519 驗簽 + ChaCha20 挑戰生成)
+    // --------------------------------------------------------
+    async fn authenticate(
+        &self,
+        request: Request<AuthRequest>,
+    ) -> Result<Response<AuthResponse>, Status> {
+        let remote_addr = request.remote_addr();
+        check_acl(remote_addr, &self.parsed_cidrs)?;
+
+        let req = request.into_inner();
+
+        // Phase 2: Ed25519 簽章驗證 → 建立 session → 產生 ChaCha20 認知挑戰
+        //
+        // 流程：
+        // 1. Client 以 Ed25519 私鑰簽署 nonce，連同公鑰一併送出
+        // 2. Daemon 驗證簽章，查找對應的 CapabilitySet
+        // 3. 建立 session，分配 session_id
+        // 4. 產生 ChaCha20-Poly1305 認知挑戰，要求 Client 解密證明計算能力
+
+        // 步驟 1-3: Ed25519 驗簽 + Session 建立
+        let session = match self.authenticator.verify(
+            &req.agent_name,
+            &req.public_key,
+            &req.signature,
+            &req.nonce,
+        ).await {
+            Ok(session) => session,
+            Err(e) => {
+                warn!("Phase 2 Authenticate 失敗: {}", e);
+                // 記錄審計日誌
+                self.audit.log(crate::audit::AuditEvent::AuthFailure {
+                    agent_name: req.agent_name.clone(),
+                    reason: format!("{}", e),
+                    remote_addr: remote_addr.map(|a| a.to_string()).unwrap_or_default(),
+                });
+                return Ok(Response::new(AuthResponse {
+                    success: false,
+                    session_id: String::new(),
+                    capability_hash: String::new(),
+                    chacha_challenge_nonce: Vec::new(),
+                    chacha_challenge_ciphertext: Vec::new(),
+                    message: format!("認證失敗: {}", e),
+                }));
+            }
+        };
+
+        // 步驟 4: 產生 ChaCha20-Poly1305 認知挑戰
+        let (challenge_nonce, challenge_ciphertext) = self.challenge_store.generate_challenge().await;
+
+        // 計算 capability hash 供 Client 校驗
+        let cap_hash = AgentAuthenticator::capability_hash(&session.capabilities);
+        let cap_hash_hex = hex::encode(&cap_hash);
+
+        info!(
+            "Phase 2 Authenticate 成功: agent='{}', session='{}', 等待認知挑戰回應",
+            session.name, session.session_id
+        );
+
+        Ok(Response::new(AuthResponse {
+            success: true,
+            session_id: session.session_id,
+            capability_hash: cap_hash_hex,
+            chacha_challenge_nonce: challenge_nonce,
+            chacha_challenge_ciphertext: challenge_ciphertext,
+            message: "認證成功，請完成 ChaCha20 認知挑戰".to_string(),
+        }))
+    }
+
+    // --------------------------------------------------------
+    // v6: CognitiveChallenge (Phase 2: ChaCha20 驗證 + TLS EKM 綁定)
+    // --------------------------------------------------------
+    async fn cognitive_challenge(
+        &self,
+        request: Request<ChallengeRequest>,
+    ) -> Result<Response<ChallengeResponse>, Status> {
+        let remote_addr = request.remote_addr();
+        check_acl(remote_addr, &self.parsed_cidrs)?;
+
+        let req = request.into_inner();
+
+        // Phase 2: 驗證 ChaCha20 解密結果 + TLS Exporter EKM HMAC 通道綁定
+        //
+        // 流程：
+        // 1. Client 收到 Authenticate 回應中的 (nonce, ciphertext)
+        // 2. Client 以共享的 ChaCha20 key 解密 ciphertext → 得到 plaintext
+        // 3. Client 計算 HMAC-SHA256(ekm, plaintext) 作為通道綁定證據
+        // 4. Daemon 驗證 plaintext（constant-time）+ EKM HMAC
+
+        // 從 ChallengeRequest 中取得 Client 回傳的解密明文
+        // Proto 定義: decrypted_plaintext = field 1, client_ekm_hmac = field 2
+        let decrypted = &req.decrypted_plaintext;
+
+        if decrypted.is_empty() {
+            return Ok(Response::new(ChallengeResponse {
+                passed: false,
+                session_token: String::new(),
+                message: "decrypted_plaintext 不可為空".to_string(),
+            }));
+        }
+
+        // 步驟 1: 驗證 ChaCha20 解密結果（constant-time comparison via ChallengeStore）
+        // ChallengeStore 使用 nonce 作為查找 key，但 ChallengeRequest 中沒有 nonce 欄位
+        // 因此我們需要遍歷所有待驗證的挑戰 — 或者使用明文的前 12 bytes 作為辨識
+        // 設計決策：使用 ChallengeStore 的全量搜索模式
+        //
+        // TODO: Proto 應新增 challenge_nonce 欄位到 ChallengeRequest，
+        //       以避免 O(n) 搜索。目前以 try_verify_any 替代。
+        let challenge_passed = self.challenge_store.try_verify_any(decrypted).await;
+
+        if !challenge_passed {
+            warn!("Phase 2 CognitiveChallenge 失敗: ChaCha20 解密結果不匹配");
+            return Ok(Response::new(ChallengeResponse {
+                passed: false,
+                session_token: String::new(),
+                message: "認知挑戰失敗：解密結果不正確或已過期".to_string(),
+            }));
+        }
+
+        // 步驟 2: TLS Exporter EKM HMAC 通道綁定驗證 (Plugins 版本)
+        // 若 Client 提供了 client_ekm_hmac，進行通道綁定驗證
+        if !req.client_ekm_hmac.is_empty() {
+            // 產生 stub EKM（未來替換為真實 TLS session EKM）
+            // 使用 session UUID 的前 16 bytes 作為 context
+            let mut session_uuid = [0u8; 16];
+            // 以 remote_addr hash 作為 stub session context
+            let addr_str = remote_addr.map(|a| a.to_string()).unwrap_or_default();
+            let addr_hash = sha2::Digest::finalize(sha2::Digest::chain_update(
+                sha2::Sha256::default(),
+                addr_str.as_bytes(),
+            ));
+            session_uuid.copy_from_slice(&addr_hash[..16]);
+
+            let ekm = threat_defense::derive_ekm_stub(&session_uuid);
+            if !threat_defense::verify_ekm_hmac(&ekm, decrypted, &req.client_ekm_hmac) {
+                warn!("Phase 2 CognitiveChallenge: TLS EKM HMAC 通道綁定失敗");
+                return Ok(Response::new(ChallengeResponse {
+                    passed: false,
+                    session_token: String::new(),
+                    message: "TLS 通道綁定失敗：EKM HMAC 不匹配".to_string(),
+                }));
+            }
+            info!("Phase 2 CognitiveChallenge: TLS EKM HMAC 通道綁定成功");
+        } else {
+            info!("Phase 2 CognitiveChallenge: Client 未提供 EKM HMAC（跳過通道綁定）");
+        }
+
+        // 步驟 3: 產生 session token
+        let session_token = uuid::Uuid::new_v4().to_string();
+        info!("Phase 2 CognitiveChallenge 成功: session_token={}", session_token);
+
+        Ok(Response::new(ChallengeResponse {
+            passed: true,
+            session_token,
+            message: "認知挑戰通過，Session 已啟動".to_string(),
+        }))
+    }
+
+    // --------------------------------------------------------
+    // v6: SecurityStatus (安全狀態查詢 stub)
+    // --------------------------------------------------------
+    async fn security_status(
+        &self,
+        request: Request<SecurityStatusRequest>,
+    ) -> Result<Response<SecurityStatusResponse>, Status> {
+        let remote_addr = request.remote_addr();
+        check_acl(remote_addr, &self.parsed_cidrs)?;
+
+        let _req = request.into_inner();
+        Ok(Response::new(SecurityStatusResponse {
+            active_tarpits: 0,
+            active_sessions: self.processes.read().await.len() as u32,
+            blocked_ips: 0,
+            policy_version: "13Policy-v1.0".to_string(),
+        }))
+    }
 }
 
 // ============================================================
@@ -626,15 +821,61 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Bind: {}", config.bind_address);
 
     let addr = config.bind_address.parse()?;
+    let tls_config = config.tls.clone();
     let ssh = MySsh::new(config);
 
     info!("SakiAgentSSH Daemon v{} — Copyright (c) 2026 Saki Studio. All rights reserved.", env!("CARGO_PKG_VERSION"));
-    info!("Listening on {}", addr);
 
-    Server::builder()
-        .add_service(SakiSshServer::new(ssh))
-        .serve(addr)
-        .await?;
+    // === Phase 1: TLS 傳輸層配置 ===
+    match tls_config {
+        Some(tls) => {
+            use tonic::transport::{Certificate, Identity, ServerTlsConfig};
+
+            info!("TLS 啟用: cert={}, key={}", tls.cert_path, tls.key_path);
+
+            // 載入伺服器證書與私鑰
+            let cert_pem = std::fs::read_to_string(&tls.cert_path)
+                .map_err(|e| format!("無法讀取伺服器證書 {}: {}", tls.cert_path, e))?;
+            let key_pem = std::fs::read_to_string(&tls.key_path)
+                .map_err(|e| format!("無法讀取伺服器私鑰 {}: {}", tls.key_path, e))?;
+            let server_identity = Identity::from_pem(cert_pem, key_pem);
+
+            let mut server_tls = ServerTlsConfig::new().identity(server_identity);
+
+            // mTLS: 若提供 CA 證書且要求客戶端證書，啟用雙向驗證
+            if let Some(ref ca_path) = tls.ca_cert_path {
+                if tls.require_client_cert {
+                    let ca_pem = std::fs::read_to_string(ca_path)
+                        .map_err(|e| format!("無法讀取 CA 證書 {}: {}", ca_path, e))?;
+                    let ca_cert = Certificate::from_pem(ca_pem);
+                    server_tls = server_tls.client_ca_root(ca_cert);
+                    info!("mTLS 啟用: 要求客戶端證書驗證 (CA: {})", ca_path);
+                } else {
+                    info!("TLS 模式: 單向 TLS（CA 已配置但未要求客戶端證書）");
+                }
+            } else {
+                info!("TLS 模式: 單向 TLS（無客戶端證書驗證）");
+            }
+
+            info!("Listening on {} (TLS)", addr);
+
+            Server::builder()
+                .tls_config(server_tls)?
+                .add_service(SakiSshServer::new(ssh))
+                .serve(addr)
+                .await?;
+        }
+        None => {
+            // 向後相容：無 TLS 配置時維持明文 gRPC
+            info!("Listening on {} (plaintext)", addr);
+            warn!("⚠ TLS 未啟用 — 通訊為明文 gRPC，僅建議用於受信任的內網環境");
+
+            Server::builder()
+                .add_service(SakiSshServer::new(ssh))
+                .serve(addr)
+                .await?;
+        }
+    }
 
     Ok(())
 }

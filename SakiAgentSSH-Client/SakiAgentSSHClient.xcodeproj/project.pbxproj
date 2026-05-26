@@ -1,0 +1,352 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3D01665D26B7E5811C048E4B /* SakiAgentSSHClientApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7686B344CDAEC4EE84488BB0 /* SakiAgentSSHClientApp.swift */; };
+		C225C5EBA9208E81AB473B4C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5FE3E4E6CFC59205EEAB6A12 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		56020313A3C49AA86CEA7104 /* SakiAgentSSHClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SakiAgentSSHClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5FE3E4E6CFC59205EEAB6A12 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7686B344CDAEC4EE84488BB0 /* SakiAgentSSHClientApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SakiAgentSSHClientApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		50D0582E5EC50B74707211E2 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				7686B344CDAEC4EE84488BB0 /* SakiAgentSSHClientApp.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		60B63A41537F619C67730E94 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				56020313A3C49AA86CEA7104 /* SakiAgentSSHClient.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		973823E4E723A66E2EF1F013 = {
+			isa = PBXGroup;
+			children = (
+				5FE3E4E6CFC59205EEAB6A12 /* Assets.xcassets */,
+				50D0582E5EC50B74707211E2 /* Sources */,
+				60B63A41537F619C67730E94 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B194A8C5451B35C3EE786234 /* SakiAgentSSHClient */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C319B16D29E0416E6F239DC1 /* Build configuration list for PBXNativeTarget "SakiAgentSSHClient" */;
+			buildPhases = (
+				52ED0BF88F78B184C0A6D0DE /* Sources */,
+				CFE73A3CE8965A3BE64C5E65 /* Resources */,
+				3C9200D1A270D899217F7A39 /* Copy Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SakiAgentSSHClient;
+			packageProductDependencies = (
+			);
+			productName = SakiAgentSSHClient;
+			productReference = 56020313A3C49AA86CEA7104 /* SakiAgentSSHClient.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F926BFA98BBB061AADB05AB3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					B194A8C5451B35C3EE786234 = {
+						DevelopmentTeam = 36HPTNN8NU;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = B3309DD2B9EDB087F55346B8 /* Build configuration list for PBXProject "SakiAgentSSHClient" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 973823E4E723A66E2EF1F013;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B194A8C5451B35C3EE786234 /* SakiAgentSSHClient */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CFE73A3CE8965A3BE64C5E65 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C225C5EBA9208E81AB473B4C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		3C9200D1A270D899217F7A39 /* Copy Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Resources";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "RES_DIR=\"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nFONTS_DIR=\"${RES_DIR}/Fonts\"\nmkdir -p \"${FONTS_DIR}\"\ncp \"${SRCROOT}/Resources/GenJyuuGothicX-Regular.ttf\" \"${FONTS_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/Credits.rtf\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/help_zh-Hant.md\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/help_en-US.md\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/help_ja-JP.md\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/AppIcon.icns\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/avan.png\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/sakissh\" \"${RES_DIR}/\" 2>/dev/null || true\nchmod +x \"${RES_DIR}/sakissh\" 2>/dev/null || true\n# Codesign embedded binary with sandbox entitlements\nif [ -n \"${CODE_SIGN_IDENTITY}\" ] && [ \"${CODE_SIGN_IDENTITY}\" != \"-\" ]; then\n  codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \\\n    --entitlements \"${SRCROOT}/SakiAgentSSHClient.entitlements\" \\\n    --options runtime \\\n    \"${RES_DIR}/sakissh\" 2>/dev/null || true\nfi\n# Copy dSYM to archive dSYMs folder\nif [ -d \"${SRCROOT}/Resources/sakissh.dSYM\" ] && [ -n \"${ARCHIVE_DSYMS_DIR}\" ]; then\n  cp -r \"${SRCROOT}/Resources/sakissh.dSYM\" \"${ARCHIVE_DSYMS_DIR}/\" 2>/dev/null || true\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		52ED0BF88F78B184C0A6D0DE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3D01665D26B7E5811C048E4B /* SakiAgentSSHClientApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		009FB85AEFA8B6E6B3E351ED /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_OPTIMIZATION = "";
+				CODE_SIGN_ENTITLEMENTS = SakiAgentSSHClient.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_ONLY_ACTIVE_RESOURCES = NO;
+				INFOPLIST_KEY_CFBundleIconFile = AppIcon;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Saki Studio. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "tw.com.saki-studio.SakiAgentSSH-Client-GUIApp";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		79AA3F13BF9E7ED2AE5B779E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 9;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 36HPTNN8NU;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ATSApplicationFontsPath = Fonts;
+				INFOPLIST_KEY_CFBundleDisplayName = "SakiAgentSSH Client";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Saki Studio. All rights reserved.";
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B7A2ED356C962E483C969880 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_OPTIMIZATION = "";
+				CODE_SIGN_ENTITLEMENTS = SakiAgentSSHClient.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_ONLY_ACTIVE_RESOURCES = NO;
+				INFOPLIST_KEY_CFBundleIconFile = AppIcon;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Saki Studio. All rights reserved.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "tw.com.saki-studio.SakiAgentSSH-Client-GUIApp";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		C19AFCF2A18C8BF90776E36E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 9;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 36HPTNN8NU;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_ATSApplicationFontsPath = Fonts;
+				INFOPLIST_KEY_CFBundleDisplayName = "SakiAgentSSH Client";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Saki Studio. All rights reserved.";
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B3309DD2B9EDB087F55346B8 /* Build configuration list for PBXProject "SakiAgentSSHClient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C19AFCF2A18C8BF90776E36E /* Debug */,
+				79AA3F13BF9E7ED2AE5B779E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C319B16D29E0416E6F239DC1 /* Build configuration list for PBXNativeTarget "SakiAgentSSHClient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				009FB85AEFA8B6E6B3E351ED /* Debug */,
+				B7A2ED356C962E483C969880 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F926BFA98BBB061AADB05AB3 /* Project object */;
+}

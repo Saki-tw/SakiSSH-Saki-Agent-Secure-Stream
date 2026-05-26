@@ -1,0 +1,65 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildOnly"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "edc7817815b0a2bd50b667e1bdf677eb78750b2ac4b528aea01965ab1aed62a5"
+    }
+  ],
+  "containerPath" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Client/SakiAgentSSHClient.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "arm64",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : false,
+      "platform" : "macosx",
+      "sdk" : "macosx26.2",
+      "sdkVariant" : "macos",
+      "supportedArchitectures" : [
+        "arm64e",
+        "arm64",
+        "x86_64"
+      ],
+      "targetArchitecture" : "arm64"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Client/build_out/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Client/build_out/Build/Products",
+      "derivedDataPath" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Client/build_out",
+      "indexDataStoreFolderPath" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Client/build_out/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Client/build_out/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/SakiAgentSSH-Client/build_out/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Release",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+          "ASSETCATALOG_COMPILER_OPTIMIZATION" : "",
+          "ENABLE_ONLY_ACTIVE_RESOURCES" : "NO"
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "ACTION" : "build",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "ONLY_ACTIVE_ARCH" : "YES"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "launch",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

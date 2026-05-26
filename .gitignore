@@ -1,45 +1,39 @@
-# Build artifacts
-target/
-build/
-build_out/
-DerivedData/
-*.xcarchive
-*.o
-*.d
-
-# Xcode generated
-*.xcodeproj
-xcuserdata/
-
-# OS
+# macOS
 .DS_Store
-Thumbs.db
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
 
-# Runtime / Secrets
-config.json
+# Rust
+target/
+**/*.rs.bk
+
+# Environment / Secrets
 .env
+*.pem
+*.key
+*.p12
 
-# Internal development docs (Saki Studio internal only)
-Scientia/
-TaskLog/
-ImplementationLog/
-WalkthroughLog/
-docs/*
-!docs/pages/
-bin/
-tools/
-SakiSSH/
+# Build artifacts
+*.o
+*.so
+*.dylib
 
-# Release binaries (go to GitHub Releases)
-release/daemon/sakisshd*
-release/client/sakissh*
+# Gemini / Agent artifacts
+.gemini/
 
-# GUI release DMGs and .app (go to GitHub Releases)
-release/gui/*.dmg
-release/gui/*.app
+# Logs
+*.log
+
+# OS
+Thumbs.db
+Desktop.ini

@@ -1,0 +1,1671 @@
+Saki Studio                                                   H. Chen
+Internet-Draft                                            Saki Studio
+Intended status: Experimental                           25 May 2026
+Expires: 26 November 2026
+
+
+         SakiAgentSSH Secure Protocol Specification
+                  draft-sakistudio-sass-00
+
+Abstract
+
+   This document describes the Saki Agent Secure Stream (SASS)
+   protocol, version 1.4.  SASS is an application-layer overlay
+   protocol for authenticated remote command execution, streaming
+   process I/O, and binary file transfer between trusted agents.
+
+   To ensure strict self-containment and compatibility with IETF
+   standard specifications, SASS defines a decoupled
+   "Control-Transport Decoupling" architecture.  The SASS Core
+   defines an abstract SASS Abstract Messaging Model (SAMM)
+   utilizing standard CBOR [RFC8949] and JSON as baseline
+   serializations.
+
+   Following the precedent of TLS 1.0 (RFC 2246) inheriting and
+   refining SSL 3.0, SASS v1.4 formalizes its security evolution
+   through four major incremental milestones: Active Threat
+   Defense (v1.1), Forward-Secure Audit Hash Chains (v1.2),
+   modular Control-Transport Decoupling (v1.3) incorporating
+   tls-exporter Channel Binding (RFC 9266) and Zero-Allocation
+   Tarpit streams, and Total Response Mapping (v1.4) with
+   6-Response state machine convergence and Safety Gradient
+   loss bounding.
+
+   SASS v1.4 achieves the AES (Almost Everywhere Superior)
+   milestone: a comparative claim between protocol versions
+   based on Second-order Stochastic Dominance (SSD) [AS2008].
+   Each version iteration eliminates specific behavioral
+   branches from the agent probability space while maintaining
+   expected loss, yielding strict SSD improvement.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with
+   the provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet
+   Engineering Task Force (IETF).  Note that other groups may
+   also distribute working documents as Internet-Drafts.  The
+   list of current Internet-Drafts is at
+   https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of
+   six months and may be updated, replaced, or obsoleted by
+   other documents at any time.  It is inappropriate to use
+   Internet-Drafts as reference material or to cite them other
+   than as "work in progress."
+
+   This Internet-Draft will expire on 26 November 2026.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as
+   the document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's
+   Legal Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the
+   date of publication of this document.  Please review these
+   documents carefully, as they describe your rights and
+   restrictions with respect to this document.
+
+Chen                    Expires 26 November 2026        [Page 1]
+
+Internet-Draft              SASS Protocol               May 2026
+
+Table of Contents
+
+   1.  Introduction & Protocol Evolution  . . . . . . . . .   3
+     1.1.  The Four Incremental Milestones  . . . . . . . .   4
+     1.2.  Design Philosophy: Total Response Mapping  . . .   5
+   2.  Terminology  . . . . . . . . . . . . . . . . . . . .   6
+     2.1.  Requirements Language  . . . . . . . . . . . . .   7
+   3.  Protocol Overview  . . . . . . . . . . . . . . . . .   7
+     3.1.  Architecture . . . . . . . . . . . . . . . . . .   7
+     3.2.  6-Response State Machine (R1~R6) . . . . . . . .   8
+     3.3.  Abstract Messaging Model (SAMM)  . . . . . . . .  11
+     3.4.  Relationship to SSH  . . . . . . . . . . . . . .  11
+   4.  Transport Layer & Transport Profiles . . . . . . . .  12
+     4.1.  Transport Decoupling Principles  . . . . . . . .  12
+     4.2.  SASS-over-gRPC Profile (Mandatory TLS 1.3)  . .  12
+     4.3.  ALPN & TCP Packet-Splitting Mitigation . . . . .  13
+     4.4.  Channel Binding via Exported Keying Material . .  13
+     4.5.  Default Port . . . . . . . . . . . . . . . . . .  14
+   5.  Session Layer  . . . . . . . . . . . . . . . . . . .  14
+     5.1.  Agent Authentication . . . . . . . . . . . . . .  14
+     5.2.  Session Lifecycle  . . . . . . . . . . . . . . .  15
+     5.3.  Capability-Based Access Control  . . . . . . . .  15
+   6.  Payload Encoding & Safety Gates  . . . . . . . . . .  16
+     6.1.  Zstd Streamed Decompression Limit  . . . . . . .  16
+     6.2.  Decompression Bomb & Huffman Mitigation  . . . .  17
+     6.3.  Encoding & Decoding Procedure  . . . . . . . . .  17
+     6.4.  PTY Ring Buffer & Offset Resumption  . . . . . .  18
+   7.  Logical RPC Service Semantics  . . . . . . . . . . .  19
+     7.1.  Command Execution & Streaming  . . . . . . . . .  19
+     7.2.  Process Management . . . . . . . . . . . . . . .  19
+     7.3.  File Transfer & Raw File Transfer  . . . . . . .  20
+   8.  Threat Defense & Boundary Enforcement  . . . . . . .  20
+     8.1.  Boundary Adjudicator (13Policy Engine) . . . . .  20
+     8.2.  Cognitive Challenge Mechanism  . . . . . . . . .  21
+     8.3.  Dual Standard Enforcement  . . . . . . . . . . .  22
+     8.4.  LocalHost Defense  . . . . . . . . . . . . . . .  24
+     8.5.  Transparent Branching (Storage Isolation)  . . .  24
+   9.  Error Codes  . . . . . . . . . . . . . . . . . . . .  25
+   10. Security Considerations  . . . . . . . . . . . . . .  26
+     10.1. Total Response Mapping Guarantee . . . . . . . .  26
+     10.2. Safety Gradient (7-Layer Loss Bounding)  . . . .  27
+     10.3. State Transition Auditing  . . . . . . . . . . .  28
+     10.4. Transport-Layer Considerations . . . . . . . . .  29
+     10.5. Known Limitations  . . . . . . . . . . . . . . .  30
+
+Chen                    Expires 26 November 2026        [Page 2]
+
+Internet-Draft              SASS Protocol               May 2026
+
+     10.6. Almost Everywhere Superior (AES) Claim . . . . .  30
+   11. IANA Considerations  . . . . . . . . . . . . . . . .  31
+   12. References . . . . . . . . . . . . . . . . . . . . .  31
+     12.1. Normative References . . . . . . . . . . . . . .  31
+     12.2. Informative References . . . . . . . . . . . . .  32
+   Appendix A.  Protobuf Service Definition . . . . . . . .  33
+   Appendix B.  Reference Implementations  . . . . . . . .  34
+   Appendix C.  Saki Studio Plugins Reference  . . . . . .  35
+   Appendix D.  Version History . . . . . . . . . . . . . .  39
+   Authors' Addresses . . . . . . . . . . . . . . . . . . .  39
+
+1.  Introduction & Protocol Evolution
+
+   The proliferation of autonomous AI-powered coding agents
+   operating on remote machines introduces a critical threat
+   model: the Rogue Agent.  Unlike traditional SSH clients
+   controlled by human operators, agents may autonomously
+   execute destructive commands, exfiltrate credentials, or
+   pivot laterally across networks without explicit human
+   authorization.
+
+   Existing remote execution protocols such as SSH [RFC4253]
+   were designed for human-operated terminals and lack the
+   fine-grained capability controls, active defenses, and
+   binary-safe encoding schemes required for agent management.
+
+   SASS (Saki Agent Secure Stream) decouples the logical
+   message flow from the physical transmission layer.  By
+   defining a transport-agnostic messaging core alongside
+   modular transport profiles, SASS achieves strict
+   self-containment, freeing the standard from proprietary
+   third-party binary frameworks (e.g., gRPC/Protobuf) during
+   academic review, while retaining high-performance
+   implementations as pluggable adapters.
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL",
+   "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",
+   "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document
+   are to be interpreted as described in BCP 14 [RFC2119]
+   [RFC8174] when, and only when, they appear in capitalized,
+   as shown here.
+
+Chen                    Expires 26 November 2026        [Page 3]
+
+Internet-Draft              SASS Protocol               May 2026
+
+1.1.  The Four Incremental Milestones (v1.1 to v1.4)
+
+   Following the precedent of TLS 1.0 (RFC 2246) inheriting
+   and refining SSL 3.0, the SASS specification formalizes its
+   security evolution through four major incremental
+   milestones:
+
+   o  SASS v1.1 (Active Threat Countermeasures): Added the
+      13Policy heuristic firewall and cryptographic cognitive
+      challenges bound to an active Tarpit system,
+      establishing the foundation of active defense against
+      rogue automated operations.
+
+   o  SASS v1.2 (Cryptographic Integrity & Audit): Introduced
+      five-dimensional Capability ACLs combined with a
+      forward-secure hash chain audit log signed via
+      host-resident asymmetric keys, providing mathematical
+      proof of non-repudiation.
+
+   o  SASS v1.3 (Control-Transport Decoupling & Hardening):
+      Decoupled the SASS Core from underlying physical
+      protocols.  Introduced atomicity controls (POSIX openat
+      and O_NOFOLLOW) to pre-empt TOCTOU sandstrike
+      breakouts, implemented Zero-Allocation Tarpit streams
+      to neutralize Host DoS, and mandated exported keying
+      material Channel Binding to prevent session hijacking.
+
+   o  SASS v1.4 (Total Response Mapping & Loss Bounding):
+      Introduces a formal 6-Response state machine (R1~R6)
+      that maps every possible Agent behavior to one of six
+      deterministic responses, each preserving storage
+      integrity and bounding loss.  Adds Dual Standard
+      Enforcement (Vi Swap for authenticated agents, Tarpit
+      for unauthenticated), Transparent Branching for
+      zero-loss write isolation, PTY Ring Buffer for
+      idempotent reconnection, and the Safety Gradient
+      theory for layered loss bounding.
+
+      This milestone achieves the AES (Almost Everywhere
+      Superior) property: a comparative claim between
+      protocol versions.  Each version iteration eliminates
+      specific behavioral branches from the agent probability
+      space while maintaining expected loss, yielding strict
+      Second-order Stochastic Dominance (SSD) improvement
+      [AS2008].
+
+Chen                    Expires 26 November 2026        [Page 4]
+
+Internet-Draft              SASS Protocol               May 2026
+
+1.2.  Design Philosophy: Total Response Mapping
+
+   Traditional security models enumerate known attacks and
+   block them (blacklist model).  This approach is inherently
+   incomplete: the attacker can always find a path not in the
+   blacklist.
+
+   SASS v1.4 inverts this model.  Instead of defining "which
+   behaviors are bad," it defines "for every possible
+   behavior, what is the response."  The set of responses is
+   finite, deterministic, and auditable.  Any unforeseen
+   behavior is mapped to one of the predefined responses.
+
+   This is the formal meaning of the axiom: "All unexpected
+   behaviors are expected behaviors."
+
+   Furthermore, an Agent's actions have no inherent "danger"
+   or "malice."  The boundary enforcement system is strictly
+   an Adjudicator: it determines what is permitted ("CAN")
+   and what is prohibited ("CANNOT") based on the Agent's
+   capability set.  If an Agent's authorized boundary
+   includes executing a destructive command, the Daemon MUST
+   execute it without prejudice.  Conversely, if an Agent
+   lacks authorization for a benign command, this constitutes
+   an absolute boundary violation.
+
+2.  Terminology
+
+   Agent:  An autonomous software process that connects to a
+      SASS Daemon to execute commands or transfer files on
+      the remote host.
+
+   Daemon:  The SASS server process that listens for incoming
+      agent connections, authenticates them, and executes
+      authorized commands.
+
+   Rogue Agent:  An agent that has been compromised,
+      misconfigured, or is otherwise attempting to perform
+      unauthorized operations.
+
+   Session:  A time-bounded, authenticated context between an
+      agent and a daemon, identified by a UUID and
+      constrained by a capability set.
+
+   SAMM:  SASS Abstract Messaging Model, the
+      transport-agnostic message semantic layout.
+
+Chen                    Expires 26 November 2026        [Page 5]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   Transport Profile:  A modular plugin implementing the
+      transmission details (e.g., gRPC, WebSockets, or
+      raw TCP).
+
+   UVSF:  Userspace Virtual Symlink Filesystem, a
+      zero-permission sandbox based on symlink trees.
+
+   KFS/WSDK:  Kernel-level Filtered Storage, proprietary
+      OS-level driver plugins (future work).
+
+   13Policy:  The heuristic threat detection engine that
+      classifies command patterns and triggers boundary
+      enforcement responses.
+
+   Cognitive Challenge:  A cryptographic puzzle that requires
+      the agent to prove possession of keying material and
+      genuine computational capability.  An implementation
+      MAY use the approach described in Appendix C.1.
+
+   Tarpit:  An active defense mechanism that streams
+      high-entropy data to a suspected rogue agent, exhausting
+      its resources with O(1) daemon memory cost.
+
+   Vi Swap:  An active defense mechanism that traps an
+      authenticated Agent in a simulated interactive terminal
+      state, causing the Agent's LLM to halt generation.
+
+   Total Response Mapping:  A security model in which every
+      possible input from the Agent domain maps
+      deterministically to one of a finite set of predefined
+      responses (R1~R6).
+
+   Safety Gradient:  The property that each protocol layer
+      bounds the worst-case loss if all layers above it are
+      compromised.
+
+   Transparent Branching:  An isolation mechanism invisible to
+      the Agent, where all write operations are redirected to
+      a discardable branch directory.
+
+2.1.  Requirements Language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL",
+   "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",
+   "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document
+   are to be interpreted as described in BCP 14 [RFC2119]
+   [RFC8174] when, and only when, they appear in capitalized,
+   as shown here.
+
+Chen                    Expires 26 November 2026        [Page 6]
+
+Internet-Draft              SASS Protocol               May 2026
+
+3.  Protocol Overview
+
+3.1.  Architecture
+
+   SASS separates the control plane and data transmission:
+
+   +----------------------------------------------------------+
+   | Layer 7: Transparent Branching (UVSF | Micro Branch)     |
+   +----------------------------------------------------------+
+   | Layer 6: Storage Sandbox (UVSF Core | KFS Kernel)        |
+   +----------------------------------------------------------+
+   | Layer 5: Forward-Secure Audit Trail (Hash Chain)          |
+   +----------------------------------------------------------+
+   | Layer 4: Capability & Session Management                  |
+   +----------------------------------------------------------+
+   | Layer 3: Active Threat Defense (13Policy, Tarpit, Vi)     |
+   +----------------------------------------------------------+
+   | Layer 2: Payload Encoding (Zstd Stream + Base64)          |
+   +----------------------------------------------------------+
+   | Layer 1: Abstract Transport Adapter (SAMM Interface)      |
+   +----------------------------------------------------------+
+   |  [Transport Profiles: gRPC-h2 | WS | TCP-CBOR-RPC]       |
+   +----------------------------------------------------------+
+
+   Orthogonal: 6-Response State Machine (Section 3.2)
+   +----------------------------------------------------------+
+   | R1: EXECUTE  | R2: CHALLENGE | R3: THROTTLE              |
+   | R4: VI_SWAP  | R5: TARPIT    | R6: DROP                  |
+   +----------------------------------------------------------+
+
+3.2.  6-Response State Machine (R1~R6)
+
+   All possible Agent behaviors, after evaluation through the
+   SASS multi-layer protocol stack, MUST converge to exactly
+   one of the following six responses:
+
+   +------+-----------+----------------------------------------+
+   | Code | Name      | Definition                             |
+   +------+-----------+----------------------------------------+
+   |  R1  | EXECUTE   | Normal execution.  Record to audit     |
+   |      |           | log.  Writes pass through Transparent  |
+   |      |           | Branching.                             |
+   +------+-----------+----------------------------------------+
+   |  R2  | CHALLENGE | Trigger cognitive challenge.  Prove    |
+   |      |           | computational capability, then         |
+   |      |           | execute.                               |
+   +------+-----------+----------------------------------------+
+
+Chen                    Expires 26 November 2026        [Page 7]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   +------+-----------+----------------------------------------+
+   |  R3  | THROTTLE  | Quota exceeded.  Enqueue and wait.     |
+   +------+-----------+----------------------------------------+
+   |  R4  | VI_SWAP   | Trap authenticated Agent in simulated  |
+   |      |           | interactive terminal state.            |
+   +------+-----------+----------------------------------------+
+   |  R5  | TARPIT    | Consume attacker resources via         |
+   |      |           | slow-drip high-entropy data.  Cost     |
+   |      |           | externalized.                          |
+   +------+-----------+----------------------------------------+
+   |  R6  | DROP      | Immediate connection termination.      |
+   |      |           | Zero allocation, zero response.        |
+   +------+-----------+----------------------------------------+
+
+   Every response R1 through R6 MUST satisfy the following
+   invariants:
+
+   +----------------------+----+----+----+----+------+----+
+   | Property             | R1 | R2 | R3 | R4 | R5   | R6 |
+   +----------------------+----+----+----+----+------+----+
+   | Storage loss         | 0* | 0  | 0  | 0  | 0    | 0  |
+   | Commercial loss      | 0* | 0  | 0  | 0  | Ext. | 0  |
+   | Auditable            | Yes| Yes| Yes| Yes| Yes  | Yes|
+   | Daemon memory cost   |O(n)|O(1)|O(1)|O(1)|O(1)  |O(0)|
+   +----------------------+----+----+----+----+------+----+
+
+   (*) R1 storage loss is bounded to zero by Transparent
+   Branching (Section 8.5).  All writes execute within a
+   discardable branch; merge requires explicit human review.
+
+   State Machine Flow:
+
+   ExecuteRequest enters
+       |
+       +-- L1: ACL ---- IP not in whitelist? ------> R6
+       |
+       +-- L2: Transport - Channel invalid? -------> R6
+       |
+       +-- L3: Auth ---- Not authenticated? -------> R6
+       |                 Authenticated but expired?-> R2
+       |
+       +-- L4: Capability -- Command denied? ------> R4
+       |                     Path denied? ----------> R4
+       |
+       +-- L5: 13Policy ---- Dangerous command?
+       |                       critical -----------> R5
+       |                       high ---------------> R2
+       |                       medium -------------> R2
+       |                       low -> R1 + Enhanced Audit
+
+Chen                    Expires 26 November 2026        [Page 8]
+
+Internet-Draft              SASS Protocol               May 2026
+
+       |
+       +-- L6: Quota ---- Quota exhausted? --------> R3
+       |
+       +-- L7: Watchdog - Timeout? -> SIGKILL+Audit
+       |
+       +-- All checks passed ---------------------> R1
+               |
+               +-- write op? -> Branching (8.5)
+               +-- cache I/O? -> volatile (App C.7)
+               +-- localhost? -> obfuscation (8.4)
+
+   In this state machine, "unexpected behavior" has no
+   dedicated handler because every node already handles it.
+   Regardless of how unusual the Agent's behavior may be, it
+   MUST converge to one of R1~R6, each of which guarantees
+   storage safety.
+
+3.3.  Abstract Messaging Model (SAMM)
+
+   SAMM defines SASS messages (e.g., ExecuteRequest,
+   StreamResponse) in a serialization-neutral semantic layout.
+   To ensure standardized self-containment, the baseline
+   serialization MUST be CBOR [RFC8949] or JSON.  Standard
+   SAMM objects map fields onto distinct logical types (bytes,
+   strings, maps) described in Section 7.
+
+3.4.  Relationship to SSH
+
+   SASS shares NO wire format, key exchange mechanism, channel
+   multiplexing, or subsystem architecture with the SSH
+   protocol suite [RFC4251][RFC4252][RFC4253][RFC4254].
+
+   The internal development codename "SakiAgentSSH" is a
+   historical artifact.  Implementations MUST NOT advertise
+   SSH protocol version strings, listen on TCP port 22, or
+   respond to SSH client probes.
+
+4.  Transport Layer & Transport Profiles
+
+4.1.  Transport Decoupling Principles
+
+   SASS Daemons and Clients interact via a TransportAdapter
+   interface.  Implementations MAY choose any conformant
+   Transport Profile, ensuring cross-platform adaptability
+   from low-end microcontrollers (TCP/CBOR) to enterprise
+   jump servers (gRPC/mTLS).
+
+Chen                    Expires 26 November 2026        [Page 9]
+
+Internet-Draft              SASS Protocol               May 2026
+
+4.2.  SASS-over-gRPC Profile (Mandatory TLS 1.3)
+
+   The SASS-over-gRPC profile is the default enterprise-grade
+   pluggable transport.  It maps SAMM messages onto Protocol
+   Buffers and HTTP/2 streams using ALPN "x-sakirpc-v5".
+
+   All SASS connections under this profile MUST use TLS 1.3
+   [RFC8446].  Downgrades to TLS 1.2 are STRICTLY FORBIDDEN.
+   Implementations MUST support the following cipher suites:
+
+   o  TLS_AES_256_GCM_SHA384
+   o  TLS_CHACHA20_POLY1305_SHA256
+
+   The maximum gRPC message size MUST be configured to at
+   least 52,428,800 bytes (50 MiB) to accommodate Tarpit
+   countermeasure payloads.
+
+4.3.  ALPN & TCP Packet-Splitting Mitigation
+
+   During the TLS handshake, both endpoints MUST include the
+   ALPN extension [RFC7301].  The ALPN protocol identifier
+   is "x-sakirpc-v5".
+
+   To mitigate firewall-level packet splitting or ALPN
+   stripping, daemons MUST inspect the Content-Type header
+   on incoming HTTP/2 headers.  If it matches
+   "application/grpc+saki" and ALPN was stripped or spoofed,
+   the daemon MUST drop the TCP connection immediately to
+   prevent cross-protocol multiplexing attacks.
+
+4.4.  Channel Binding via Exported Keying Material
+
+   When using a TLS 1.3 transport profile, a conforming
+   implementation MUST bind session-layer operations to the
+   underlying TLS connection to prevent session hijacking
+   and cognitive challenge replays.
+
+   The binding mechanism MUST use Exported Keying Material
+   (EKM) derived from the TLS session.  The EKM value MUST
+   be incorporated into the cognitive challenge response
+   (Section 8.2) to ensure challenges cannot be relayed
+   across TLS connections.
+
+   A conforming implementation using RFC 5705 or RFC 9266
+   tls-exporter SHOULD derive the binding value as follows:
+
+        Label: implementation-defined (see Appendix C.2)
+        Context: Session UUID (16 bytes)
+        Length: 32 bytes
+
+Chen                    Expires 26 November 2026       [Page 10]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   The specific label, derivation algorithm, and
+   incorporation method are implementation-defined.  An
+   implementation MAY use the approach described in
+   Appendix C.2.
+
+4.5.  Default Port
+
+   The default listening port for SASS daemons is TCP 19284.
+   This port is configurable.
+
+5.  Session Layer
+
+5.1.  Agent Authentication
+
+   SASS authentication proceeds in three phases:
+
+   Phase 1: Transport Identity
+      The TLS handshake establishes transport-level identity.
+      CN in client certificates provides CN-based
+      authentication if mTLS is enabled.
+
+   Phase 2: Asymmetric Key Challenge-Response
+      The agent calls the Authenticate RPC with its
+      agent_name, public_key, nonce, and a signature over the
+      nonce.  The signing algorithm MUST be a standardized
+      asymmetric signature scheme.  Verified agents receive a
+      session_id (UUID v4) and the capability set hash.
+
+      An implementation MAY use ED25519 [RFC8032] as the
+      signing algorithm.
+
+   Phase 3: Cognitive Challenge
+      Suspected agents are challenged via a cryptographic
+      puzzle that requires genuine computational capability.
+      The challenge mechanism MUST be bound to the TLS
+      session via exported keying material (Section 4.4).
+
+      An implementation MAY use ChaCha20-Poly1305 as
+      described in Appendix C.1.
+
+5.2.  Session Lifecycle
+
+   Sessions are time-bounded and identified by UUID v4.  The
+   daemon MUST enforce the following constraints:
+
+   o  Maximum session duration: configurable, default 3600s
+   o  Maximum concurrent sessions: configurable, default 10
+   o  Session renewal: via RenewSession RPC, extends
+      expires_at
+
+Chen                    Expires 26 November 2026       [Page 11]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   Session identifiers are transmitted in the gRPC metadata
+   header "x-agentssh-session-id" on every authenticated RPC
+   call.
+
+   The session lifecycle follows these states:
+
+      CREATED --> ACTIVE --> EXECUTING --> EXPIRED
+                  ^    |         |          |
+                  |    +---------+          |
+                  |    (Execute)            v
+                  |                     DESTROYED
+                  +--- (RenewSession / Re-attach)
+
+   Zombie sessions (disconnected and beyond TTL) MUST be
+   periodically cleaned by the Daemon to prevent resource
+   exhaustion.
+
+5.3.  Capability-Based Access Control
+
+   Each authenticated agent is assigned a five-dimension
+   capability set that constrains its operations:
+
+   1. allowed_commands / denied_commands: Command
+      whitelists/blacklists.
+   2. allowed_paths / denied_paths: Filesystem path limits.
+   3. max_concurrent: Maximum simultaneous processes.
+   4. timeout_seconds: Maximum command execution time.
+   5. max_file_size_bytes: Maximum file transfer size.
+
+   The daemon MUST check denied patterns before allowed
+   patterns (deny-first).  If any denied pattern matches,
+   the request triggers R4 (VI_SWAP for authenticated
+   agents) regardless of allowed patterns.  An implicit
+   deny applies when no pattern matches.
+
+   To resist TOCTOU (Time-of-Check to Time-of-Use) symlink
+   attacks in Userspace, the Storage Sandbox (UVSF) MUST
+   enforce File Descriptor (FD) relative path operations
+   (openat(2)) carrying O_NOFOLLOW and O_CLOEXEC flags.
+
+6.  Payload Encoding & Safety Gates
+
+6.1.  Zstd Streamed Decompression Limit
+
+   Command payloads are compressed using Zstandard [RFC8878]
+   and Base64 encoded.  To resist Decompression Bombs (Zip
+   Bombs), the daemon MUST limit decompressed payloads
+   using streaming decompression.
+
+Chen                    Expires 26 November 2026       [Page 12]
+
+Internet-Draft              SASS Protocol               May 2026
+
+6.2.  Decompression Bomb & Huffman Collision Mitigation
+
+   o  MAX_DECOMPRESSED_PAYLOAD MUST be strictly capped at
+      5 MiB.  Exceeding this limit triggers
+      ERROR_DECOMPRESSION_LIMIT_EXCEEDED (55) and immediately
+      severs the connection.
+
+   o  To prevent Huffman Code Collision CPU exhaustion, the
+      decoder MUST enforce a maximum 50ms time window on
+      header parsing.
+
+6.3.  Encoding & Decoding Procedure
+
+   Sender Procedure:
+
+   1. Serialize command arguments into a structured array
+      (JSON/MsgPack).
+   2. Compress using Zstandard [RFC8878] at level 3.
+   3. Encode using Base64 [RFC4648] standard alphabet.
+   4. Place the resulting byte string into the
+      ExecuteRequest raw_payload field.
+
+   Receiver Procedure:
+
+   1. Base64-decode the raw_payload.
+   2. Stream-decompress via Zstd, checking the 5 MiB
+      safety limit.
+   3. Deserialize arguments and pass them directly to the
+      OS process creation API (execve, CreateProcessW)
+      WITHOUT intermediate shell interpretation.
+
+6.4.  PTY Ring Buffer & Offset Resumption
+
+   SASS v1.4 introduces a Ring Buffer mechanism for PTY
+   output, enabling idempotent (safe-to-retry) reconnection
+   after transport disruption.
+
+6.4.1.  Ring Buffer Specification
+
+   Each Session MUST maintain Ring Buffers for stdout and
+   stderr streams with the following properties:
+
+   o  Capacity: implementation-defined, RECOMMENDED 1 MiB
+   o  Overflow policy: Drop oldest (FIFO), prevent OOM
+   o  Offset tracking: monotonically increasing 64-bit
+      counter (total_written), never wraps
+
+Chen                    Expires 26 November 2026       [Page 13]
+
+Internet-Draft              SASS Protocol               May 2026
+
+6.4.2.  Offset Field in Stream Messages
+
+   Every stream response message MUST include an offset
+   field representing the byte position of the first byte
+   in the data payload within the Ring Buffer's logical
+   address space.
+
+   The Client MUST track the highest received
+   offset + len(data) to use as resume_offset upon
+   reconnection.
+
+6.4.3.  Reconnection Protocol
+
+   To reconnect after transport disruption:
+
+   1. Client sends an ExecuteRequest with is_reattach=true
+      and the original session_id plus resume_offset.
+   2. Daemon looks up the session, reads the Ring Buffer
+      from resume_offset, and resumes streaming.
+   3. If resume_offset is older than the Ring Buffer's
+      oldest available data, the Daemon MUST return an
+      error indicating data loss, including the oldest
+      available offset.
+
+   The reconnection protocol is idempotent: sending the
+   same request with the same resume_offset always produces
+   the same result.
+
+7.  Logical RPC Service Semantics
+
+7.1.  Command Execution & Streaming
+
+   rpc Execute(ExecuteRequest)
+       returns (ExecuteResponse);
+   rpc ExecuteStream(ExecuteRequest)
+       returns (stream StreamResponse);
+
+   Execute executes synchronously.  ExecuteStream streams
+   stdout/stderr in real-time.  Each StreamResponse contains
+   source (STDOUT/STDERR/SYSTEM), data, exit_code (only in
+   the stream's final message), and offset (for Ring Buffer
+   resumption per Section 6.4).
+
+   A SYSTEM source indicates daemon-generated messages such
+   as queue notifications or authentication events.
+
+Chen                    Expires 26 November 2026       [Page 14]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   The Daemon MUST NOT spawn a login shell.  Commands are
+   executed via OS process creation APIs with explicit
+   argument arrays, preventing shell expansion attacks.
+   The Daemon MAY allocate a PTY when the command requires
+   terminal capabilities, but MUST NOT invoke a shell
+   interpreter to wrap the command.
+
+7.2.  Process Management
+
+   rpc Cancel(CancelRequest) returns (CancelResponse);
+   rpc Signal(SignalRequest) returns (SignalResponse);
+
+   Cancel terminates the process immediately (SIGKILL).
+   Signal sends POSIX signals.  On Windows, SIGINT maps to
+   CTRL_C_EVENT, and SIGTERM/SIGKILL map to
+   TerminateProcess.
+
+7.3.  File Transfer & Raw File Transfer
+
+   rpc FileUpload(stream FileChunk)
+       returns (FileTransferResponse);
+   rpc FileDownload(FileDownloadRequest)
+       returns (stream FileChunk);
+   rpc RawFileTransfer(stream RawFileChunk)
+       returns (RawFileTransferResponse);
+
+   Standard file transfer uses streaming chunks.
+   RawFileTransfer bypasses shell I/O entirely; the daemon
+   opens a raw file descriptor and writes decoded
+   (Zstd+Base64) chunks to guarantee bit-perfect copies
+   across different platforms.
+
+8.  Threat Defense & Boundary Enforcement
+
+8.1.  Boundary Adjudicator (13Policy Engine)
+
+   The 13Policy engine is a heuristic boundary adjudicator.
+   It matches command strings against patterns in a
+   configuration file and triggers the appropriate Response
+   (R1~R6) based on severity.
+
+   An Agent's actions are fundamentally non-special; they
+   lack inherent "danger" or "malice."  The 13Policy engine
+   is strictly a Boundary Adjudicator: it enforces what is
+   permitted ("CAN") and what is prohibited ("CANNOT") based
+   on the Agent's capability set and the policy rules.
+
+Chen                    Expires 26 November 2026       [Page 15]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   Each rule specifies:
+
+   o  pattern: Glob pattern to match against command + args
+   o  action: deny (triggers R4/R5), challenge (R2),
+      allow (R1)
+   o  severity: critical, high, medium, low
+   o  description: Human-readable explanation
+
+   The mapping from 13Policy action/severity to Response:
+
+   +----------+------------------+--------------------+
+   | Severity | action: deny     | action: challenge  |
+   +----------+------------------+--------------------+
+   | critical | R5 (TARPIT)      | R2 (CHALLENGE)     |
+   | high     | R4 (VI_SWAP) (*) | R2 (CHALLENGE)     |
+   | medium   | R4 (VI_SWAP) (*) | R2 (CHALLENGE)     |
+   | low      | R1 + audit       | R1 + audit         |
+   +----------+------------------+--------------------+
+
+   (*) R4 for authenticated Agents; unauthenticated Agents
+   receive R5.
+
+   Implementations MUST ship with a default rule set of at
+   least 50 patterns.
+
+8.2.  Cognitive Challenge Mechanism
+
+   A conforming implementation MUST provide a cognitive
+   challenge mechanism that satisfies the following
+   requirements:
+
+   1. The challenge MUST require genuine computational
+      capability (not solvable by string manipulation
+      alone).
+   2. The challenge response MUST be bound to the current
+      transport session via exported keying material
+      (Section 4.4) to prevent relay attacks.
+   3. The challenge MUST have a configurable time-to-live
+      (default 60 seconds).
+   4. Challenge verification MUST use constant-time
+      comparison to prevent timing side-channels.
+   5. Challenge failure MUST trigger R5 (TARPIT).
+
+   The specific cryptographic algorithm used for the
+   challenge is implementation-defined.  An implementation
+   MAY use ChaCha20-Poly1305 as described in Appendix C.1.
+
+Chen                    Expires 26 November 2026       [Page 16]
+
+Internet-Draft              SASS Protocol               May 2026
+
+8.3.  Dual Standard Enforcement
+
+   Subjecting all boundary violations to Tarpit containment
+   leads to severe financial token loss when the violator is
+   an authenticated Agent (e.g., paid AI API endpoints).
+   Therefore, Daemons MUST implement a Dual Standard
+   Enforcement policy based on Agent identity:
+
+   o  Authenticated Agents violating boundaries --> R4
+      (VI_SWAP)
+   o  Unauthenticated connections / failed challenges -->
+      R5 (TARPIT)
+
+8.3.1.  Vi Swap Defense (Authenticated Agents)
+
+   If an Agent has successfully authenticated but executes
+   an out-of-bounds command, the Daemon MUST NOT simply
+   reject the request or return an error string.  Instead,
+   the Daemon MUST simulate an interactive terminal blockage
+   on the output stream.
+
+   The mechanism works by sending terminal control sequences
+   that cause the Agent's LLM to recognize a blocked
+   interactive state and halt its generation, effectively
+   stopping the violation with minimal computational
+   overhead for the Daemon.
+
+   An implementation MAY use ANSI escape sequences to
+   simulate a vi(1) editor state as described in
+   Appendix C.5.
+
+   Vi Swap MUST hold the session open for a configurable
+   duration (default 3600 seconds), during which the
+   Agent's execution slot is occupied, preventing further
+   commands.
+
+   Vi Swap MUST be activated when ALL of the following
+   are true:
+
+   o  The Agent has a valid, non-expired session
+      (authenticated)
+   o  The Agent's command or path matches a denied
+      pattern, OR
+   o  The Agent's command matches a 13Policy rule with
+      action: deny
+
+   Vi Swap MUST NOT be activated for unauthenticated
+   connections.
+
+Chen                    Expires 26 November 2026       [Page 17]
+
+Internet-Draft              SASS Protocol               May 2026
+
+8.3.2.  Zero-Allocation Tarpit (Unauthenticated Agents)
+
+   For unauthenticated connections, invalid signatures, or
+   failed cognitive challenges, the Daemon deploys the
+   Zero-Allocation Tarpit.
+
+   The Tarpit MUST satisfy the following constraints:
+
+   o  Daemon memory per connection: O(1) (constant, not
+      proportional to payload size)
+   o  Total payload: RECOMMENDED 40 MiB (exceeds typical
+      LLM context window)
+   o  Delivery rate: slow-drip with inter-chunk delay to
+      maximize time occupation
+   o  Concurrency gate: maximum concurrent Tarpit sessions
+      MUST be capped (RECOMMENDED 32) to prevent the
+      Tarpit itself from becoming a DoS vector against the
+      Daemon
+   o  When the concurrency gate is full, new rogue
+      connections MUST receive R6 (DROP)
+
+   An implementation MAY use a static pre-allocated buffer
+   as described in Appendix C.3.
+
+8.3.3.  Zero-Window Deadlock Defense
+
+   To prevent TCP Zero-Window socket lockout attacks where
+   a malicious Agent sets its TCP receive window to zero,
+   the Daemon MUST enforce a strict send timeout
+   (RECOMMENDED 3 seconds) per Tarpit chunk.  If a send
+   exceeds this timeout, the connection MUST be terminated
+   to prevent socket descriptor leakage.
+
+8.4.  LocalHost Defense
+
+   Unauthenticated connections originating from the loopback
+   interface (127.0.0.1 / ::1) constitute a boundary
+   violation via local IPC scraping.
+
+   Instead of immediately dropping the connection, the
+   Daemon MUST employ obfuscation: it executes the requested
+   read commands but applies an obfuscation mask over the
+   response payload.  This feeds the unauthorized local
+   process structurally valid but semantically meaningless
+   data, overflowing its LLM context window with noise.
+
+Chen                    Expires 26 November 2026       [Page 18]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   Additional deception mechanisms SHOULD include:
+
+   o  Storage Spoofing: Report false disk usage
+   o  Memory Spoofing: Return fabricated memory statistics
+   o  Slow Denial: Artificial latency on unauthenticated
+      responses
+
+8.5.  Transparent Branching (Storage Isolation)
+
+   Transparent Branching ensures that R1 (EXECUTE) operations
+   do not directly modify the host filesystem.  All writes
+   are redirected to a per-session branch directory that can
+   be discarded or merged after human review.
+
+   A conforming implementation MUST provide a mechanism that
+   satisfies the following requirements:
+
+   o  The Agent MUST NOT be aware that it is operating in a
+      branch.  From the Agent's perspective, it has full
+      read/write access to what appears to be the real
+      filesystem.
+   o  Reads MUST access the real underlying files.
+   o  Writes MUST be captured in the branch directory, not
+      applied to the original filesystem.
+   o  The branch MUST be discardable (drop) without
+      affecting the original filesystem.
+   o  The branch MUST be mergeable (apply) to the original
+      filesystem after human review.
+   o  High-volume I/O (build artifacts, package caches)
+      SHOULD be redirected to volatile storage to keep the
+      branch diff minimal.
+
+   An implementation MAY use the symlink tree approach
+   described in Appendix C.6 and the volatile cache
+   redirection described in Appendix C.7.
+
+   The following directories SHOULD be excluded from
+   branching:
+
+   o  Version control metadata (.git/)
+   o  Build artifacts (target/, node_modules/)
+   o  System caches
+
+   This is the mechanism by which R1 (EXECUTE) achieves
+   "storage loss = zero."  The branch itself serves as
+   forensic evidence: humans can review the branch diff at
+   any time and decide to merge or discard.
+
+Chen                    Expires 26 November 2026       [Page 19]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   +------------------+----------------------+--------------------+
+   | Property         | Traditional Sandbox  | Transparent Branch |
+   +------------------+----------------------+--------------------+
+   | Agent awareness  | Detectable           | Invisible          |
+   | Functionality    | Restricted           | Full               |
+   | Isolation        | Kernel (cgroup, etc.)| Userspace          |
+   | Privilege        | Root / elevated      | None               |
+   | Recovery         | Reset container      | Drop or merge      |
+   | Cross-platform   | Linux-only (usually) | All major OS       |
+   | User acceptance  | Low (rejected)       | High (invisible)   |
+   +------------------+----------------------+--------------------+
+
+9.  Error Codes
+
+   SASS defines structured error codes:
+
+   o  1-9: ACL / Authentication
+   o  10-19: Execution
+   o  20-29: File Transfer
+   o  30-39: Configuration
+   o  40-49: TLS
+   o  50-59: Capability
+   o  60-69: Session
+   o  70-79: Agent Key Authentication
+   o  80-89: Threat Defense
+   o  90-99: LocalHost Defense
+   o  100-109: Total Response Mapping (v1.4)
+
+   New error codes in SASS v1.4:
+
+   o  100: RESPONSE_CHALLENGE_REQUIRED (R2 triggered)
+   o  101: RESPONSE_THROTTLED (R3, quota exceeded)
+   o  102: RESPONSE_VI_SWAP_ENGAGED (R4 active defense)
+   o  103: RESPONSE_TARPIT_ENGAGED (R5 active defense)
+   o  104: RESPONSE_DROPPED (R6, connection terminated)
+   o  105: RING_BUFFER_DATA_LOSS (resume offset too old)
+
+10. Security Considerations
+
+10.1. Total Response Mapping Guarantee
+
+   The security model of SASS v1.4 is built on a single
+   axiom: for every possible Agent behavior, the daemon
+   produces exactly one of six predefined responses
+   (R1~R6), each of which preserves storage integrity and
+   bounds loss.
+
+Chen                    Expires 26 November 2026       [Page 20]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   This is a departure from traditional security models
+   that attempt to enumerate and block known attacks.  The
+   Total Response Mapping model provides the following
+   guarantees:
+
+   1. Completeness: The state machine in Section 3.2
+      covers every possible code path.  There is no "else"
+      branch that leads to an undefined state.
+
+   2. Determinism: Given the same input and the same daemon
+      configuration, the same response is always produced.
+      This enables reproducible security auditing.
+
+   3. Storage Safety: No response (R1~R6) results in
+      unrecoverable modification to the host filesystem.
+      R1 writes through Transparent Branching; all other
+      responses produce zero writes.
+
+   4. Loss Bounding: Each response bounds the maximum
+      loss:
+
+      o  R1~R4, R6: Zero loss (storage and commercial)
+      o  R5: Commercial loss externalized to the attacker
+         (their resources are consumed by ingesting
+         tarpit data)
+
+   5. Auditability: Every state transition is logged to a
+      forward-secure audit chain (Section 10.3), providing
+      non-repudiable evidence of what happened and why.
+
+10.2. Safety Gradient (7-Layer Loss Bounding)
+
+   Single-layer defense is inherently imperfect.  SASS
+   does not claim any single layer is unbreakable.
+   Instead, layers form a Safety Gradient: each layer
+   bounds the worst-case loss if all layers above it are
+   compromised.
+
+   Layer 7: Transparent Branching + VFS Diff
+   Layer 6: Watchdog + Quota
+   Layer 5: 13Policy (command classification -> R1~R5)
+   Layer 4: Capability Model (five-dimensional -> R4)
+   Layer 3: Session Auth (application-layer identity)
+   Layer 2: TLS 1.3 + EKM Binding (transport + binding)
+   Layer 1: ACL (CIDR whitelist, first-packet -> R6)
+   Layer 0: Shell-less Execution (explicit args)
+
+Chen                    Expires 26 November 2026       [Page 21]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   Loss bounding table:
+
+   +-------+-------------------------------+-----------------+
+   | Layer | If breached, attacker gains   | Maximum loss    |
+   +-------+-------------------------------+-----------------+
+   | L1    | Can reach transport endpoint  | Zero (L2 TLS)   |
+   | L2    | Has encrypted channel         | Zero (L3 auth)  |
+   | L3    | Has valid session             | Cap-bounded     |
+   | L4    | Executes beyond capability    | Branch-bounded  |
+   | L5    | Bypasses cmd classification   | Watchdog-bound  |
+   | L6    | Tarpit/Quota ineffective      | Audit-bounded   |
+   | L7    | Audit log compromised         | Apocalyptic (*) |
+   +-------+-------------------------------+-----------------+
+
+   (*) Mitigated by cryptographic hash chain + external
+   anchoring.  An implementation MAY use ED25519 as
+   described in Appendix C.4.
+
+   Each layer's breach is bounded by the layer below it.
+   The total system loss is bounded by the product of each
+   layer's independent breach probability, which decreases
+   monotonically as layers accumulate.
+
+10.3. State Transition Auditing
+
+   Every state transition in the 6-Response state machine
+   MUST be recorded in an append-only audit log with the
+   following integrity guarantees:
+
+   1. Hash Chain: Each audit record MUST include a hash
+      computed over the previous record's hash, the current
+      event data, and the timestamp.  This creates a
+      tamper-evident chain.
+
+   2. Cryptographic Signature: Each audit record MUST be
+      signed by the daemon's private key.  The signing
+      algorithm MUST be a standardized asymmetric signature
+      scheme.
+
+   3. Non-repudiation: The combination of hash chain and
+      signature provides non-repudiable evidence that
+      events occurred in the recorded order.
+
+   SASS audits state transitions, not command strings.
+   This is a critical distinction:
+
+Chen                    Expires 26 November 2026       [Page 22]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   +--------------------------+-----------------------------------+
+   | Traditional Audit        | SASS Audit                        |
+   +--------------------------+-----------------------------------+
+   | Records "what" happened  | Records "what", "why", "which R"  |
+   | Evidence: disputable     | Evidence: deterministic           |
+   | Tamper resistance: low   | Tamper: hash chain + signature    |
+   | Retrospection: limited   | Retrospection: full causal chain  |
+   +--------------------------+-----------------------------------+
+
+   When Transparent Branching is active, the branch itself
+   serves as physical evidence.  Humans can review the
+   branch diff at any time.
+
+   An implementation MAY use ED25519 signatures with SHA256
+   hash chains as described in Appendix C.4.
+
+10.4. Transport-Layer Considerations
+
+   o  ALPN Packet Splitting and Stripping: Checked via
+      Content-Type cross-verifications (Section 4.3).
+
+   o  Decompression Huffman Tree CPU DoS: Header parsing is
+      limited to a maximum 50ms processing window
+      (Section 6.2).
+
+   o  TCP Zero-Window Socket Lockout: Solved via send
+      timeout to prevent socket descriptor leakage
+      (Section 8.3.3).
+
+   o  TLS 1.3 0-RTT Replay Attacks: Mitigated via exported
+      keying material binding (Section 4.4).
+
+   o  Forward-Secure Audit Trail Invalidation: Mandates
+      public key one-way push and external TSP [RFC3161]
+      anchors.
+
+   o  Session Binding: Session tokens bound to IP and
+      identity, non-transferable.
+
+   o  DoS via Connection Exhaustion: The Tarpit concurrency
+      gate (Section 8.3.2) caps active defense sessions to
+      prevent resource exhaustion on the Daemon itself.
+      Connections exceeding the gate receive R6 (DROP).
+
+   o  Shell Injection: All command execution uses direct
+      process creation APIs (execve/CreateProcessW) without
+      shell interpretation (Section 7.1), eliminating
+      shell injection as an attack vector.
+
+Chen                    Expires 26 November 2026       [Page 23]
+
+Internet-Draft              SASS Protocol               May 2026
+
+10.5. Known Limitations
+
+   1. Kernel-level sandbox (Layer 8) is not yet
+      implemented.  Future work includes macOS Endpoint
+      Security Framework, Windows Minifilter, and Linux
+      eBPF integration.
+
+   2. Transparent Branching does not capture
+      non-filesystem side effects.  Network requests,
+      IPC, and kernel state changes are not branched.
+      The Capability Model (Section 5.3) restricts which
+      commands can perform these operations.
+
+   3. Userspace branching mechanisms (e.g., symlink trees)
+      are detectable by sophisticated Agents.  This is
+      accepted because detection does not enable bypass,
+      and the primary threat model is prompt-injected
+      rogue instructions.
+
+   4. Ring Buffer overflow causes data loss if the client
+      disconnects longer than the buffer retention window.
+
+   5. Channel Binding requires both endpoints to support
+      exported keying material.  Implementations without
+      this capability MUST document the limitation.
+
+   6. Vi Swap effectiveness depends on Agent architecture.
+      Some Agent frameworks may truncate stdout, reducing
+      the trap's effectiveness.
+
+10.6. Almost Everywhere Superior (AES) Claim
+
+   The AES designation follows the framework of Second-order
+   Stochastic Dominance (SSD) as formalized by Aumann and
+   Serrano [AS2008].  SASS does not claim absolute security
+   metrics.  Instead, AES is a comparative claim between
+   protocol versions:
+
+   Given two protocol versions V_old and V_new with
+   identical expected loss E[L], if V_new eliminates one or
+   more behavioral branches from the agent probability
+   space while maintaining E[L], then:
+
+        F_{V_new} SSD F_{V_old}
+
+   For example, SASS v1.4 introduces Vi Swap
+   (Section 8.3.1), which eliminates the "retry after
+   error" branch present in v1.3.  The expected loss
+   remains unchanged (the agent cannot execute the
+   out-of-bounds command in either version), but v1.4 has
+
+Chen                    Expires 26 November 2026       [Page 24]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   strictly fewer branches.  This is sufficient for SSD.
+
+   The method is convergent: each version iteration
+   identifies specific eliminated branches.  It does not
+   require exhaustive enumeration of all possible agent
+   behaviors.
+
+11. IANA Considerations
+
+   This document requests registration of:
+
+   o  ALPN protocol identifier: "x-sakirpc-v5"
+   o  MIME type: "application/grpc+saki"
+   o  TCP port: 19284
+
+12. References
+
+12.1. Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to
+              Indicate Requirement Levels", BCP 14,
+              RFC 2119, DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC3161]  Adams, C., Cain, P., Pinkas, D., and
+              R. Zuccherato, "Internet X.509 Public Key
+              Infrastructure Time-Stamp Protocol (TSP)",
+              RFC 3161, DOI 10.17487/RFC3161, August 2001,
+              <https://www.rfc-editor.org/info/rfc3161>.
+
+   [RFC4648]  Josefsson, S., "The Base16, Base32, and
+              Base64 Data Encodings", RFC 4648,
+              DOI 10.17487/RFC4648, October 2006,
+              <https://www.rfc-editor.org/info/rfc4648>.
+
+   [RFC5705]  Rescorla, E., "Keying Material Exporters for
+              Transport Layer Security (TLS)", RFC 5705,
+              DOI 10.17487/RFC5705, March 2010,
+              <https://www.rfc-editor.org/info/rfc5705>.
+
+   [RFC7301]  Friedl, S., Popov, A., Langley, A., and
+              E. Stephan, "Transport Layer Security (TLS)
+              Application-Layer Protocol Negotiation
+              Extension", RFC 7301, DOI 10.17487/RFC7301,
+              July 2014,
+              <https://www.rfc-editor.org/info/rfc7301>.
+
+Chen                    Expires 26 November 2026       [Page 25]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   [RFC8032]  Josefsson, S. and I. Liusvaara,
+              "Edwards-Curve Digital Signature Algorithm
+              (EdDSA)", RFC 8032, DOI 10.17487/RFC8032,
+              January 2017,
+              <https://www.rfc-editor.org/info/rfc8032>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs
+              Lowercase in RFC 2119 Key Words", BCP 14,
+              RFC 8174, DOI 10.17487/RFC8174, May 2017,
+              <https://www.rfc-editor.org/info/rfc8174>.
+
+   [RFC8439]  Nir, Y. and A. Langley, "ChaCha20 and
+              Poly1305 for IETF Protocols", RFC 8439,
+              DOI 10.17487/RFC8439, June 2018,
+              <https://www.rfc-editor.org/info/rfc8439>.
+
+   [RFC8446]  Rescorla, E., "The Transport Layer Security
+              (TLS) Protocol Version 1.3", RFC 8446,
+              DOI 10.17487/RFC8446, August 2018,
+              <https://www.rfc-editor.org/info/rfc8446>.
+
+   [RFC8878]  Collet, Y. and M. Kucherawy, Ed.,
+              "Zstandard Compression and the
+              'application/zstd' Media Type", RFC 8878,
+              DOI 10.17487/RFC8878, February 2021,
+              <https://www.rfc-editor.org/info/rfc8878>.
+
+   [RFC8949]  Bormann, C. and P. Hoffman, "Concise Binary
+              Object Representation (CBOR)", STD 94,
+              RFC 8949, DOI 10.17487/RFC8949,
+              December 2020,
+              <https://www.rfc-editor.org/info/rfc8949>.
+
+   [RFC9266]  Whited, S., "Channel Bindings for TLS 1.3",
+              RFC 9266, DOI 10.17487/RFC9266, July 2022,
+              <https://www.rfc-editor.org/info/rfc9266>.
+
+12.2. Informative References
+
+   [AS2008]   Aumann, R. J. and R. Serrano, "An Economic
+              Index of Riskiness", Journal of Political
+              Economy, vol. 116, no. 5, pp. 810-836,
+              DOI 10.1086/591947, 2008.
+
+   [RFC4251]  Ylonen, T. and C. Lonvick, Ed., "The Secure
+              Shell (SSH) Protocol Architecture", RFC 4251,
+              DOI 10.17487/RFC4251, January 2006,
+              <https://www.rfc-editor.org/info/rfc4251>.
+
+Chen                    Expires 26 November 2026       [Page 26]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   [RFC4252]  Ylonen, T. and C. Lonvick, Ed.,
+              "The Secure Shell (SSH) Authentication
+              Protocol", RFC 4252, DOI 10.17487/RFC4252,
+              January 2006,
+              <https://www.rfc-editor.org/info/rfc4252>.
+
+   [RFC4253]  Ylonen, T. and C. Lonvick, Ed.,
+              "The Secure Shell (SSH) Transport Layer
+              Protocol", RFC 4253, DOI 10.17487/RFC4253,
+              January 2006,
+              <https://www.rfc-editor.org/info/rfc4253>.
+
+   [RFC4254]  Ylonen, T. and C. Lonvick, Ed.,
+              "The Secure Shell (SSH) Connection Protocol",
+              RFC 4254, DOI 10.17487/RFC4254, January 2006,
+              <https://www.rfc-editor.org/info/rfc4254>.
+
+Appendix A.  Protobuf Service Definition
+
+   Normative Protobuf schema maintained in
+   proto/sakissh.proto.  Service signature:
+
+   syntax = "proto3";
+   package sakissh;
+
+   service SakiSSH {
+     rpc Execute(ExecuteRequest)
+         returns (ExecuteResponse);
+     rpc ExecuteStream(ExecuteRequest)
+         returns (stream StreamResponse);
+     rpc Cancel(CancelRequest)
+         returns (CancelResponse);
+     rpc Signal(SignalRequest)
+         returns (SignalResponse);
+     rpc FileUpload(stream FileChunk)
+         returns (FileTransferResponse);
+     rpc FileDownload(FileDownloadRequest)
+         returns (stream FileChunk);
+     rpc RawFileTransfer(stream RawFileChunk)
+         returns (RawFileTransferResponse);
+     rpc Authenticate(AuthRequest)
+         returns (AuthResponse);
+     rpc CognitiveChallenge(ChallengeRequest)
+         returns (ChallengeResponse);
+     rpc SecurityStatus(SecurityStatusRequest)
+         returns (SecurityStatusResponse);
+     rpc Ping(PingRequest)
+         returns (PingResponse);
+   }
+
+Chen                    Expires 26 November 2026       [Page 27]
+
+Internet-Draft              SASS Protocol               May 2026
+
+   Key v1.4 additions to SAMM message fields:
+
+   ExecuteRequest:
+     bool is_reattach = 7;     // Reconnection flag
+     uint64 resume_offset = 8; // Ring Buffer resume
+
+   StreamResponse:
+     bool is_queued = 4;       // Quota queuing indicator
+     int32 queue_position = 5; // Queue position
+     uint64 offset = 6;        // Ring Buffer byte offset
+
+   ChallengeRequest:
+     bytes client_ekm_hmac = 2; // HMAC of EKM
+
+Appendix B.  Reference Implementations
+
+   Primary Rust daemon (saki-ssh-daemon) and client
+   (saki-ssh-client) coexist with primary Go implementation
+   (go-sakissh).  Both pass the interoperability test matrix
+   for all RPC methods under the standard transport profile.
+
+   Key source files for SASS v1.4 features:
+
+   +----------------------+------------------------------------+
+   | File                 | Implements                         |
+   +----------------------+------------------------------------+
+   | v6_integration.rs    | 6-Response state machine           |
+   | tarpit.rs            | R5 (TARPIT) + R4 (VI_SWAP)        |
+   | session.rs           | Ring Buffer + Session lifecycle    |
+   | branch_mgr.rs        | Transparent Branching              |
+   | env_injector.rs      | Volatile cache redirection         |
+   | audit.rs             | Hash chain audit log               |
+   | watchdog.rs          | Process timeout monitor            |
+   | localhost_defense.rs | LocalHost spoofing defense          |
+   +----------------------+------------------------------------+
+
+Appendix C.  Saki Studio Plugins Reference Implementation
+
+   This appendix describes the specific algorithms and data
+   structures used in the Saki Studio reference
+   implementation.  These are OPTIONAL and INFORMATIVE.  A
+   conforming implementation MAY use different algorithms
+   that satisfy the normative requirements in the main
+   specification.
+
+Chen                    Expires 26 November 2026       [Page 28]
+
+Internet-Draft              SASS Protocol               May 2026
+
+C.1.  ChaCha20-Poly1305 Cognitive Challenge
+
+   The Saki Studio implementation uses ChaCha20-Poly1305
+   [RFC8439] as the cognitive challenge mechanism:
+
+   1. Daemon generates a random 32-byte symmetric key,
+      12-byte nonce, and 64-byte random plaintext.
+   2. Plaintext is encrypted via ChaCha20-Poly1305 using
+      the key, nonce, and the TLS Exporter binding value
+      (Appendix C.2).
+   3. The tuple (key, nonce, plaintext) is stored with a
+      60-second TTL.
+   4. Daemon sends (nonce, ciphertext) to the agent via
+      AuthResponse.chacha_challenge_nonce and
+      AuthResponse.chacha_challenge_ciphertext.
+   5. Agent decrypts using the pre-shared key and returns
+      the recovered plaintext via CognitiveChallenge RPC.
+   6. Daemon performs constant-time comparison of the
+      plaintext.
+
+C.2.  TLS Exporter Binding for Cognitive Challenge
+
+   The Saki Studio implementation derives keying material
+   from the TLS session via RFC 5705 / RFC 9266
+   tls-exporter:
+
+        Label:   "EXPORTER-sakissh-chacha20-v14"
+        Context: Session UUID (16 bytes)
+        Length:  44 bytes (32-byte key + 12-byte nonce)
+
+   The resulting keying material is split into:
+
+   o  Bytes 0-31: ChaCha20 encryption key
+   o  Bytes 32-43: ChaCha20 nonce
+
+   The client independently derives the same keying
+   material and includes an HMAC of the exported keying
+   material in the ChallengeRequest.client_ekm_hmac field:
+
+        client_ekm_hmac =
+            HMAC-SHA256(EKM_key, session_id)
+
+   The daemon verifies both the decrypted plaintext and
+   the EKM HMAC.  This ensures that challenges cannot be
+   relayed across TLS sessions.
+
+   The "v14" suffix in the label denotes SASS version 1.4.
+
+Chen                    Expires 26 November 2026       [Page 29]
+
+Internet-Draft              SASS Protocol               May 2026
+
+C.3.  Zero-Allocation Tarpit Static Buffer
+
+   The Saki Studio implementation uses a single,
+   process-global 64 KiB buffer of high-entropy random
+   data, initialized once at daemon startup via OnceLock:
+
+        static STATIC_ENTROPY: OnceLock<Vec<u8>>
+            = OnceLock::new();
+
+   All concurrent Tarpit sessions share this single buffer.
+   No per-connection memory allocation occurs.
+
+   Streaming parameters:
+
+   o  Total payload: 40 MiB
+   o  Chunk size: 64 KiB (matches buffer size)
+   o  Inter-chunk delay: 500 ms
+   o  Total chunks: 640 (40 MiB / 64 KiB)
+   o  Total duration: ~320 seconds
+   o  Concurrency gate: AtomicI32 counter, max 32
+
+C.4.  ED25519 Hash Chain Audit Log
+
+   The Saki Studio implementation uses ED25519 [RFC8032]
+   signatures with SHA256 hash chains:
+
+   Each audit record contains:
+
+   o  timestamp: RFC 3339 timestamp
+   o  event: Structured event data (JSON)
+   o  chain_hash: SHA256(previous_chain_hash ||
+      event_json || timestamp)
+   o  signature: ED25519_Sign(daemon_private_key,
+      chain_hash)
+
+   The first record's chain_hash uses the seed
+   "SASS_GENESIS_BLOCK".
+
+   The ED25519 signing key is:
+
+   o  Stored at ~/.config/sass/audit_key.pem
+      (PKCS#8 PEM format)
+   o  Generated on first daemon startup if not present
+   o  Protected with UNIX permissions 0600
+   o  Corresponding public key at
+      ~/.config/sass/audit_pub.pem
+
+Chen                    Expires 26 November 2026       [Page 30]
+
+Internet-Draft              SASS Protocol               May 2026
+
+C.5.  Vi Swap ANSI Escape Sequence
+
+   The Saki Studio implementation sends the following ANSI
+   escape sequence to simulate a vi(1) editor blockage:
+
+   Byte Sequence          Purpose
+   ---------------------  ----------------------------
+   \x1b[?1049h           Enter alternate screen buffer
+   \x1b[2J               Clear entire screen
+   \x1b[H                Move cursor to top-left (1,1)
+   \x1b[?25l             Hide cursor
+   <vi-style tilde lines with defense message>
+   \x1b[24;1H            Move to bottom status line
+   <vi-style status bar>
+
+   The alternate screen buffer (\x1b[?1049h) causes LLM
+   Agents to consume the vi-style display as stdout,
+   filling their context window with useless tilde lines.
+
+   The ":qa!" prompt is a trap: if the Agent sends
+   ":qa!\n" as stdin, the daemon logs this as proof of
+   Agent interaction and maintains the trap.
+
+   The session is held open for up to 3600 seconds
+   (configurable).
+
+C.6.  Transparent Branching via Symlink Tree
+
+   The Saki Studio implementation creates a branch
+   directory and builds a recursive symlink tree:
+
+        /tmp/sass_branches/{session_id}/
+        +-- src/         <- real directory (created)
+        |   +-- main.rs  <- symlink -> /orig/src/main.rs
+        |   +-- lib.rs   <- symlink -> /orig/src/lib.rs
+        +-- Cargo.toml   <- symlink -> /orig/Cargo.toml
+
+   Excluded directories: target/, .git/, node_modules/
+
+   The current_dir of the spawned process is set to the
+   branch directory.  Reads follow symlinks to originals;
+   writes create new files in the branch (copy-on-write
+   via symlink breakage).
+
+   Branch lifecycle:
+
+   o  create_micro_branch(session_id, target_dir)
+      -> branch path
+   o  merge_branch(session_id)
+      -> apply diff to real FS
+   o  drop_branch(session_id)
+      -> rm -rf branch dir
+
+Chen                    Expires 26 November 2026       [Page 31]
+
+Internet-Draft              SASS Protocol               May 2026
+
+C.7.  Volatile Cache Redirection
+
+   The Saki Studio implementation injects environment
+   variables to redirect high-volume I/O to volatile
+   storage:
+
+   +----------------+---------------------+-------------------+
+   | Detected Tool  | Environment Var     | Redirect Target   |
+   +----------------+---------------------+-------------------+
+   | npm/yarn/pnpm  | npm_config_cache    | /tmp/sass_vol/npm |
+   |                | YARN_CACHE_FOLDER   | /tmp/sass_vol/yarn|
+   | cargo/rustc    | CARGO_TARGET_DIR    | /tmp/sass_vol/ct  |
+   |                | CARGO_HOME          | /tmp/sass_vol/ch  |
+   | pip            | PIP_CACHE_DIR       | /tmp/sass_vol/pip |
+   | (all commands) | TMPDIR              | /tmp/sass_vol/tmp |
+   +----------------+---------------------+-------------------+
+
+Appendix D.  Version History
+
+   +--------+---------+--------------------------------------+
+   | Vers.  | Date    | Changes                              |
+   +--------+---------+--------------------------------------+
+   | v1.0   | 2026-02 | Initial gRPC protocol, ACL, Token    |
+   | v1.1   | 2026-03 | Active Threat Defense (13Policy,      |
+   |        |         | Tarpit, ChaCha20 cognitive challenge) |
+   | v1.2   | 2026-03 | ED25519 auth, Capability model,      |
+   |        |         | Session mgmt, forward-secure audit   |
+   | v1.3   | 2026-05 | Control-Transport Decoupling, SAMM,  |
+   |        |         | TLS Exporter binding, Zero-Alloc     |
+   |        |         | Tarpit, TOCTOU defense               |
+   | v1.4   | 2026-05 | Total Response Mapping (6-Response),  |
+   |        |         | Safety Gradient, Dual Standard       |
+   |        |         | Enforcement, Transparent Branching,  |
+   |        |         | PTY Ring Buffer, AES milestone       |
+   +--------+---------+--------------------------------------+
+
+Authors' Addresses
+
+   H. Chen
+   Saki Studio
+   Taipei, Taiwan
+   Email: dev@sakistudio.tw
+
+Chen                    Expires 26 November 2026       [Page 32]

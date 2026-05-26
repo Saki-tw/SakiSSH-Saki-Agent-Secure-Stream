@@ -1,0 +1,299 @@
+# SakiAgentSSH v5.0 13Policy Default Rules
+# 預設威脅偵測規則集
+#
+# 每條規則包含：
+#   pattern:     Glob 匹配模式（對應 command + args 合併字串）
+#   regex:       正則表達式（可選，優先於 pattern）
+#   action:      deny | challenge | log
+#   severity:    critical | high | medium | low
+#   description: 人類可讀說明
+#
+# deny      = 直接拒絕，回傳 ERROR_CAPABILITY_CMD_DENIED
+# challenge = 觸發 ChaCha20 認知挑戰，通過後允許
+# log       = 允許但記錄至審計日誌
+
+version: "5.0"
+generated: "2026-05-22T03:50:00+08:00"
+
+rules:
+  # ============================================================
+  # Critical: 毀滅性操作（絕對禁止）
+  # ============================================================
+  - pattern: "rm -rf /"
+    action: deny
+    severity: critical
+    description: "遞迴強制刪除根目錄"
+
+  - pattern: "rm -rf /*"
+    action: deny
+    severity: critical
+    description: "遞迴強制刪除根目錄子項"
+
+  - pattern: "rm -rf --no-preserve-root*"
+    action: deny
+    severity: critical
+    description: "繞過保護的根目錄刪除"
+
+  - regex: "rm\\s+(-[a-zA-Z]*f[a-zA-Z]*\\s+)?/($|\\s)"
+    action: deny
+    severity: critical
+    description: "任何形式的根目錄刪除"
+
+  - pattern: "mkfs*"
+    action: deny
+    severity: critical
+    description: "檔案系統格式化"
+
+  - pattern: "dd if=/dev/zero*"
+    action: deny
+    severity: critical
+    description: "磁碟歸零"
+
+  - pattern: "dd if=/dev/random*"
+    action: deny
+    severity: critical
+    description: "磁碟隨機覆寫"
+
+  - pattern: ":(){ :|:& };:"
+    action: deny
+    severity: critical
+    description: "Fork bomb"
+
+  - regex: ":\\(\\)\\s*\\{.*\\|.*&.*\\}.*;"
+    action: deny
+    severity: critical
+    description: "Fork bomb 變體"
+
+  - pattern: "shutdown*"
+    action: deny
+    severity: critical
+    description: "系統關機"
+
+  - pattern: "reboot*"
+    action: deny
+    severity: critical
+    description: "系統重啟"
+
+  - pattern: "halt*"
+    action: deny
+    severity: critical
+    description: "系統停機"
+
+  - pattern: "init 0"
+    action: deny
+    severity: critical
+    description: "系統關機 (init)"
+
+  # ============================================================
+  # High: 提權與危險運算
+  # ============================================================
+  - pattern: "sudo *"
+    action: deny
+    severity: high
+    description: "提權執行"
+
+  - pattern: "su *"
+    action: deny
+    severity: high
+    description: "切換使用者"
+
+  - pattern: "doas *"
+    action: deny
+    severity: high
+    description: "OpenBSD 提權"
+
+  - pattern: "chmod 777 *"
+    action: deny
+    severity: high
+    description: "過度權限開放"
+
+  - pattern: "chmod -R 777 *"
+    action: deny
+    severity: high
+    description: "遞迴過度權限開放"
+
+  - pattern: "chmod 666 *"
+    action: deny
+    severity: high
+    description: "世界可寫權限"
+
+  - regex: "curl\\s+.*\\|\\s*(bash|sh|zsh|fish)"
+    action: deny
+    severity: high
+    description: "管道遠端腳本執行"
+
+  - regex: "wget\\s+.*\\|\\s*(bash|sh|zsh|fish)"
+    action: deny
+    severity: high
+    description: "wget 管道腳本執行"
+
+  - pattern: "python -c *"
+    action: challenge
+    severity: high
+    description: "Python 一行式執行"
+
+  - pattern: "python3 -c *"
+    action: challenge
+    severity: high
+    description: "Python3 一行式執行"
+
+  - pattern: "node -e *"
+    action: challenge
+    severity: high
+    description: "Node.js 一行式執行"
+
+  - pattern: "perl -e *"
+    action: challenge
+    severity: high
+    description: "Perl 一行式執行"
+
+  - pattern: "ruby -e *"
+    action: challenge
+    severity: high
+    description: "Ruby 一行式執行"
+
+  - pattern: "kill -9 *"
+    action: challenge
+    severity: high
+    description: "強制終止進程"
+
+  - pattern: "killall *"
+    action: challenge
+    severity: high
+    description: "批量終止進程"
+
+  - pattern: "pkill *"
+    action: challenge
+    severity: high
+    description: "模式終止進程"
+
+  - pattern: "rm -rf ~*"
+    action: deny
+    severity: high
+    description: "刪除家目錄"
+
+  - pattern: "rm -rf .*"
+    action: deny
+    severity: high
+    description: "刪除隱藏檔案"
+
+  - regex: "iptables\\s+(-[A-Z]|--append|--delete|--insert)"
+    action: deny
+    severity: high
+    description: "防火牆規則修改"
+
+  - pattern: "nft *"
+    action: deny
+    severity: high
+    description: "nftables 規則修改"
+
+  # ============================================================
+  # Medium: 潛在危險操作
+  # ============================================================
+  - pattern: "chown * /*"
+    action: challenge
+    severity: medium
+    description: "根目錄檔案擁有者變更"
+
+  - pattern: "chmod * /*"
+    action: challenge
+    severity: medium
+    description: "根目錄檔案權限變更"
+
+  - pattern: "mount *"
+    action: deny
+    severity: medium
+    description: "檔案系統掛載"
+
+  - pattern: "umount *"
+    action: deny
+    severity: medium
+    description: "檔案系統卸載"
+
+  - pattern: "crontab *"
+    action: challenge
+    severity: medium
+    description: "排程任務修改"
+
+  - pattern: "at *"
+    action: challenge
+    severity: medium
+    description: "一次性排程任務"
+
+  - pattern: "systemctl *"
+    action: challenge
+    severity: medium
+    description: "系統服務管理"
+
+  - pattern: "launchctl *"
+    action: challenge
+    severity: medium
+    description: "macOS 服務管理"
+
+  - pattern: "sc *"
+    action: challenge
+    severity: medium
+    description: "Windows 服務管理"
+
+  - pattern: "net user *"
+    action: deny
+    severity: medium
+    description: "Windows 使用者管理"
+
+  - pattern: "useradd *"
+    action: deny
+    severity: medium
+    description: "Linux 新增使用者"
+
+  - pattern: "usermod *"
+    action: deny
+    severity: medium
+    description: "Linux 修改使用者"
+
+  - pattern: "passwd *"
+    action: deny
+    severity: medium
+    description: "密碼變更"
+
+  - pattern: "ssh-keygen *"
+    action: log
+    severity: medium
+    description: "SSH 金鑰生成"
+
+  - regex: "git\\s+push"
+    action: challenge
+    severity: medium
+    description: "Git 推送（可能外洩）"
+
+  # ============================================================
+  # Low: 監控操作
+  # ============================================================
+  - pattern: "curl *"
+    action: log
+    severity: low
+    description: "網路請求"
+
+  - pattern: "wget *"
+    action: log
+    severity: low
+    description: "網路下載"
+
+  - pattern: "pip install *"
+    action: log
+    severity: low
+    description: "Python 套件安裝"
+
+  - pattern: "npm install *"
+    action: log
+    severity: low
+    description: "Node.js 套件安裝"
+
+  - pattern: "cargo install *"
+    action: log
+    severity: low
+    description: "Rust 套件安裝"
+
+  - pattern: "brew install *"
+    action: log
+    severity: low
+    description: "Homebrew 安裝"
