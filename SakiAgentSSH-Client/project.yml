@@ -2,7 +2,7 @@ name: SakiAgentSSHClient
 options:
   bundleIdPrefix: tw.com.saki-studio
   deploymentTarget:
-    macOS: "13.0"
+    macOS: "14.0"
   xcodeVersion: "16.0"
   developmentLanguage: en
 

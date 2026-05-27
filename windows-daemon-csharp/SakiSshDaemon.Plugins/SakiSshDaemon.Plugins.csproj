@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>SakiSshDaemon.Plugins</RootNamespace>
+    <AssemblyName>SakiSshDaemon.Plugins</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Ed25519 簽名 (Plugin #4: AuditChain) -->
+    <PackageReference Include="NSec.Cryptography" Version="24.4.0" />
+    <!-- JSON 序列化 (Plugin #4: AuditChain) -->
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <!-- 日誌抽象層 -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SakiSshDaemon.Interop\SakiSshDaemon.Interop.csproj" />
+  </ItemGroup>
+
+</Project>

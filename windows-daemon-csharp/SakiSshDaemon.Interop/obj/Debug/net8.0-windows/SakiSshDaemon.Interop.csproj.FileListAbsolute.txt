@@ -1,0 +1,13 @@
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/bin/Debug/net8.0-windows/SakiSshDaemon.Interop.deps.json
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/bin/Debug/net8.0-windows/SakiSshDaemon.Interop.dll
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/bin/Debug/net8.0-windows/SakiSshDaemon.Interop.pdb
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/Debug/net8.0-windows/SakiSshDaemon.Interop.csproj.AssemblyReference.cache
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/Debug/net8.0-windows/SakiSshDaemon.Interop.GeneratedMSBuildEditorConfig.editorconfig
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/Debug/net8.0-windows/SakiSshDaemon.Interop.AssemblyInfoInputs.cache
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/Debug/net8.0-windows/SakiSshDaemon.Interop.AssemblyInfo.cs
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/Debug/net8.0-windows/SakiSshDaemon.Interop.csproj.CoreCompileInputs.cache
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/Debug/net8.0-windows/SakiSshDaemon.Interop.sourcelink.json
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/Debug/net8.0-windows/SakiSshDaemon.Interop.dll
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/Debug/net8.0-windows/refint/SakiSshDaemon.Interop.dll
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/Debug/net8.0-windows/SakiSshDaemon.Interop.pdb
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/Debug/net8.0-windows/ref/SakiSshDaemon.Interop.dll

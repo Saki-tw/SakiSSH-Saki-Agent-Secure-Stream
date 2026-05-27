@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "5qGdnvhEj00=",
+  "success": true,
+  "projectFilePath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/SakiSshDaemon.Interop.csproj",
+  "expectedPackageFiles": [
+    "/Users/hc1034/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.2/microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+    "/Users/hc1034/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.2/microsoft.extensions.logging.abstractions.8.0.2.nupkg.sha512",
+    "/Users/hc1034/.nuget/packages/microsoft.netcore.app.ref/8.0.26/microsoft.netcore.app.ref.8.0.26.nupkg.sha512",
+    "/Users/hc1034/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.26/microsoft.aspnetcore.app.ref.8.0.26.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,275 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon/SakiSshDaemon.csproj": {}
+  },
+  "projects": {
+    "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/SakiSshDaemon.Interop.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/SakiSshDaemon.Interop.csproj",
+        "projectName": "SakiSshDaemon.Interop",
+        "projectPath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/SakiSshDaemon.Interop.csproj",
+        "packagesPath": "/Users/hc1034/.nuget/packages/",
+        "outputPath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/hc1034/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0-windows"
+        ],
+        "sources": {
+          "/opt/homebrew/Cellar/dotnet/10.0.107/libexec/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0-windows7.0": {
+            "targetAlias": "net8.0-windows",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0-windows7.0": {
+          "targetAlias": "net8.0-windows",
+          "dependencies": {
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.26, 8.0.26]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.26, 8.0.26]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/10.0.107/libexec/sdk/10.0.107/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/SakiSshDaemon.Plugins.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/SakiSshDaemon.Plugins.csproj",
+        "projectName": "SakiSshDaemon.Plugins",
+        "projectPath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/SakiSshDaemon.Plugins.csproj",
+        "packagesPath": "/Users/hc1034/.nuget/packages/",
+        "outputPath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/hc1034/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0-windows"
+        ],
+        "sources": {
+          "/opt/homebrew/Cellar/dotnet/10.0.107/libexec/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0-windows7.0": {
+            "targetAlias": "net8.0-windows",
+            "projectReferences": {
+              "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/SakiSshDaemon.Interop.csproj": {
+                "projectPath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/SakiSshDaemon.Interop.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0-windows7.0": {
+          "targetAlias": "net8.0-windows",
+          "dependencies": {
+            "Microsoft.Extensions.Logging.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.2, )"
+            },
+            "NSec.Cryptography": {
+              "target": "Package",
+              "version": "[24.4.0, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[8.0.5, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.26, 8.0.26]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.26, 8.0.26]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/10.0.107/libexec/sdk/10.0.107/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon/SakiSshDaemon.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon/SakiSshDaemon.csproj",
+        "projectName": "SakiSshDaemon",
+        "projectPath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon/SakiSshDaemon.csproj",
+        "packagesPath": "/Users/hc1034/.nuget/packages/",
+        "outputPath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/hc1034/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0-windows"
+        ],
+        "sources": {
+          "/opt/homebrew/Cellar/dotnet/10.0.107/libexec/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0-windows7.0": {
+            "targetAlias": "net8.0-windows",
+            "projectReferences": {
+              "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/SakiSshDaemon.Interop.csproj": {
+                "projectPath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Interop/SakiSshDaemon.Interop.csproj"
+              },
+              "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/SakiSshDaemon.Plugins.csproj": {
+                "projectPath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/SakiSshDaemon.Plugins.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0-windows7.0": {
+          "targetAlias": "net8.0-windows",
+          "dependencies": {
+            "Microsoft.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Microsoft.Extensions.Hosting.WindowsServices": {
+              "target": "Package",
+              "version": "[8.0.1, )"
+            },
+            "Serilog.Extensions.Hosting": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Serilog.Sinks.Console": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Serilog.Sinks.File": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.26, 8.0.26]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.osx-arm64",
+              "version": "[8.0.26, 8.0.26]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.26, 8.0.26]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/10.0.107/libexec/sdk/10.0.107/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

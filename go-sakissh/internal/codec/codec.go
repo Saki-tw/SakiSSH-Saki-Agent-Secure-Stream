@@ -65,3 +65,32 @@ func DecodePayload(encoded string) ([]byte, error) {
 	return decompressed.Bytes(), nil
 }
 
+// EncodeStreamChunk — 串流區塊專用編碼：Zstd 壓縮 + Base64 編碼
+// 對齊 Rust: codec::encode_stream_chunk()
+//
+// 確保 CJK 多位元組字元在 gRPC 傳輸中不被截斷或誤譯。
+// 壓縮失敗時 fallback 為原始 Base64（無壓縮）。
+func EncodeStreamChunk(data []byte) string {
+	if len(data) == 0 {
+		return ""
+	}
+	// 嘗試 Zstd 壓縮 + Base64
+	encoded := EncodePayload(data)
+	if encoded != "" {
+		return encoded
+	}
+	// Fallback: 僅 Base64（無壓縮）
+	return base64.StdEncoding.EncodeToString(data)
+}
+
+// DecodeStreamChunk — 串流區塊專用解碼：Base64 解碼 + Zstd 解壓縮
+// 對齊 Rust: codec::decode_stream_chunk()
+//
+// 含 5MiB 安全門控，防禦 zip bomb 攻擊
+func DecodeStreamChunk(encoded string) ([]byte, error) {
+	if len(encoded) == 0 {
+		return []byte{}, nil
+	}
+	return DecodePayload(encoded)
+}
+

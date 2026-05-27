@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "YiTMsAMG8cg=",
+  "success": true,
+  "projectFilePath": "/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/SakiSshDaemon.Plugins.csproj",
+  "expectedPackageFiles": [
+    "/Users/hc1034/.nuget/packages/libsodium/1.0.19/libsodium.1.0.19.nupkg.sha512",
+    "/Users/hc1034/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.2/microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+    "/Users/hc1034/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.2/microsoft.extensions.logging.abstractions.8.0.2.nupkg.sha512",
+    "/Users/hc1034/.nuget/packages/nsec.cryptography/24.4.0/nsec.cryptography.24.4.0.nupkg.sha512",
+    "/Users/hc1034/.nuget/packages/system.text.json/8.0.5/system.text.json.8.0.5.nupkg.sha512",
+    "/Users/hc1034/.nuget/packages/microsoft.netcore.app.ref/8.0.26/microsoft.netcore.app.ref.8.0.26.nupkg.sha512",
+    "/Users/hc1034/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.26/microsoft.aspnetcore.app.ref.8.0.26.nupkg.sha512"
+  ],
+  "logs": []
+}

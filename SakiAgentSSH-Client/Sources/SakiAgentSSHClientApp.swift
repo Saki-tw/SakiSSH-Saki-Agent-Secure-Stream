@@ -1,12 +1,16 @@
 import SwiftUI
+import os.log
 
 @main
 struct SakiAgentSSHClientApp: App {
+    @StateObject private var pluginManager = PluginManager.shared
+
     var body: some Scene {
         WindowGroup {
             AboutView()
+                .environmentObject(pluginManager)
         }
-        .defaultSize(width: 520, height: 520)
+        .defaultSize(width: 520, height: 620)
         .commands {
             CommandGroup(replacing: .help) {
                 Button("SakiAgentSSH 說明書") {
@@ -122,7 +126,9 @@ struct HelpView: View {
 
 // MARK: - About View
 struct AboutView: View {
+    @EnvironmentObject var pluginManager: PluginManager
     @State private var showHelp = false
+    @State private var showPluginStatus = false
     private let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.2.0"
     private let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
 
@@ -134,6 +140,13 @@ struct AboutView: View {
                     .fontWeight(.semibold)
                     .foregroundStyle(.secondary)
                 Spacer()
+                Button { showPluginStatus.toggle() } label: {
+                    Image(systemName: "puzzlepiece.extension")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Color.sakiPurple)
+                }
+                .buttonStyle(.plain)
+                .help("SASS Plugins 狀態")
                 Button { showHelp = true } label: {
                     Image(systemName: "questionmark.circle")
                         .font(.system(size: 16))
@@ -180,6 +193,14 @@ struct AboutView: View {
                     }
                     .padding(.horizontal, 32)
 
+                    // SASS Plugins 狀態區塊
+                    if showPluginStatus {
+                        Divider().padding(.horizontal, 40)
+                        PluginStatusView()
+                            .environmentObject(pluginManager)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+
                     Divider().padding(.horizontal, 40)
 
                     VStack(spacing: 4) {
@@ -195,6 +216,7 @@ struct AboutView: View {
                     CopyrightView()
                     Spacer(minLength: 16)
                 }
+                .animation(.easeInOut(duration: 0.3), value: showPluginStatus)
             }
         }
         .frame(minWidth: 440, minHeight: 400)
@@ -267,3 +289,70 @@ struct CopyrightView: View {
         }
     }
 }
+
+// MARK: - Plugin Status View
+
+/// SASS Plugins 狀態面板
+/// 顯示所有 Plugin 的即時運行狀態
+struct PluginStatusView: View {
+    @EnvironmentObject var pluginManager: PluginManager
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("SASS Plugins")
+                .font(.saki(14))
+                .fontWeight(.semibold)
+                .foregroundStyle(
+                    LinearGradient(colors: [.sakiPurple, .sakiBlue],
+                                 startPoint: .leading, endPoint: .trailing)
+                )
+
+            ForEach(PluginManager.PluginID.allCases) { plugin in
+                HStack(spacing: 10) {
+                    Image(systemName: plugin.systemImage)
+                        .font(.system(size: 12))
+                        .foregroundStyle(colorForState(pluginManager.pluginStatus[plugin] ?? .idle))
+                        .frame(width: 16)
+                    Text(plugin.rawValue)
+                        .font(.saki(11))
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Text(labelForState(pluginManager.pluginStatus[plugin] ?? .idle))
+                        .font(.saki(10))
+                        .foregroundStyle(colorForState(pluginManager.pluginStatus[plugin] ?? .idle))
+                }
+            }
+
+            if let session = pluginManager.currentSessionID {
+                HStack {
+                    Text("Session:")
+                        .font(.saki(10))
+                        .foregroundStyle(.tertiary)
+                    Text(session.prefix(8) + "...")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+        .padding(.horizontal, 32)
+    }
+
+    private func colorForState(_ state: PluginManager.PluginState) -> Color {
+        switch state {
+        case .idle: return .secondary
+        case .running: return .orange
+        case .success: return .green
+        case .failure: return .red
+        }
+    }
+
+    private func labelForState(_ state: PluginManager.PluginState) -> String {
+        switch state {
+        case .idle: return "待命"
+        case .running: return "執行中"
+        case .success: return "✓"
+        case .failure(let reason): return "✗ \(reason.prefix(20))"
+        }
+    }
+}
+

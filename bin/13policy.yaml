@@ -1,0 +1,17 @@
+dangerous_commands:
+- rm -rf /
+- mkfs
+- dd if=/dev/zero
+- ':(){ :|:& };:'
+challenge_commands:
+- chmod 777
+- chown root
+- iptables
+- shutdown
+- reboot
+audit_commands:
+- curl
+- wget
+- scp
+- ssh
+tarpit_size_mb: 40

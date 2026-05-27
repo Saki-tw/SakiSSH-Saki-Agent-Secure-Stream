@@ -759,7 +759,7 @@ impl SakiSsh for MySsh {
             ));
             session_uuid.copy_from_slice(&addr_hash[..16]);
 
-            let ekm = threat_defense::derive_ekm_stub(&session_uuid);
+            let ekm = threat_defense::derive_ekm_fallback(&session_uuid);
             if !threat_defense::verify_ekm_hmac(&ekm, decrypted, &req.client_ekm_hmac) {
                 warn!("Phase 2 CognitiveChallenge: TLS EKM HMAC 通道綁定失敗");
                 return Ok(Response::new(ChallengeResponse {

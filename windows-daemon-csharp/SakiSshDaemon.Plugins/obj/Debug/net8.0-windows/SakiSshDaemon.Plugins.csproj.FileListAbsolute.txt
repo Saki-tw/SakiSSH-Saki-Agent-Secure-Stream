@@ -1,0 +1,16 @@
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/bin/Debug/net8.0-windows/SakiSshDaemon.Plugins.deps.json
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/bin/Debug/net8.0-windows/SakiSshDaemon.Plugins.dll
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/bin/Debug/net8.0-windows/SakiSshDaemon.Plugins.pdb
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/bin/Debug/net8.0-windows/SakiSshDaemon.Interop.dll
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/bin/Debug/net8.0-windows/SakiSshDaemon.Interop.pdb
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/SakiSshDaemon.Plugins.csproj.AssemblyReference.cache
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/SakiSshDaemon.Plugins.GeneratedMSBuildEditorConfig.editorconfig
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/SakiSshDaemon.Plugins.AssemblyInfoInputs.cache
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/SakiSshDaemon.Plugins.AssemblyInfo.cs
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/SakiSshDaemon.Plugins.csproj.CoreCompileInputs.cache
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/SakiSshDaemon.Plugins.sourcelink.json
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/SakiSshD.B11731B7.Up2Date
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/SakiSshDaemon.Plugins.dll
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/refint/SakiSshDaemon.Plugins.dll
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/SakiSshDaemon.Plugins.pdb
+/Users/hc1034/Saki_Studio/Claude/SakiAgentSSH/windows-daemon-csharp/SakiSshDaemon.Plugins/obj/Debug/net8.0-windows/ref/SakiSshDaemon.Plugins.dll

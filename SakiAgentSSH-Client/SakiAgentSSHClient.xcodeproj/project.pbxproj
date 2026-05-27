@@ -7,14 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2C7EA48A15FD3E62815F73B5 /* AuditVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF683434E0BCEC561B1D2ED /* AuditVerifier.swift */; };
 		3D01665D26B7E5811C048E4B /* SakiAgentSSHClientApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7686B344CDAEC4EE84488BB0 /* SakiAgentSSHClientApp.swift */; };
+		6FB0EE8E2E212481B08D0F19 /* PluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A91AD7A76488D4544827407 /* PluginManager.swift */; };
+		A1655E546C4F5515C44B40D8 /* ChaCha20Solver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 804E589AC3ACEEAFA98B4E9A /* ChaCha20Solver.swift */; };
+		B69F0071409743A491E8DF52 /* TlsExporterBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE552911770704B5D542F23 /* TlsExporterBinding.swift */; };
 		C225C5EBA9208E81AB473B4C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5FE3E4E6CFC59205EEAB6A12 /* Assets.xcassets */; };
+		D29D499D7FA58A3372436B74 /* EnvInjectorClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EDEA6587353F335AC6970AA /* EnvInjectorClient.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1EDEA6587353F335AC6970AA /* EnvInjectorClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvInjectorClient.swift; sourceTree = "<group>"; };
+		4A91AD7A76488D4544827407 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
 		56020313A3C49AA86CEA7104 /* SakiAgentSSHClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SakiAgentSSHClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5FE3E4E6CFC59205EEAB6A12 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7686B344CDAEC4EE84488BB0 /* SakiAgentSSHClientApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SakiAgentSSHClientApp.swift; sourceTree = "<group>"; };
+		7FE552911770704B5D542F23 /* TlsExporterBinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TlsExporterBinding.swift; sourceTree = "<group>"; };
+		804E589AC3ACEEAFA98B4E9A /* ChaCha20Solver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChaCha20Solver.swift; sourceTree = "<group>"; };
+		CCF683434E0BCEC561B1D2ED /* AuditVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuditVerifier.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -22,6 +32,7 @@
 			isa = PBXGroup;
 			children = (
 				7686B344CDAEC4EE84488BB0 /* SakiAgentSSHClientApp.swift */,
+				79CAEF0006DF2B7505F6091B /* Plugins */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -32,6 +43,18 @@
 				56020313A3C49AA86CEA7104 /* SakiAgentSSHClient.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		79CAEF0006DF2B7505F6091B /* Plugins */ = {
+			isa = PBXGroup;
+			children = (
+				CCF683434E0BCEC561B1D2ED /* AuditVerifier.swift */,
+				804E589AC3ACEEAFA98B4E9A /* ChaCha20Solver.swift */,
+				1EDEA6587353F335AC6970AA /* EnvInjectorClient.swift */,
+				4A91AD7A76488D4544827407 /* PluginManager.swift */,
+				7FE552911770704B5D542F23 /* TlsExporterBinding.swift */,
+			);
+			path = Plugins;
 			sourceTree = "<group>";
 		};
 		973823E4E723A66E2EF1F013 = {
@@ -81,7 +104,6 @@
 				};
 			};
 			buildConfigurationList = B3309DD2B9EDB087F55346B8 /* Build configuration list for PBXProject "SakiAgentSSHClient" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -91,6 +113,7 @@
 			mainGroup = 973823E4E723A66E2EF1F013;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
+			productRefGroup = 60B63A41537F619C67730E94 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -128,7 +151,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "RES_DIR=\"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nFONTS_DIR=\"${RES_DIR}/Fonts\"\nmkdir -p \"${FONTS_DIR}\"\ncp \"${SRCROOT}/Resources/GenJyuuGothicX-Regular.ttf\" \"${FONTS_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/Credits.rtf\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/help_zh-Hant.md\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/help_en-US.md\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/help_ja-JP.md\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/AppIcon.icns\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/avan.png\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/sakissh\" \"${RES_DIR}/\" 2>/dev/null || true\nchmod +x \"${RES_DIR}/sakissh\" 2>/dev/null || true\n# Codesign embedded binary with sandbox entitlements\nif [ -n \"${CODE_SIGN_IDENTITY}\" ] && [ \"${CODE_SIGN_IDENTITY}\" != \"-\" ]; then\n  codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \\\n    --entitlements \"${SRCROOT}/SakiAgentSSHClient.entitlements\" \\\n    --options runtime \\\n    \"${RES_DIR}/sakissh\" 2>/dev/null || true\nfi\n# Copy dSYM to archive dSYMs folder\nif [ -d \"${SRCROOT}/Resources/sakissh.dSYM\" ] && [ -n \"${ARCHIVE_DSYMS_DIR}\" ]; then\n  cp -r \"${SRCROOT}/Resources/sakissh.dSYM\" \"${ARCHIVE_DSYMS_DIR}/\" 2>/dev/null || true\nfi\n";
+			shellScript = "RES_DIR=\"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nFONTS_DIR=\"${RES_DIR}/Fonts\"\nmkdir -p \"${FONTS_DIR}\"\ncp \"${SRCROOT}/Resources/GenJyuuGothicX-Regular.ttf\" \"${FONTS_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/Credits.rtf\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/help_zh-Hant.md\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/help_en-US.md\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/help_ja-JP.md\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/AppIcon.icns\" \"${RES_DIR}/\" 2>/dev/null || true\ncp \"${SRCROOT}/Resources/avan.png\" \"${RES_DIR}/\" 2>/dev/null || true\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -137,7 +160,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C7EA48A15FD3E62815F73B5 /* AuditVerifier.swift in Sources */,
+				A1655E546C4F5515C44B40D8 /* ChaCha20Solver.swift in Sources */,
+				D29D499D7FA58A3372436B74 /* EnvInjectorClient.swift in Sources */,
+				6FB0EE8E2E212481B08D0F19 /* PluginManager.swift in Sources */,
 				3D01665D26B7E5811C048E4B /* SakiAgentSSHClientApp.swift in Sources */,
+				B69F0071409743A491E8DF52 /* TlsExporterBinding.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,7 +227,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 6;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 36HPTNN8NU;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -218,8 +246,8 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Saki Studio. All rights reserved.";
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.2.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -286,7 +314,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 6;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 36HPTNN8NU;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -311,8 +339,8 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Saki Studio. All rights reserved.";
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.2.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
