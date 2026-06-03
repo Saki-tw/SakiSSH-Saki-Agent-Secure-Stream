@@ -1,0 +1,28 @@
+# 內部參考檔
+MANIFEST.md
+gitignore_ideal
+
+# OS
+.DS_Store
+
+# 編譯產物
+build/
+build_out/
+target/
+*.dSYM
+*.dSYM/
+xcuserdata/
+*.xcuserstate
+ModuleCache*/
+DerivedData/
+bin/
+obj/
+*.o
+*.a
+*.dylib
+*.so
+*.exe
+*.dll
+*.log
+*.car
+*.dmg

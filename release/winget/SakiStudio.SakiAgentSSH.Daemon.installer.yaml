@@ -1,0 +1,12 @@
+# Created using winget-pkgs YAML schema
+PackageIdentifier: SakiStudio.SakiAgentSSH.Daemon
+PackageVersion: 0.2.0
+InstallerType: portable
+Commands:
+  - sakisshd
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakisshd.exe
+    InstallerSha256: 23431D5D2618BAD7143E507FAAFBBA97E3E19935718D76EB5F0376876CDB38DA
+ManifestType: installer
+ManifestVersion: 1.6.0

@@ -1,0 +1,12 @@
+Authentication successful!
+  Session ID:    3539e667-8871-4da8-87ef-d49a421b726c
+  Expires at:    1779433280 (unix)
+  Daemon:        5.0.0
+  Cap hash:      dcc4dbce04bc15522f7e554b3ff6174e8323d8c1aa94da78b7c6ad42ea381c6f
+
+Initiating ChaCha20 Cognitive Challenge...
+Challenge decrypted successfully. Submitting response...
+Cognitive Challenge PASSED!
+
+Export for subsequent commands:
+  export SAKISSH_SESSION=3539e667-8871-4da8-87ef-d49a421b726c

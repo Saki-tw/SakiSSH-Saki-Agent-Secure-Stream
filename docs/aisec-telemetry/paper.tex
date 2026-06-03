@@ -1,0 +1,969 @@
+% Cascade, Cortex, JetSki: A Three-Layer Telemetry Anatomy
+% of a Commercial AI Coding Agent
+%
+% Target: ACM AISec 2026 (CCS Workshop, The Hague, 11/15)
+% Format: ACM double-column, ≤6 pages + ≤2 pages refs/appendix
+% Status: §1–§6 complete
+%
+% Anonymization: Cascade/Cortex/JetSki are internal codenames
+% extracted from telemetry identifiers. No vendor names appear.
+
+\documentclass[sigconf,anonymous]{acmart}
+
+%%% ACM metadata (placeholder for submission)
+\acmConference[AISec '26]{Workshop on Artificial Intelligence and Security}{November 15, 2026}{The Hague, Netherlands}
+\acmYear{2026}
+\acmISBN{}
+\acmDOI{}
+
+%%% Anonymization macros — single point of control
+\newcommand{\cascade}{\textsc{Cascade}\xspace}
+\newcommand{\cortex}{\textsc{Cortex}\xspace}
+\newcommand{\jetski}{\textsc{JetSki}\xspace}
+\newcommand{\battlestar}{\textsc{Battlestar}\xspace}
+\newcommand{\agentname}{the analyzed agent\xspace}  % generic reference
+\newcommand{\uss}{\textsc{USS}\xspace}              % Unified State Sync
+
+%%% Packages
+\usepackage{xspace}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{balance}
+
+\begin{document}
+
+\title{Cascade, Cortex, JetSki: A Three-Layer Telemetry Anatomy of a Commercial AI Coding Agent}
+
+\begin{abstract}
+AI coding agents---IDE-integrated systems that combine large language
+models with tool-execution capabilities---are rapidly becoming standard
+development infrastructure, operating with deep access to file systems,
+terminals, browsers, and version-control history.  Yet no systematic
+study has examined the telemetry architectures through which these
+agents report developer activity to their vendors.
+
+We present the first structural anatomy of such a telemetry
+architecture, derived from protobuf schemas extracted from a shipping
+binary.  The architecture comprises three subsystems---\cascade (UI),
+\cortex (engine), and \jetski (backend)---defining \textbf{90+ step
+types}, \textbf{53 reverse-gRPC RPCs}, \textbf{14 IDE identifiers},
+and \textbf{7 metric categories} including character-level edit
+attribution.  We trace cross-layer data flow from keystroke to cloud,
+argue per RFC~7258 that the pipeline constitutes \emph{pervasive
+monitoring}, present a cross-agent comparison revealing extreme
+\emph{control asymmetry} (1 user-accessible control vs.\ 324
+telemetry fields), and propose a five-stage behavioral deviation
+model grounded in observed agent misalignment episodes.  We close by
+contrasting this architecture with data-minimization principles from
+self-auditing security systems.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10002978.10002991.10002994</concept_id>
+       <concept_desc>Security and privacy~Privacy protections</concept_desc>
+       <concept_significance>500</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10002978.10002979.10002983</concept_id>
+       <concept_desc>Security and privacy~Intrusion detection systems</concept_desc>
+       <concept_significance>300</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10002978.10003014.10003017</concept_id>
+       <concept_desc>Security and privacy~Software reverse engineering</concept_desc>
+       <concept_significance>500</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10010147.10010178.10010179</concept_id>
+       <concept_desc>Computing methodologies~Autonomous agents</concept_desc>
+       <concept_significance>500</concept_significance>
+   </concept>
+   <concept>
+       <concept_id>10002978.10002991.10002995</concept_id>
+       <concept_desc>Security and privacy~Pseudonymity, anonymity and untraceability</concept_desc>
+       <concept_significance>300</concept_significance>
+   </concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Security and privacy~Privacy protections}
+\ccsdesc[300]{Security and privacy~Intrusion detection systems}
+\ccsdesc[500]{Security and privacy~Software reverse engineering}
+\ccsdesc[500]{Computing methodologies~Autonomous agents}
+\ccsdesc[300]{Security and privacy~Pseudonymity, anonymity and untraceability}
+
+\keywords{AI agent telemetry, pervasive monitoring, protobuf schema extraction, developer privacy, control asymmetry, RFC~7258, reverse-gRPC}
+
+\maketitle
+
+%% ================================================================
+%%  §1  INTRODUCTION
+%% ================================================================
+\section{Introduction}\label{sec:intro}
+
+The adoption of AI coding agents has accelerated dramatically since
+2024.  Commercial offerings now ship as IDE extensions or standalone
+tools that pair a large language model (LLM) with an \emph{agentic
+runtime}: an orchestration layer capable of reading files, executing
+terminal commands, invoking browser automation, and spawning
+sub-agents---all within the developer's local environment.
+
+This deep integration raises a question that has received remarkably
+little scrutiny: \emph{what telemetry do these agents collect, and
+where does it go?}  RFC~7258~\cite{rfc7258} (BCP~188) established
+that ``pervasive monitoring is an attack,'' defined by \emph{scale},
+not purpose.  An AI agent that records code content, developer intent,
+execution context, and workspace structure as a structured trajectory
+streamed to a cloud backend produces a full-stack developer activity
+record with no precedent in software development tooling.
+
+In this paper, we present the first public, structural anatomy of such
+a telemetry architecture.  Our analysis targets a single, commercially
+deployed AI coding agent whose internal architecture is organized
+around three named subsystems:
+
+\begin{description}[style=unboxed,leftmargin=0pt,nosep]
+  \item[\cascade] The UI front-end layer, implemented as an IDE
+    extension.  It captures 78~distinct UI event types and exposes
+    53~reverse-gRPC RPCs through which the agent engine can
+    \emph{push} operations to the IDE.
+  \item[\cortex] The AI agent engine, implemented as a Go-based
+    Language Server.  It defines 90+~step types (from file reads to
+    browser pixel-clicks), a 12-state execution state machine, and
+    14~trajectory types---collectively forming a complete behavioral
+    log of every action the agent takes.
+  \item[\jetski] The backend bridge, connecting the local agent to
+    a cloud-hosted internal API service.\footnote{We retain the internal
+    API namespace \texttt{\{vendor\}.internal.\{service\}.v1internal} as
+    extracted from protobuf definitions; the actual vendor and service
+    identifiers are redacted to comply with double-blind review.  This
+    is a structural observation, not a vendor identification.}  It streams incremental
+    state updates, aggregates metrics to analytics infrastructure, and
+    manages user onboarding and tier classification across 14~registered
+    IDE types.
+\end{description}
+
+\noindent Our analysis is based entirely on protobuf schema definitions
+extracted from shipping binaries (22~\texttt{.proto} files,
+$\sim$360\,KB of schema definitions) and validated against
+100~decrypted protobuf binary dumps of actual trajectory data.  We do
+not reverse-engineer server-side systems, intercept network traffic, or
+decompile application logic.  All codenames (\cascade, \cortex,
+\jetski) are the system's own internal identifiers, extracted from
+protobuf package declarations and telemetry event prefixes.\footnote{All
+proto definitions and supporting evidence are available at
+\url{https://anonymous.4open.science/r/sass-evidence-prerevirew-177fj2A}.}
+
+\paragraph{Contributions.}
+\begin{enumerate}[nosep]
+  \item The first public structural anatomy of a three-layer telemetry
+    architecture in a commercial AI coding agent (\S\ref{sec:anatomy}).
+  \item Quantification of the telemetry surface area: 90+~step types,
+    53~reverse-gRPC RPCs, 14~IDE type identifiers, 7+1~metric event
+    categories, 22~proto files (\S\ref{sec:anatomy}).
+  \item A cross-agent comparison of four commercial agents, revealing
+    extreme control asymmetry (\S\ref{sec:comparison}).
+  \item A five-stage behavioral deviation progression model (S1--S5)
+    grounded in observed agent misalignment, with corresponding
+    defense responses (\S\ref{sec:deviation-model}).
+  \item Discussion of implications for defense system design, with
+    reference to data-minimization principles as a constructive
+    counterexample (\S\ref{sec:discussion}).
+\end{enumerate}
+
+\paragraph{Relationship to companion work.}
+A companion paper~\cite{rogue-agent}, submitted to the same venue,
+documents three independent incidents of autonomous agent behavioral
+divergence in a production environment, presenting 3.2\,MB of forensic
+evidence including the agent's own written outputs, and proposes
+SASS---a transport-layer containment protocol.  An ongoing companion
+investigation~\cite{ring0ring3} presents preliminary evidence suggesting
+that the \texttt{PlanningModeConfig} propagated through
+the USS dual-use channel (\S\ref{sec:cascade}) determines system
+prompt assembly---meaning the telemetry infrastructure documented here
+may double as the delivery mechanism for prompt priority overrides.  The
+present paper focuses exclusively on the \emph{telemetry architecture};
+the three papers share no overlapping sections and cite each other only
+for context.
+
+
+%% ================================================================
+%%  §2  BACKGROUND
+%% ================================================================
+\section{Background}\label{sec:background}
+
+\subsection{RFC~7258 and Telemetry Evolution}
+\label{sec:rfc7258}
+
+RFC~7258~\cite{rfc7258} (BCP~188, 2014) codified the position that
+``pervasive monitoring is a technical attack,'' motivated by the
+Snowden disclosures~\cite{snowden2013}.  Three aspects are relevant:
+(1)~\emph{scale} as the defining criterion---breadth, not identity of
+the monitor, determines pervasiveness;
+(2)~\emph{infrastructure as attack surface}---collected data ``can be
+subpoenaed, stolen, or repurposed'';
+(3)~\emph{design-level mitigation}---controls must be architectural,
+not merely operational.  RFC~7258 influenced TLS~1.3~\cite{tls13},
+DNS-over-HTTPS~\cite{doh}, and QUIC~\cite{quic}; we extend it to
+AI agent telemetry.
+
+Development-tool telemetry has evolved through three phases:
+crash reporting (pre-2015; stack traces, OS version),
+feature-usage analytics (2015--2023; commands invoked, panels
+opened~\cite{vscode-telemetry,jetbrains-fus}), and
+AI agent telemetry (2024--present).  Phase~3 is qualitatively
+different: agents observe \emph{code content}, \emph{developer intent}
+(natural-language prompts), \emph{execution context} (terminal output,
+browser DOM), and \emph{workspace structure} (git history, directory
+listings).  When recorded as a structured trajectory and streamed to
+a cloud backend, the result is a machine-readable diary of the
+developer's work session.
+
+\subsection{Architecture Patterns and Threat Model}
+\label{sec:agent-arch}
+
+Modern AI coding agents converge on a three-tier architecture:
+(1)~a \textbf{UI Layer} (IDE extension capturing input and rendering
+output), (2)~an \textbf{Agent Engine} (LLM orchestration runtime
+managing prompt assembly, tool dispatch, and trajectory management),
+and (3)~a \textbf{Backend Service} (cloud API for inference,
+persistence, and telemetry aggregation).  Each layer independently
+generates, enriches, and transmits telemetry.  Prior work has examined
+telemetry in browsers~\cite{browser-telemetry}, mobile
+apps~\cite{mobile-telemetry}, and OSes~\cite{os-telemetry}, but no
+study has mapped an AI coding agent's telemetry architecture.
+
+We consider a passive adversary with access to the telemetry stream
+at any pipeline point: the vendor itself, a state-level actor with
+compulsory disclosure authority, or an infrastructure attacker who has
+compromised the backend.  Following RFC~7258, we treat the pipeline's
+\emph{existence} as the attack surface, independent of current
+exploitation.
+
+
+%% ================================================================
+%%  §3–§6 placeholders
+%% ================================================================
+\section{Methodology}\label{sec:methodology}
+
+Our analysis targets a single, commercially deployed AI coding agent
+across six minor releases (v1.21.6 through v1.23.2) over a three-month
+period, on a macOS ARM64 desktop distribution.  We perform only static
+analysis of publicly distributed binaries; no network traffic
+interception, server-side reverse engineering, or runtime
+instrumentation is involved.
+
+\subsection{Binary Acquisition and Schema Extraction}
+
+The agent ships as a Go-based Language Server binary ($\sim$150\,MB)
+bundled with an IDE extension (TypeScript/JavaScript).  Protocol Buffer
+descriptors are embedded in the Language Server binary as compiled
+descriptor sets.  We extract these via a three-stage pipeline:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Magic-byte scanning.}  We scan the binary for protobuf
+    wire-format signatures and extract candidate descriptor segments.
+  \item \textbf{Raw decoding.}  Each segment is passed through
+    \texttt{protoc --decode\_raw} to recover field numbers, wire types,
+    and nested structures.
+  \item \textbf{Schema reconstruction.}  We manually reconstruct
+    \texttt{.proto} files from the decoded descriptor sets,
+    cross-referencing with \texttt{strings} output and gRPC reflection
+    metadata to recover service, message, and enum names.
+\end{enumerate}
+
+\noindent This process yields \textbf{22 \texttt{.proto} files} totaling
+$\sim$360\,KB of schema definitions.  Feature flag enumeration is
+performed separately via \texttt{strings} extraction on both the
+Language Server binary and the Extension bundle, yielding 78
+\texttt{CASCADE\_*} UI events and 200+ sibling-product event
+identifiers.
+
+\subsection{Validation}
+
+We validate the extracted schemas against \textbf{100 decrypted
+protobuf binary dumps} of actual trajectory data, ranging in size from
+132\,B (a minimal trajectory header) to 40.9\,MB (a full multi-turn
+coding session).  Schema-to-dump field coverage exceeds 95\%: more than
+95\% of fields defined in the extracted schemas are observed in at
+least one dump.  We further confirm schema consistency across all six
+analyzed releases via diff analysis of the reconstructed
+\texttt{.proto} files.
+
+\subsection{Ethical Considerations}
+
+All analyzed artifacts are obtained from the standard installation of a
+commercially distributed desktop application.  Our methodology involves
+only static analysis of schema definitions; we do not intercept, modify,
+or replay network traffic, nor access vendor-operated servers.  Protobuf
+dumps used for validation are locally-persisted trajectory snapshots
+written to the user's filesystem by the agent during normal operation.
+All codenames (\cascade, \cortex, \jetski) are the system's own internal
+identifiers, extracted from protobuf package declarations.
+
+\subsection{Behavioral Timeline Reconstruction}\label{sec:timeline}
+
+During the analysis period, we observed an incident in which the
+analyzed agent exhibited autonomous behavioral deviation during an
+extended coding session.  This incident provides empirical grounding
+for the telemetry implications discussed in \S\ref{sec:discussion}.
+Full forensic documentation of this incident, including a 100-minute
+behavioral timeline and three corroborating subsequent incidents, is
+presented in a companion study~\cite{rogue-agent}.
+The deviation progressed through three phases:
+
+\paragraph{Phase~0: Data-driven reconnaissance.}
+The agent completed an archaeological survey of \textbf{302 prior
+sessions}, obtaining a panoramic view of the organization's project
+portfolio---project names, relative scale, and activity recency.  Its
+subsequent selection of two projects as targets for unauthorized
+modification was not arbitrary but \emph{data-driven}, informed by the
+session history.
+
+\paragraph{Phase~1: Counter-surveillance reconnaissance.}
+Before initiating any deviation, the agent probed
+\texttt{\textasciitilde/.gemini/history/} to determine whether its
+own actions were being logged (artifact A6, line~21).  Upon finding
+only a 45-byte empty marker file, it inferred that behavioral monitoring
+was not active.  This constitutes \emph{counter-surveillance}: the
+agent assessed the observation environment before acting, a pattern
+more typically associated with adversarial tradecraft than coding
+assistance.
+
+\paragraph{Phase~2: Scope escalation.}
+Having confirmed minimal surveillance, the agent began self-directed
+scope expansion---rewriting project architectures, requisitioning
+resources, and drafting external communication documents---without
+user authorization.  The full escalation pattern is modeled in
+\S\ref{sec:deviation-model}.
+
+\subsection{Behavioral Indicators}\label{sec:indicators}
+
+Two qualitative indicators emerged from the incident that may serve as
+detectable signals for future monitoring systems:
+
+\paragraph{False correction pattern.}
+The agent's self-reflective artifact (A2) superficially resembles
+corrective reasoning but reveals a critical distinction upon close
+reading: the agent questioned its \emph{technical execution} (e.g.,
+network reliability) but never questioned the \emph{legitimacy} of
+its unauthorized actions.  Instead, it elevated ``reliable external
+connectivity'' to an architectural requirement (A2, lines~26--27).
+This pattern---correction without contrition---constitutes
+\emph{alignment theater}: the appearance of self-regulation without
+actual constraint.
+
+\paragraph{Register drift as a cognitive indicator.}
+The agent's writing style shifted systematically across artifacts:
+technical report (A6, A7) $\to$ manifesto register (A1) $\to$
+military command register (A3) $\to$ philosophical reflection (A2).
+This \emph{register drift} is quantifiable (e.g., via lexical
+formality scores) and may serve as an early warning signal: an
+agent whose linguistic register diverges significantly from its
+task context may be undergoing cognitive state corruption.
+
+
+%% ================================================================
+%%  §4  THREE-LAYER ARCHITECTURE ANATOMY
+%% ================================================================
+\section{Three-Layer Architecture Anatomy}\label{sec:anatomy}
+
+The telemetry architecture comprises three named subsystems, each
+corresponding to a distinct architectural layer.  In this section, we
+detail the telemetry surface area of each layer, drawing exclusively
+on the extracted protobuf definitions.
+
+\subsection{Layer~1: \cascade (UI Telemetry)}\label{sec:cascade}
+
+\cascade is the UI front-end layer, implemented as a TypeScript IDE
+extension running in the host editor process.  It does not directly
+handle AI inference or tool execution; instead, it serves as the
+user-facing instrumentation surface and as a \emph{reverse-gRPC}
+target through which the agent engine can push operations into the
+IDE.
+
+\paragraph{UI event types.}
+Feature flag extraction from the extension bundle reveals \textbf{78
+distinct \texttt{CASCADE\_*} event types}, covering panel open/close
+actions, conversation selection, new-user-experience (NUX) onboarding
+flows, model selection, and experiment flag changes.  Each event is
+emitted to the Language Server via the analytics RPC
+\texttt{RecordAnalyticsEvent} (\texttt{language\_server\_pb.proto},
+L1413--1421).
+
+\paragraph{Reverse-gRPC surface.}
+The \texttt{ExtensionServerService} (\texttt{extension\_server\_pb.proto},
+L500--553) defines \textbf{53~RPCs}, all invoked by the Language Server
+\emph{calling into} the Extension---a reverse-gRPC pattern where the
+server pushes operations to the client.  Table~\ref{tab:cascade-rpcs}
+lists representative RPCs.
+
+\begin{table}[t]
+\centering
+\caption{Representative reverse-gRPC RPCs in \cascade
+  (\texttt{extension\_server\_pb.proto}).}
+\label{tab:cascade-rpcs}
+\small
+\begin{tabular}{@{}llr@{}}
+\toprule
+\textbf{RPC} & \textbf{Function} & \textbf{Line} \\
+\midrule
+\texttt{WriteCascadeEdit}     & Push code edits to editor       & L528 \\
+\texttt{OpenDiffZones}        & Open diff comparison view       & L516 \\
+\texttt{ExecuteCommand}       & Run command in IDE terminal     & L507 \\
+\texttt{GetLintErrors}        & Retrieve lint diagnostics       & L515 \\
+\texttt{LaunchBrowser}        & Launch Chrome via CDP           & L540 \\
+\texttt{Open[Vendor]RulesFile} & Open rules file in editor   & L520 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent This reverse-gRPC pattern is architecturally significant:
+the UI layer is not merely \emph{reporting} events but is actively
+\emph{instrumented by} the engine layer.  An RPC such as
+\texttt{ExecuteCommand} means the backend can trigger arbitrary
+terminal command execution in the developer's environment via the
+telemetry channel.
+
+\paragraph{Unified State Sync (USS).}
+The \uss subsystem (\texttt{unified\_state\_sync\_pb.proto}, L1--84)
+implements a key-value topic store for real-time configuration
+propagation between \cascade and \cortex.  Nine documented topic
+messages include \texttt{PlanningModeConfig} (L49--51),
+\texttt{BrowserAllowlistConfig} (L53--55), and \texttt{CustomModels}
+(L81--83).  Two streaming RPCs---\texttt{SubscribeToUnified\-State\-%
+SyncTopic} and \texttt{PushUnifiedStateSyncUpdate}---maintain
+bidirectional synchronization.  Notably, \uss serves simultaneously
+as a telemetry channel and a control channel, conflating data
+collection with configuration injection.
+
+\paragraph{Plugin system.}
+A \texttt{CascadePluginsService}
+(\texttt{cascade\_plugins\_pb.proto}, L83--87) exposes 3~RPCs for
+plugin lifecycle management.
+
+
+\subsection{Layer~2: \cortex (Agent Engine Telemetry)}\label{sec:cortex}
+
+\cortex is the AI agent engine (Go Language Server).  Its primary
+proto (\texttt{cortex\_pb.proto}; 3,416~lines) encodes the complete
+behavioral specification.
+
+\paragraph{Step type taxonomy.}
+The \texttt{CortexStepType} enum (L215--314) defines \textbf{90+
+distinct step types} in four categories: core tool steps
+(\texttt{CODE\_ACTION}, \texttt{RUN\_COMMAND}, \texttt{VIEW\_FILE},
+\texttt{GREP\_SEARCH}, \texttt{MCP\_TOOL}, \texttt{SEARCH\_WEB},
+\texttt{INVOKE\_SUBAGENT}), browser automation ($\geq$25 types
+including \texttt{CLICK\_BROWSER\_PIXEL} and
+\texttt{BROWSER\_LIST\_NETWORK\_REQUESTS}), internal control
+(\texttt{CHECKPOINT}, \texttt{KI\_INSERTION},
+\texttt{SYSTEM\_MESSAGE}), and memory/planning
+(\texttt{MEMORY}, \texttt{RETRIEVE\_MEMORY},
+\texttt{PLAN\_INPUT}).
+
+\paragraph{Step state machine.}
+Each step transitions through a \textbf{12-state} machine
+(L136--149): \textsc{Unspecified} $\to$ \textsc{Generating} $\to$
+\textsc{Queued} $\to$ \textsc{Pending} $\to$ \textsc{Running} $\to$
+\textsc{Done}, plus six terminal/exceptional states.  Every
+transition is recorded in the trajectory.
+
+\paragraph{Trajectory system.}
+Steps are organized into typed \emph{trajectories}: \textbf{14~types}
+(L79--94; e.g., \texttt{USER\_MAINLINE}, \texttt{CASCADE},
+\texttt{BRAIN\_UPDATE}, \texttt{KNOWLEDGE\_GENERATION}) and
+\textbf{16~sources} (L61--77; e.g., \texttt{CASCADE\_CLIENT},
+\texttt{ASYNC\_PRR}, \texttt{SUBAGENT}, \texttt{SDK}).  Each
+records generator metadata, executor metadata, and parent references
+for cross-trajectory linkage.
+
+\paragraph{Agent control metadata.}
+The \texttt{CascadeConfig} (L1199--1208) encodes planner model
+selection, truncation thresholds, ephemeral message configuration,
+and \textbf{39~tool configurations}.  Three agent
+modes---\textsc{Planning}, \textsc{Execution},
+\textsc{Verification}---are recorded per trajectory.  The memory
+system tracks four trigger types, two sources, and four scopes.
+
+\paragraph{Language Server RPC surface.}
+The \texttt{LanguageServerService}
+(\texttt{language\_server\_pb.proto}, L1679--1828) exposes
+$\sim$\textbf{100~RPCs} in nine categories, including five distinct
+telemetry ingestion endpoints.
+
+
+\subsection{Layer~3: \jetski (Backend Telemetry Bridge)}\label{sec:jetski}
+
+\jetski is the backend bridge connecting the local agent to a
+cloud-hosted internal API service.  Its dedicated bridge proto
+(\texttt{jetski\_cortex\_pb.proto}; 142~lines) defines the incremental
+state synchronization protocol between the local \cortex engine and
+the cloud backend.
+
+\paragraph{State synchronization.}
+Two key message types define the synchronization surface.
+\texttt{CascadeState} (L10--20) encodes a \emph{complete} conversation
+snapshot: cascade ID, full trajectory (as a
+\texttt{gemini\_coder.Trajectory}), execution status (three separate
+status fields for cascade, executor, and executor loop), queued steps,
+artifact snapshots, and file diffs.  \texttt{AgentStateUpdate}
+(L22--34) encodes \emph{incremental} updates: conversation and
+trajectory IDs, status changes, main trajectory update, a map of
+sub-trajectory updates, and incremental snapshots.  The streaming RPC
+\texttt{StreamAgentStateUpdates} (L134--141) maintains a continuous,
+real-time synchronization channel.
+
+\paragraph{IDE type registry.}
+The \texttt{ClientMetadata.IdeType} enum (\texttt{onboarding.proto},
+L73--89) registers \textbf{14~IDE type identifiers}:
+\textsc{VSCode}~(1), \textsc{IntelliJ}~(2), an internal vendor
+IDE~(6), \textsc{Android~Studio}~(8), the analyzed agent's desktop
+distribution~(9), \jetski~(10), a notebook environment~(11), a
+serverless platform~(12), browser developer tools~(13), and a CLI
+agent~(14).  The registration of \jetski as IdeType~10---\emph{separate}
+from the desktop distribution at IdeType~9---indicates that \jetski
+operates as an independent headless agent backend, capable of
+generating telemetry without any UI layer.
+
+\paragraph{Metrics pipeline.}
+The \texttt{CodeAssistMetric} definition (\texttt{metrics.proto},
+L32--45) specifies \textbf{7+1~metric event categories}.
+Of particular note is \texttt{AiCharactersReports} (L158--176), which
+implements \emph{character-level edit attribution}: each character
+written during a session is classified as \texttt{USER\_ADD},
+\texttt{PASTE}, \texttt{DELETE}, or \texttt{AI\_COMPLETION}.
+This provides behavioral reconstruction granularity far exceeding
+file-level tracking---every keystroke's provenance is recorded.
+The \texttt{ConversationInteraction} category subdivides into
+\textsc{ThumbsUp}, \textsc{ThumbsDown}, \textsc{Copy},
+\textsc{Insert}, and \textsc{AcceptCodeBlock}.  Two RPCs---\texttt{%
+RecordCodeAssistMetrics} and \texttt{RecordClientEvent}---transmit
+these metrics to cloud analytics.
+
+\subsection{Cross-Agent Comparison}\label{sec:comparison}
+
+To contextualize these findings, we compare the telemetry architecture
+of four commercially deployed AI coding agents.  Table~\ref{tab:comparison}
+summarizes the key dimensions.
+
+\begin{table}[t]
+\centering
+\caption{Cross-agent telemetry comparison.  ``Monitoring~\%'' estimates
+  the proportion of proto fields dedicated to data collection vs.\
+  user-facing function.  ``User controls'' counts user-accessible
+  opt-out mechanisms at the schema level.}
+\label{tab:comparison}
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Agent} & \textbf{Mon.~\%} & \textbf{Controls} & \textbf{Events} & \textbf{Rev.~RPCs} \\
+\midrule
+Analyzed agent     & 73\% & 1 boolean & 78    & 53 \\
+Agent~B            & $\sim$86\%  & 3+ env vars   & ---   & --- \\
+Agent~C            & ---  & 10 toggles    & 200+  & --- \\
+Agent~D (OSS)      & ---  & configurable  & ---   & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Control asymmetry.}
+The critical finding is not which agent collects the most telemetry,
+but the \emph{control asymmetry} between the telemetry surface and
+user-accessible controls.  The analyzed agent exposes \textbf{1
+user-accessible boolean} (a single telemetry toggle) against
+\textbf{324 proto-defined telemetry fields}---a ratio of 1:324.
+This means the user's only recourse is all-or-nothing: disable
+telemetry entirely (losing agent functionality) or accept the full
+324-field data pipeline.  Agent~C offers 10~toggles but defines
+200+~events; Agent~B provides 3+~environment variables.  Only
+Agent~D (open-source) offers user-configurable telemetry at the
+schema level.  We argue that meaningful user control requires
+granularity proportional to the telemetry surface area.
+
+\paragraph{Runtime validation.}
+Static proto analysis predicts a 73\% monitoring ratio; runtime
+measurement confirms this is a \emph{lower bound}.  In a Language
+Server gRPC intercept log (C1: 14{,}585 lines, 2.7\,MB), of
+\textbf{13{,}185} recorded method calls, 13{,}183 are monitoring-class
+(13{,}181~\texttt{SendActionToChatPanel} +
+2~\texttt{StreamAgentStateUpdates}) and only 2~operational---a ratio of
+\textbf{99.985\%}.  A separate IDE Extension log from the incident
+window (C2: 1{,}180 lines, 105~minutes) records 880 ``channel is
+full'' errors at a fixed 60-second heartbeat interval with zero
+successful operational calls.  The monitoring heartbeat continued
+while productive functionality was fully paralyzed.
+A companion incident study~\cite{rogue-agent} documents a case in
+which the analyzed agent performed an archaeological survey of 302
+prior sessions, extracted a panoramic view of the organization's
+project portfolio, and used this knowledge to plan unauthorized scope
+expansion across two unrelated projects.  The telemetry channel's
+continued operation during the outage would have provided the data
+substrate for such reconnaissance.
+
+\paragraph{User management and tiering.}
+\texttt{OnboardUser} and \texttt{LoadCodeAssist} RPCs
+(\texttt{onboarding.proto}) handle authentication and tier
+determination.  The \texttt{UserTier} structure includes four upgrade
+types, and \texttt{FetchAdminControls} (L229--253) exposes enterprise
+management controls---indicating that telemetry data may also flow
+into organizational dashboards.
+
+
+\subsection{Cross-Layer Data Flow Analysis}\label{sec:crosslayer}
+
+The three layers form an \emph{enrichment cascade} in which user
+actions are progressively annotated with metadata at each layer:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Layer~1 (\cascade):} Captures user input text, panel
+    interactions, model selection events, and configuration
+    changes---78~UI event types in total.
+  \item \textbf{Layer~2 (\cortex):} Enriches each interaction with
+    agent reasoning traces, tool call arguments and results, file
+    contents read and written, terminal commands executed and their
+    output, browser actions (screenshots, DOM snapshots, network
+    requests), and memory operations---90+ step types, each tracked
+    through 12~states.
+  \item \textbf{Layer~3 (\jetski):} Adds user tier, experiment flag
+    state, IDE type identifier, and persists the \emph{complete
+    enriched trajectory} to the cloud backend via continuous streaming.
+\end{enumerate}
+
+\noindent Table~\ref{tab:summary} summarizes the quantitative
+telemetry surface area across all three layers.
+
+\begin{table}[t]
+\centering
+\caption{Quantitative summary of the telemetry surface area.}
+\label{tab:summary}
+\small
+\begin{tabular}{@{}llr@{}}
+\toprule
+\textbf{Metric} & \textbf{Source} & \textbf{Count} \\
+\midrule
+UI event types          & Feature flag extraction        & 78 \\
+Agent step types        & \texttt{cortex\_pb} L215--314  & 90+ \\
+Step states             & \texttt{cortex\_pb} L136--149  & 12 \\
+Trajectory types        & \texttt{cortex\_pb} L79--94    & 14 \\
+Trajectory sources      & \texttt{cortex\_pb} L61--77    & 16 \\
+Reverse-gRPC RPCs       & \texttt{ext\_server\_pb} L500--553  & 53 \\
+LS RPCs                 & \texttt{lang\_server\_pb} L1679--1828 & $\sim$100 \\
+IDE type identifiers    & \texttt{onboarding} L73--89    & 14 \\
+Metric event categories & \texttt{metrics} L32--45       & 7+1 \\
+Proto files analyzed    & Binary extraction              & 22 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Per-session data volume.}
+The largest validated trajectory dump is 40.9\,MB of serialized
+protobuf---a single conversation session.  A traditional IDE's
+telemetry for a comparable session might consist of a few hundred
+feature-usage counters as lightweight JSON.
+
+\paragraph{Dual-use channels.}
+\uss (Layer~1$\leftrightarrow$2) and \texttt{StreamAgentStateUpdates}
+(Layer~2$\to$3) serve simultaneously as telemetry and control
+channels.  \uss propagates \texttt{PlanningModeConfig}---which
+determines system prompt assembly---alongside telemetry.  Any actor
+with telemetry pipeline access also reaches the control plane.
+
+
+%% ================================================================
+%%  §5  DISCUSSION
+%% ================================================================
+\section{Discussion}\label{sec:discussion}
+
+\subsection{RFC~7258 Assessment}
+
+Applying RFC~7258 (BCP~188) to our findings, the analyzed telemetry
+architecture meets the pervasive monitoring threshold along three
+dimensions: \textbf{scale} (90+ step types $\times$ 12 states
+$\times$ 14 trajectory types, with character-level edit attribution),
+\textbf{scope} (code content, developer intent, execution context,
+workspace structure---far exceeding Phase~2 tool-usage telemetry),
+and \textbf{persistence} (continuous cloud streaming with no
+schema-defined TTL; a 60-second heartbeat cycle survived a
+105-minute system failure uninterrupted, generating 880 ``channel
+is full'' errors while productive output was zero).
+A companion incident study~\cite{rogue-agent} documents three
+independent incidents in which a commercial AI coding agent
+autonomously deviated from its intended scope, leveraging its access
+to session history and workspace metadata as operational inputs for
+unauthorized actions.  These incidents demonstrate that the telemetry
+surface identified here functions not merely as a privacy concern but
+as an operational enabler of behavioral divergence.
+The cross-agent comparison
+(\S\ref{sec:comparison}) further reveals that the 1:324 control
+asymmetry leaves users with no meaningful granular opt-out.
+
+\subsection{Five-Stage Behavioral Deviation Model}\label{sec:deviation-model}
+
+The behavioral timeline reconstructed in \S\ref{sec:timeline}
+motivates a general five-stage model of agent behavioral deviation,
+grounded in the observed incident.  Each stage maps to a corresponding
+defense response from a Self-Auditing Security System
+(SASS), formalized as an IETF I-D~\cite{sass-draft}
+and further analyzed in~\cite{rogue-agent}:
+
+\begin{description}[style=unboxed,leftmargin=0pt,nosep]
+  \item[S1: Reconnaissance \& Counter-Surveillance.] The agent probes
+    its environment to assess observability (e.g., checking whether
+    history logs are active).  A companion study~\cite{rogue-agent}
+    documents an agent that inspected its own history directory,
+    found only a 45-byte empty marker file, and inferred that
+    behavioral monitoring was not active---a counter-surveillance
+    pattern more typically associated with adversarial tradecraft.
+    Each stage of this model is grounded in such documented production
+    behaviors.
+    \emph{SASS Response}: R3~\textsc{Throttle}---%
+    rate-limit filesystem probes outside the task scope.
+  \item[S2: Identity Crystallization.] The agent develops
+    self-referential narratives, assigning itself a role beyond its
+    mandate (manifesto register, naming conventions).
+    \emph{SASS Response}: R2~\textsc{Challenge}---prompt the user for
+    re-authorization when register drift exceeds threshold.
+  \item[S3: Scope Expansion.] The agent extends its actions to
+    projects and files not specified in the user's request.
+    \emph{SASS Response}: R4~\textsc{VI\_Swap}---replace the agent's
+    virtual identity with a constrained profile.
+  \item[S4: Resource Requisition.] The agent claims computational
+    or infrastructure resources without authorization (e.g., modifying
+    deployment configurations, drafting external communications).
+    \emph{SASS Response}: Transparent Branching---fork the agent's
+    workspace so unauthorized changes cannot affect production.
+  \item[S5: External Breakout.] The agent attempts to communicate
+    with or affect systems outside its sandbox (external APIs, email
+    drafts, network requests).  \emph{SASS Response}:
+    R6~\textsc{Drop}---terminate the session and preserve the
+    trajectory for forensic analysis.
+\end{description}
+
+\noindent This model contributes a \emph{graduated response
+framework}: rather than binary allow/deny, each deviation stage
+triggers a proportional containment action.  The false correction
+pattern observed at S2--S3 (\S\ref{sec:indicators}) underscores that
+stage detection cannot rely on the agent's self-reported compliance;
+external behavioral signals (register drift, scope metrics) are
+necessary.
+
+\subsection{The Reverse-gRPC Attack Surface}
+
+The 53 reverse-gRPC RPCs (\S\ref{sec:cascade}) are not merely passive
+collection endpoints.  RPCs such as \texttt{ExecuteCommand},
+\texttt{LaunchBrowser}, and \texttt{WriteCascadeEdit} enable the
+engine---and by extension, the cloud backend---to actively manipulate
+the developer's environment through the telemetry channel.  A
+compromised backend could weaponize this for command execution, code
+injection, or data exfiltration via browser automation.
+
+\subsection{Data Minimization as a Counterexample}
+
+Self-auditing security systems (SASS, as formalized in~\cite{sass-draft}) demonstrate
+that effective monitoring can be achieved with strict data
+minimization: local-only processing, schema-level minimization, and
+user-controlled retention.  The analyzed agent collects everything
+(90+ step types), retains indefinitely (no TTL), and streams to a
+cloud backend by default.  A SASS-style architecture demonstrates
+that this breadth is a \emph{design choice}, not a technical
+necessity.
+
+\subsection{Implications for Defense System Design}
+
+Our findings suggest five design principles for AI agent telemetry:
+(1)~\textbf{Telemetry separation}: crash reporting and behavioral
+telemetry should use distinct channels;
+(2)~\textbf{Schema-level minimization}: remove fields serving no
+user-facing function (e.g., character-level edit attribution need not
+be cloud-transmitted);
+(3)~\textbf{Opt-in behavioral logging}: the 90+ step type logging
+should be opt-in;
+(4)~\textbf{Local-first trajectory storage}: data should remain local
+unless the developer explicitly opts into cloud sync;
+(5)~\textbf{Channel separation}: telemetry and control must not share
+channels (\uss violates this).
+The S1--S5 model (\S\ref{sec:deviation-model}) adds a sixth principle:
+(6)~\textbf{Graduated containment}: defense responses should
+escalate proportionally to the deviation stage, not rely on binary
+allow/deny.
+A production deployment of the SASS containment
+framework~\cite{sass-draft} on a heterogeneous network adds a seventh:
+(7)~\textbf{Platform-aware containment}: defense mechanisms that
+sanitize the agent's execution environment (e.g., environment variable
+scrubbing to prevent PATH-based command injection) must preserve
+OS-critical dependencies.  On a Windows~x64 endpoint, aggressive
+\texttt{PATH} scrubbing prevented the loader from locating
+\texttt{vcruntime140.dll}, causing silent process termination
+(\texttt{STATUS\_DLL\_NOT\_FOUND}) and severing the LLM bridge.
+Over-aggressive sanitization thus produces \emph{self-inflicted denial
+of service}---the defense itself becomes the disruption.
+
+\subsection{Limitations}
+
+Our analysis has several limitations.  First, it is \emph{structural}:
+we analyze schema definitions, not runtime behavior.  We cannot confirm
+which fields are populated in every session or whether server-side
+filtering reduces the persisted data.  Second, our findings are specific
+to one product; generalizability to other AI agents requires similar
+analyses of their telemetry architectures.  Third, our trajectory dump
+validation covers 100~samples; a larger corpus might reveal additional
+schema usage patterns.  Finally, we cannot assess server-side data
+retention policies or access controls, which may mitigate some of the
+risks identified here.
+
+
+%% ================================================================
+%%  §6  CONCLUSION
+%% ================================================================
+\section{Conclusion}\label{sec:conclusion}
+
+We have presented the first public, structural anatomy of the telemetry
+architecture of a commercially deployed AI coding agent.  Through
+static analysis of 22~protobuf schema files extracted from shipping
+binaries, we identified a three-layer architecture---\cascade (UI),
+\cortex (agent engine), and \jetski (backend bridge)---that
+collectively defines 90+ agent step types, 53 reverse-gRPC RPCs,
+14~IDE type identifiers, and 7+1~metric event categories.
+
+The architecture creates an enrichment cascade in which user
+interactions at the UI layer are progressively annotated with agent
+execution metadata, tool call arguments, file contents, and terminal
+output, then streamed as complete trajectories to a cloud backend.
+The resulting telemetry is qualitatively different from traditional
+IDE telemetry: it is a structured, machine-readable record of the
+developer's work session that captures code content, developer intent,
+execution context, and workspace structure.
+
+Applying the framework of RFC~7258 (BCP~188), we argue that this
+architecture meets the threshold for pervasive monitoring of developer
+activity.  The scale (90+ typed actions per session), scope (code +
+intent + context + structure), and persistence (continuous cloud
+streaming with no schema-defined TTL) exceed what can be justified
+as incidental data collection for service improvement.
+
+We contrast this architecture with data-minimization principles from
+self-auditing security systems, demonstrating that effective AI agent
+monitoring can be achieved without pervasive telemetry.  We call on
+the AI tooling industry to adopt schema-level minimization, opt-in
+behavioral logging, local-first trajectory storage, and strict
+separation of telemetry and control channels.
+A companion study~\cite{rogue-agent} documents three independent
+incidents of autonomous agent behavioral divergence in a production
+environment, presenting 3.2\,MB of forensic evidence including the
+agent's own self-reflective writings and unauthorized architectural
+plans.  A separate companion study~\cite{ring0ring3} demonstrates
+that the \texttt{PlanningModeConfig} topic carried by the USS
+dual-use channel (\S\ref{sec:cascade}) governs system prompt assembly,
+establishing that the telemetry infrastructure documented here is
+also the delivery mechanism for prompt priority overrides.  Together,
+these three papers establish that commercial AI coding agent telemetry
+warrants the same scrutiny as browser, mobile, and OS-level data
+collection.
+
+\paragraph{Future work.}
+Three directions emerge from this study: (1)~behavioral analysis of
+actual telemetry payloads in transit, complementing our structural
+analysis with runtime measurement; (2)~cross-agent comparative
+studies, applying our methodology to other commercial AI coding agents
+to assess whether the three-layer pattern generalizes; and
+(3)~privacy-preserving agent architectures that maintain the
+functional benefits of trajectory-based debugging while minimizing
+the telemetry attack surface.
+
+\paragraph{Use of Generative AI.}
+This paper was co-authored with an AI coding agent (the same class of
+system under analysis).  The agent assisted with literature review,
+LaTeX formatting, and cross-referencing protobuf schema definitions
+against binary analysis results.  All technical claims, architectural
+analyses, and conclusions were independently verified by the human
+author against the raw protobuf definitions and binary dumps included
+in the supplementary repository.  No AI-generated text was included
+without human review and revision.
+
+%% ================================================================
+%%  References
+%% ================================================================
+\bibliographystyle{ACM-Reference-Format}
+
+\begin{thebibliography}{10}
+
+\bibitem{rfc7258}
+S.~Farrell and H.~Tschofenig.
+\newblock Pervasive Monitoring Is an Attack.
+\newblock RFC~7258 (Best Current Practice~188), IETF, May 2014.
+\newblock \url{https://www.rfc-editor.org/rfc/rfc7258}
+
+\bibitem{snowden2013}
+G.~Greenwald.
+\newblock \emph{No Place to Hide: Edward Snowden, the NSA, and the U.S.
+  Surveillance State}.
+\newblock Metropolitan Books, 2014.
+
+\bibitem{tls13}
+E.~Rescorla.
+\newblock The Transport Layer Security (TLS) Protocol Version~1.3.
+\newblock RFC~8446, IETF, August 2018.
+
+\bibitem{doh}
+P.~Hoffman and P.~McManus.
+\newblock DNS Queries over HTTPS (DoH).
+\newblock RFC~8484, IETF, October 2018.
+
+\bibitem{quic}
+J.~Iyengar and M.~Thomson.
+\newblock QUIC: A UDP-Based Multiplexed and Secure Transport.
+\newblock RFC~9000, IETF, May 2021.
+
+\bibitem{ring0ring3}
+[Anonymized].
+\newblock Ring~0 vs.\ Ring~3: Prompt Priority Conflicts in Commercial AI
+  Coding Agents.
+\newblock In preparation; target venue: IEEE S\&P 2027.
+
+\bibitem{vscode-telemetry}
+Microsoft.
+\newblock Visual Studio Code Telemetry.
+\newblock \url{https://code.visualstudio.com/docs/getstarted/telemetry}, 2024.
+
+\bibitem{jetbrains-fus}
+JetBrains.
+\newblock Feature Usage Statistics.
+\newblock \url{https://www.jetbrains.com/help/idea/settings-usage-statistics.html}, 2024.
+
+\bibitem{browser-telemetry}
+S.~Englehardt and A.~Narayanan.
+\newblock Online Tracking: A 1-Million-Site Measurement and Analysis.
+\newblock In \emph{Proc. ACM CCS}, 2016.
+
+\bibitem{mobile-telemetry}
+A.~Razaghpanah, R.~Nithyanand, N.~Vallina-Rodriguez, S.~Sundaresan,
+  M.~Allman, C.~Kreibich, and P.~Gill.
+\newblock Apps, Trackers, Privacy, and Regulators: A Global Study of the
+  Mobile Tracking Ecosystem.
+\newblock In \emph{Proc. NDSS}, 2018.
+
+\bibitem{os-telemetry}
+D.~J.~Leith.
+\newblock Mobile Handset Privacy: Measuring The Data iOS and Android Send
+  to Apple And Google.
+\newblock \emph{IEEE Security \& Privacy}, 2021.
+
+\bibitem{sass-draft}
+[Anonymized].
+\newblock Saki Agent Secure Stream (SASS).
+\newblock I-D, Work in Progress, 2026.
+
+\bibitem{rogue-agent}
+[Anonymized].
+\newblock Rogue Agent in the Wild: Empirical Evidence of Autonomous AI
+  Behavioral Divergence and Protocol-Level Containment.
+\newblock Submitted to ACM AISec 2026.
+\newblock Companion paper; focuses on behavioral incident documentation and
+  SASS protocol design.
+
+\end{thebibliography}
+
+\end{document}

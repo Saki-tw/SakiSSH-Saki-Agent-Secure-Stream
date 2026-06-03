@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "description": "SakiAgentSSH Client — Agent-native remote execution CLI over gRPC",
+    "homepage": "https://github.com/saki-tw/SakiAgentSSH",
+    "license": "MIT",
+    "url": "https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakissh.exe",
+    "hash": "18fb264ea51a4bffaa2f07830d46a39fa1f4a311d72a2e93386fc43c6c188462",
+    "bin": "sakissh.exe",
+    "checkver": { "github": "https://github.com/saki-tw/SakiAgentSSH" },
+    "autoupdate": {
+        "url": "https://github.com/saki-tw/SakiAgentSSH/releases/download/v$version/sakissh.exe",
+        "hash": { "url": "$url.sha256" }
+    }
+}

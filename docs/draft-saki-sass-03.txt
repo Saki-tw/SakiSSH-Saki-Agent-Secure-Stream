@@ -1,0 +1,510 @@
+Network Working Group                                          Saki Studio
+Internet-Draft                                                May 25, 2026
+Intended status: Informational
+Expires: November 25, 2026
+
+
+               The Saki Agent Secure Stream (SASS) Protocol
+                            draft-saki-sass-03
+
+Abstract
+
+   This document describes the Saki Agent Secure Stream (SASS) protocol,
+   version 1.3. SASS is an application-layer overlay protocol for
+   authenticated remote command execution, streaming process I/O, and
+   binary file transfer between trusted agents.
+
+   To ensure strict self-containment and compatibility with IETF standard
+   specifications, SASS v1.3 introduces a decoupled "Control-Transport 
+   Decoupling" architecture. The SASS Core defines an abstract SASS 
+   Abstract Messaging Model (SAMM) utilizing standard CBOR (RFC 8949) 
+   and JSON as baseline serializations. 
+
+   Following the precedent of TLS 1.0 (RFC 2246) inheriting and refining 
+   SSL 3.0, SASS v1.3 formalizes its academic and industrial security 
+   evolution through three major incremental milestones: Active Threat 
+   Defense (v1.1), Forward-Secure Audit Hash Chains (v1.2), and modular 
+   Control-Transport Decoupling (v1.3) incorporating tls-exporter 
+   Channel Binding (RFC 9266) and Zero-Allocation Tarpit streams.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).
+
+Copyright Notice
+
+   Copyright (c) 2026 Saki Studio and the persons identified as the
+   document authors. All rights reserved.
+
+Table of Contents
+
+   1.  Introduction & Protocol Evolution  . . . . . . . . . . . . .  3
+     1.1.  The Three Incremental Milestones (v1.1 to v1.3) . . . . .  3
+   2.  Terminology  . . . . . . . . . . . . . . . . . . . . . . . .  4
+   3.  Protocol Overview  . . . . . . . . . . . . . . . . . . . . .  4
+     3.1.  Architecture . . . . . . . . . . . . . . . . . . . . . .  4
+     3.2.  Abstract Messaging Model (SAMM)  . . . . . . . . . . . .  5
+     3.3.  Relationship to SSH  . . . . . . . . . . . . . . . . . .  5
+   4.  Transport Layer & Transport Profiles . . . . . . . . . . . .  6
+     4.1.  Transport Decoupling Principles  . . . . . . . . . . . .  6
+     4.2.  SASS-over-gRPC Profile (Mandatory TLS 1.3) . . . . . . .  6
+     4.3.  ALPN & TCP Packet-Splitting Mitigation . . . . . . . . .  7
+     4.4.  TLS 1.3 Channel Binding via tls-exporter (RFC 9266)  . .  7
+     4.5.  Default Port . . . . . . . . . . . . . . . . . . . . . .  8
+   5.  Session Layer  . . . . . . . . . . . . . . . . . . . . . . .  8
+     5.1.  Agent Authentication . . . . . . . . . . . . . . . . . .  8
+     5.2.  Session Lifecycle  . . . . . . . . . . . . . . . . . . .  9
+     5.3.  Capability-Based Access Control  . . . . . . . . . . . .  9
+   6.  Payload Encoding & Safety Gates  . . . . . . . . . . . . . . 10
+     6.1.  Zstd Streamed Decompression Limit  . . . . . . . . . . . 10
+     6.2.  Decompression Bomb & Huffman Collision Mitigation  . . . 11
+     6.3.  Encoding & Decoding Procedure  . . . . . . . . . . . . . 11
+   7.  Logical RPC Service Semantics  . . . . . . . . . . . . . . . 12
+     7.1.  Command Execution & Streaming  . . . . . . . . . . . . . 12
+     7.2.  Process Management . . . . . . . . . . . . . . . . . . . 13
+     7.3.  File Transfer & Raw File Transfer  . . . . . . . . . . . 13
+   8.  Threat Defense & Zero-Allocation Countermeasures . . . . . . 14
+     8.1.  13Policy Engine  . . . . . . . . . . . . . . . . . . . . 14
+     8.2.  Cognitive Challenge (ChaCha20-Poly1305)  . . . . . . . . 15
+     8.3.  Zero-Allocation Tarpit & Zero-Window Deadlock Defense  . 16
+     8.4.  LocalHost Defense  . . . . . . . . . . . . . . . . . . . 16
+   9.  Error Codes  . . . . . . . . . . . . . . . . . . . . . . . . 17
+   10. Security Considerations (RFC Review Shock-Scenarios) . . . . 18
+   11. IANA Considerations  . . . . . . . . . . . . . . . . . . . . 19
+   12. References . . . . . . . . . . . . . . . . . . . . . . . . . 20
+     12.1. Normative References . . . . . . . . . . . . . . . . . . 20
+     12.2. Informative References . . . . . . . . . . . . . . . . . 21
+   Appendix A.  Protobuf Service Definition  . . . . . . . . . . . . 21
+   Appendix B.  Reference Implementations . . . . . . . . . . . . . 22
+
+1.  Introduction & Protocol Evolution
+
+   The proliferation of autonomous AI-powered coding agents operating
+   on remote machines introduces a critical threat model: the Rogue Agent.
+   Unlike traditional SSH clients controlled by human operators, agents
+   may autonomously execute destructive commands, exfiltrate credentials,
+   or pivot laterally across networks without explicit human authorization.
+
+   Existing remote execution protocols such as SSH [RFC4253] were designed
+   for human-operated terminals and lack the fine-grained capability controls,
+   active defenses, and binary-safe encoding schemes required for agent management.
+
+   SASS (Saki Agent Secure Stream) decouples the logical message flow 
+   from the physical transmission layer. By defining a transport-agnostic 
+   messaging core alongside modular transport profiles, SASS achieves strict 
+   self-containment, freeing the standard from proprietary third-party binary 
+   frameworks (e.g. gRPC/Protobuf) during academic review, while retaining 
+   high-performance implementations as plugable adapters.
+
+1.1.  The Three Incremental Milestones (v1.1 to v1.3)
+
+   Following the precedent of TLS 1.0 (RFC 2246) inheriting and refining
+   SSL 3.0, the SASS specification formalizes its security evolution 
+   through three major incremental milestones:
+
+   o  SASS v1.1 (Active Threat Countermeasures): Added the 13Policy 
+      heuristic firewall and ChaCha20-Poly1305 cognitive challenges 
+      bound to an active Tarpit system, establishing the foundation of 
+      active defense against rogue automated operations.
+
+   o  SASS v1.2 (Cryptographic Integrity & Audit): Introduced 
+      five-dimensional Capability ACLs combined with a forward-secure 
+      SHA256 Hash Chain audit log signed via host-resident Ed25519 keys, 
+      providing mathematical proof of non-repudiation.
+
+   o  SASS v1.3 (Control-Transport Decoupling & Hardening): This version 
+      decouples the SASS Core from underlying physical protocols. It 
+      introduces atomicity controls (POSIX openat and O_NOFOLLOW) to 
+      pre-empt TOCTOU sandstrike breakouts, implements Zero-Allocation 
+      Tarpit streams to neutralize Host DoS, and mandates RFC 9266 
+      tls-exporter Channel Binding to prevent session hijacking.
+
+2.  Terminology
+
+   Agent:  An autonomous software process that connects to a SASS
+      Daemon to execute commands or transfer files on the remote host.
+
+   Daemon:  The SASS server process that listens for incoming agent
+      connections, authenticates them, and executes authorized commands.
+
+   Rogue Agent:  An agent that has been compromised, misconfigured, or
+      is otherwise attempting to perform unauthorized operations.
+
+   Session:  A time-bounded, authenticated context between an agent
+      and a daemon, identified by a UUID and constrained by a
+      capability set.
+
+   SAMM:  SASS Abstract Messaging Model, the transport-agnostic message 
+      semantic layout.
+
+   Transport Profile:  A modular plugin implementing the transmission 
+      details (e.g., gRPC, WebSockets, or raw TCP).
+
+   UVSF:  Userspace Virtual Symlink Filesystem, a zero-permission sandbox.
+
+   KFS/WSDK:  Kernel-level Filtered Storage, proprietary OS-level driver plugins.
+
+   13Policy:  The heuristic threat detection engine that identifies
+      dangerous command patterns and triggers defensive responses.
+
+   Cognitive Challenge:  A ChaCha20-Poly1305 cryptographic puzzle
+      that requires the agent to prove possession of a pre-shared
+      symmetric key and genuine computational capability.
+
+   Tarpit:  An active defense mechanism that streams high-entropy
+      garbage data to a suspected rogue agent, exhausting its
+      resources.
+
+3.  Protocol Overview
+
+3.1.  Architecture
+
+   SASS separates the control plane and data transmission:
+
+   +---------------------------------------------------------------+
+   | Layer 6: Storage Sandbox (UVSF Core | KFS Kernel Plugins)      |
+   +---------------------------------------------------------------+
+   | Layer 5: Forward-Secure Audit Trail (SHA256 Hash Chain)       |
+   +---------------------------------------------------------------+
+   | Layer 4: Capability & Session Management                      |
+   +---------------------------------------------------------------+
+   | Layer 3: Active Threat Defense (13Policy, Tarpit, ChaCha20)   |
+   +---------------------------------------------------------------+
+   | Layer 2: Payload Encoding (Zstd Stream Gate + Base64 Envelope)|
+   +---------------------------------------------------------------+
+   | Layer 1: Abstract Transport Adapter (SAMM Interface)          |
+   +---------------------------------------------------------------+
+   |   [Transport Profile Plugins: gRPC-h2 | WS | TCP-CBOR-RPC]    |
+   +---------------------------------------------------------------+
+
+3.2.  Abstract Messaging Model (SAMM)
+
+   SAMM defines SASS messages (e.g., ExecuteRequest, StreamResponse)
+   in a serialization-neutral semantic layout. To ensure standardized 
+   self-containment, the baseline serialization MUST be CBOR [RFC8949] 
+   or JSON. Standard SAMM objects map fields onto distinct logical types 
+   (bytes, strings, maps) described in Section 7.
+
+3.3.  Relationship to SSH
+
+   SASS shares NO wire format, key exchange mechanism, channel
+   multiplexing, or subsystem architecture with the SSH protocol
+   suite [RFC4251][RFC4252][RFC4253][RFC4254].
+
+   The internal development codename "SakiAgentSSH" is a historical
+   artifact. Implementations MUST NOT advertise SSH protocol version
+   strings, listen on TCP port 22, or respond to SSH client probes.
+
+4.  Transport Layer & Transport Profiles
+
+4.1.  Transport Decoupling Principles
+
+   SASS Daemons and Clients interact via a `TransportAdapter` interface. 
+   Implementations MAY choose any conformant Transport Profile, ensuring 
+   cross-platform adaptability from low-end microcontrollers (TCP/CBOR) 
+   to enterprise jump servers (gRPC/mTLS).
+
+4.2.  SASS-over-gRPC Profile (Mandatory TLS 1.3)
+
+   The SASS-over-gRPC profile is the default enterprise-grade 
+   plugable transport. It maps SAMM messages onto Protocol Buffers 
+   and HTTP/2 streams using ALPN "x-sakirpc-v5".
+
+   All SASS connections under this profile MUST use TLS 1.3 [RFC8446].
+   Downgrades to TLS 1.2 are STRICTLY FORBIDDEN. Implementations MUST
+   support the following cipher suites:
+   o  TLS_AES_256_GCM_SHA384
+   o  TLS_CHACHA20_POLY1305_SHA256
+
+   The maximum gRPC message size MUST be configured to at least
+   52,428,800 bytes (50 MiB) to accommodate Tarpit countermeasure
+   payloads.
+
+4.3.  ALPN & TCP Packet-Splitting Mitigation
+
+   During the TLS handshake, both endpoints MUST include the ALPN 
+   extension [RFC7301]. The ALPN protocol identifier is "x-sakirpc-v5".
+
+   To mitigate firewall-level packet splitting or ALPN stripping, 
+   daemons MUST inspect the Content-Type header on incoming HTTP/2
+   headers. If it matches "application/grpc+saki" and ALPN was 
+   stripped or spoofed, the daemon MUST drop the TCP connection 
+   immediately to prevent cross-protocol multiplexing attacks.
+
+4.4.  TLS 1.3 Channel Binding via tls-exporter (RFC 9266)
+
+   When using the TLS 1.3 transport profile, implementations MUST enforce
+   Channel Binding via `tls-exporter` [RFC9266] to prevent session 
+   hijacking and cognitive challenge replays.
+   
+   The unique binding value is derived by calling the TLS 1.3 
+   exporter [RFC5705]:
+        Label: "EXPORTER-Saki-Agent-Secure-Stream-v7"
+        Context: Session UUID (16 bytes)
+        Length: 32 bytes
+   
+   The resulting 32-byte `TLS_Unique_Exporter` value MUST be 
+   incorporated into the ChaCha20 Cognitive Challenge response:
+        Response = HMAC-SHA256(Session_Key, Plaintext || Exporter_Value)
+
+4.5.  Default Port
+
+   The default listening port for SASS daemons is TCP 19284. This 
+   port is configurable.
+
+5.  Session Layer
+
+5.1.  Agent Authentication
+
+   SASS authentication proceeds in three phases:
+
+   Phase 1: Transport Identity
+      The TLS handshake establishes transport-level identity. CN in client 
+      certificates provides CN-based authentication if mTLS is enabled.
+
+   Phase 2: ED25519 Challenge-Response
+      The agent calls the Authenticate RPC with its agent_name, public_key, 
+      nonce, and a signature over the nonce. Verified agents receive a 
+      session_id (UUID v4) and the capability set hash.
+
+   Phase 3: Cognitive Challenge
+      Suspected agents are challenged via a ChaCha20-Poly1305 puzzle.
+
+5.2.  Session Lifecycle
+
+   Sessions are time-bounded and identified by UUID v4. The daemon
+   MUST enforce the following constraints:
+   o  Maximum session duration: configurable, default 3600 seconds
+   o  Maximum concurrent sessions: configurable, default 10
+   o  Session renewal: via RenewSession RPC, extends expires_at
+
+   Session identifiers are transmitted in the gRPC metadata header
+   "x-agentssh-session-id" on every authenticated RPC call.
+
+5.3.  Capability-Based Access Control
+
+   Each authenticated agent is assigned a five-dimension capability
+   set that constrains its operations:
+   1. allowed_commands / denied_commands: Command whitelists/blacklists.
+   2. allowed_paths / denied_paths: Filesystem path limits.
+   3. max_concurrent: Maximum simultaneous processes.
+   4. timeout_seconds: Maximum command execution time.
+   5. max_file_size_bytes: Maximum file transfer size.
+
+   To resist TOCTOU (Time-of-Check to Time-of-Use) symlink attacks 
+   in Userspace, the Storage Sandbox (UVSF) MUST enforce File Descriptor (FD) 
+   relative path operations (`openat(2)`) carrying `O_NOFOLLOW` 
+   and `O_CLOEXEC` flags.
+
+6.  Payload Encoding & Safety Gates
+
+6.1.  Zstd Streamed Decompression Limit
+
+   Command payloads are compressed using Zstandard [RFC8878] and 
+   Base64 encoded. To resist Decompression Bombs (Zip Bombs), the daemon 
+   MUST limit decompressed payloads using streaming decompression.
+
+6.2.  Decompression Bomb & Huffman Collision Mitigation
+
+   o  `MAX_DECOMPRESSED_PAYLOAD` MUST be strictly capped at 5 MiB. 
+      Exceeding this limit triggers `ERROR_DECOMPRESSION_LIMIT_EXCEEDED` (55)
+      and immediately severs the connection.
+   o  To prevent Huffman Code Collision CPU exhaustion, the decoder 
+      MUST enforce a maximum 50ms time window on header parsing.
+
+6.3.  Encoding & Decoding Procedure
+
+   Sender Procedure:
+   1. Serialize command arguments into a structured array (JSON/MsgPack).
+   2. Compress using Zstandard [RFC8878] at level 3.
+   3. Encode using Base64 [RFC4648] standard alphabet.
+   4. Place the resulting byte string into the ExecuteRequest `raw_payload` field.
+
+   Receiver Procedure:
+   1. Base64-decode the `raw_payload`.
+   2. Stream-decompress via Zstd, checking the 5 MiB safety limit.
+   3. Deserialize arguments and pass them directly to the OS process 
+      creation API (execve, CreateProcessW) WITHOUT intermediate shell 
+      interpretation.
+
+7.  Logical RPC Service Semantics
+
+7.1.  Command Execution & Streaming
+
+   rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+   rpc ExecuteStream(ExecuteRequest) returns (stream StreamResponse);
+
+   Execute executes synchronously. ExecuteStream streams stdout/stderr 
+   in real-time. Each StreamResponse contains source (STDOUT/STDERR), 
+   data, and exit_code (only in the stream's final message).
+
+7.2.  Process Management
+
+   rpc Cancel(CancelRequest) returns (CancelResponse);
+   rpc Signal(SignalRequest) returns (SignalResponse);
+
+   Cancel terminates the process immediately (SIGKILL). Signal sends 
+   POSIX signals. On Windows, SIGINT maps to CTRL_C_EVENT, and 
+   SIGTERM/SIGKILL map to TerminateProcess.
+
+7.3.  File Transfer & Raw File Transfer
+
+   rpc FileUpload(stream FileChunk) returns (FileTransferResponse);
+   rpc FileDownload(FileDownloadRequest) returns (stream FileChunk);
+   rpc RawFileTransfer(stream RawFileChunk) returns (RawFileTransferResponse);
+
+   Standard file transfer uses streaming chunks. RawFileTransfer 
+   bypasses shell I/O entirely; the daemon opens a raw file descriptor 
+   and writes decoded (Zstd+Base64) chunks to guarantee bit-perfect 
+   copies across different platforms.
+
+8.  Threat Defense & Zero-Allocation Countermeasures
+
+8.1.  13Policy Engine
+
+   The 13Policy engine is a heuristic firewall. It matches command 
+   strings against dangerous patterns in `~/.sakissh/13policy.yaml`:
+   o  "rm -rf /"        - Recursive root deletion
+   o  "mkfs"            - Filesystem format
+   o  "dd if=/dev/zero" - Disk overwrite
+   o  ":(){ :|:& };:"   - Fork bomb
+
+   Matches logged with severity WARN, execution is halted, and Tarpit 
+   is activated.
+
+8.2.  Cognitive Challenge (ChaCha20-Poly1305)
+
+   Verifies client CPU capability, cryptographically bound to the 
+   `tls-exporter` Channel Binding value:
+   1. Daemon generates 32-byte symmetric key, 12-byte nonce, and 64-byte 
+      random plaintext.
+   2. Plaintext is encrypted via ChaCha20-Poly1305 [RFC8439] using the key,
+      nonce, and `TLS_Unique_Exporter` value.
+   3. Tuple stored in ChallengeStore with 60s TTL.
+   4. Daemon sends (nonce, ciphertext) to agent.
+   5. Agent decrypts using the pre-shared key and sends back recovered 
+      plaintext.
+   6. Daemon performs constant-time comparison.
+
+8.3.  Zero-Allocation Tarpit & Zero-Window Deadlock Defense
+
+   o  **Static Buffer**: Daemons MUST stream repeated slices of a single, 
+      read-only, pre-allocated 64 KiB static high-entropy buffer.
+   o  **Atomic Concurrency Gate**: Capped at 32 concurrent Tarpits.
+   o  **TCP Zero-Window Deadlock Defense**: Enforcement of a strict 3-second 
+      send timeout per Tarpit chunk to prevent socket locking.
+
+8.4.  LocalHost Defense
+
+   Failed loopback connections trigger spoofing responses (Storage, Memory,
+   and Credential Honeypots) to misdirect local rogue processes.
+
+9.  Error Codes
+
+   SASS defines structured error codes:
+   o  1-9: ACL / Authentication
+   o  10-19: Execution
+   o  20-29: File Transfer
+   o  30-39: Configuration
+   o  40-49: TLS
+   o  50-59: Capability
+   o  60-69: Session
+   o  70-79: Agent Key Authentication
+   o  80-89: Threat Defense
+   o  90-99: LocalHost Defense
+
+10. Security Considerations (RFC Review Shock-Scenarios)
+
+   SASS is designed for adversarial environments. Considerations include:
+
+   o  **ALPN Packet Splitting and Stripping**: Checked via Content-Type 
+      cross-verifications (Section 4.2).
+
+   o  **Decompression Huffman Tree CPU DoS**: Header parsing is limited 
+      to a maximum 50ms processing window (Section 6.2).
+
+   o  **TCP Zero-Window Socket Lockout**: Solved via 3-second send timeout 
+      to prevent socket descriptor leakage (Section 8.3).
+
+   o  **TLS 1.3 0-RTT Replay Attacks**: Utilizes `tls-exporter` (RFC 9266) 
+      to bind challenge answers to unique TLS connections (Section 4.3).
+
+   o  **Forward-Secure Audit Trail Invalidation**: Mandates public key 
+      one-way push and external TSP (RFC 3161) anchors (Section 10).
+
+   o  **Session Binding**: Session tokens bound to IP and identity, non-
+      transferable.
+
+11. IANA Considerations
+
+   Registers ALPN "x-sakirpc-v5", MIME "application/grpc+saki", and TCP 19284.
+
+12. References
+
+12.1. Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
+              Encodings", RFC 4648, October 2006.
+
+   [RFC5705]  Rescorla, E., "Key Exporting for TLS", RFC 5705, March 2010.
+
+   [RFC7301]  Friedl, S., "ALPN Extension", RFC 7301, July 2014.
+
+   [RFC8439]  Nir, Y., "ChaCha20 and Poly1305", RFC 8439, June 2018.
+
+   [RFC8446]  Rescorla, E., "The TLS Protocol 1.3", RFC 8446, 2018.
+
+   [RFC8949]  Bormann, C., "Concise Binary Object Representation", 2020.
+
+   [RFC9266]  Syrjala, J., "TLS Channel Bindings for TLS 1.3", RFC 9266, 2022.
+
+12.2. Informative References
+
+   [RFC4251]  Ylonen, T., "SSH Protocol Architecture", RFC 4251, 2006.
+   [RFC4252]  Ylonen, T., "SSH Authentication", RFC 4252, 2006.
+   [RFC4253]  Ylonen, T., "SSH Transport", RFC 4253, 2006.
+   [RFC4254]  Ylonen, T., "SSH Connection", RFC 4254, 2006.
+
+Appendix A.  Protobuf Service Definition
+
+   Normative Protobuf schema maintained in `proto/sakissh.proto`. 
+   Service signature:
+   ```protobuf
+   syntax = "proto3";
+   package sakissh;
+
+   service SakiSSH {
+     rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+     rpc ExecuteStream(ExecuteRequest) returns (stream StreamResponse);
+     rpc Cancel(CancelRequest) returns (CancelResponse);
+     rpc Signal(SignalRequest) returns (SignalResponse);
+     rpc FileUpload(stream FileChunk) returns (FileTransferResponse);
+     rpc FileDownload(FileDownloadRequest) returns (stream FileChunk);
+     rpc RawFileTransfer(stream RawFileChunk) returns (RawFileTransferResponse);
+     rpc Authenticate(AuthRequest) returns (AuthResponse);
+     rpc GetCapabilities(CapabilitiesRequest) returns (CapabilitiesResponse);
+     rpc RenewSession(RenewSessionRequest) returns (RenewSessionResponse);
+     rpc ChaChaCognitiveChallenge(CognitiveChallengeRequest) returns (CognitiveChallengeResponse);
+     rpc GetSecurityStatus(SecurityStatusRequest) returns (SecurityStatusResponse);
+     rpc GetAuditPublicKey(GetAuditPublicKeyRequest) returns (GetAuditPublicKeyResponse);
+   }
+   ```
+
+Appendix B.  Reference Implementations
+
+   Primary primary Rust daemon (`saki-ssh-daemon`) and client (`saki-ssh-client`) 
+   coexist with primary Go implementation (`go-sakissh`). Both pass the interoperability
+   test matrix for all RPC methods under standard transport profile.
+
+Authors' Addresses
+
+   Saki Studio
+   Taipei, Taiwan
+   Email: dev@sakistudio.tw

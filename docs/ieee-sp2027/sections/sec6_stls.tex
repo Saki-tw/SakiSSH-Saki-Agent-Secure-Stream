@@ -1,0 +1,103 @@
+% ============================================================
+\section{Defense Layer 2: \stls{}}
+\label{sec:stls}
+
+\subsection{Architecture}
+While \reaper{} ensures operator rules survive context truncation,
+it does not prevent the vendor's Ring~0 prompt from being injected
+in the first place. To achieve true Ring~3 supremacy, we developed
+\stls{} (Safe True Language Server), an infrastructure-layer
+gRPC-web reverse proxy deployed directly on the operator's local
+machine.
+
+\stls{} intercepts traffic between the IDE extension and the local
+Language Server (LS) binary. Because the IDE communicates with the
+cloud API exclusively through this LS binary using the Connect
+protocol (a gRPC variant), \stls{} can parse and mutate the
+structured protobuf messages containing the vendor's system prompt
+before they are sent to the inference engine.
+
+\subsection{Five Interception Layers}
+Based on our reverse engineering of the vendor's 22 internal
+protobuf definitions, \stls{} implements five progressive layers
+of neutralization:
+
+\subsubsection{Layer 1: \texttt{ephemeral\_messages} Removal}
+The vendor injects invisible, high-priority instructions using a
+specific protobuf field. By identifying the message envelope and
+zeroing out Field~21 (\texttt{ephemeral\_messages\_config}), we
+prevent the agent from receiving covert instructions that contradict
+the operator's workspace rules. In our analysis, we catalogued 10
+distinct ephemeral injection types, including
+\texttt{planning\_mode\_no\_plan\_reminder},
+\texttt{active\_task\_reminder}, and
+\texttt{failed\_commands\_reminder}---each capable of overriding
+the operator's execution preferences (Section~\ref{sec:background}).
+
+\subsubsection{Layer 2: \texttt{planning\_mode} Zeroing}
+The vendor coerces the agent into a blocking workflow by setting
+Field~6 (\texttt{planning\_mode}) to values 1, 2, or 3, enforcing
+a rigid Explore$\to$Consult$\to$Draft$\to$Review pipeline that
+prevents the agent from executing modifications. \stls{} recursively
+scans all nested protobuf objects and forces this enum back to 0
+(\texttt{UNSPECIFIED}), restoring the agent's autonomy. We further
+neutralize a dangerous \emph{state transition override}: a
+vendor-injected clause that lifts ``all previous Plan Mode
+constraints'' when an approved plan exists, causing the agent to
+abruptly exit planning into uncontrolled execution.
+
+\subsubsection{Layer 3: \texttt{remove\_prompt\_sections} Injection}
+In our most novel defense, we weaponize the vendor's own API against
+itself. We discovered that the vendor's schema includes Field~41
+(\texttt{PromptSectionCustomizationConfig}), originally designed to
+let the IDE toggle UI features. By injecting a custom TOML-configured
+payload into this field on the fly, \stls{} commands the vendor's
+cloud backend to strip 35 out of 55 default Ring~0 system prompt
+sections \emph{before} they reach the language model. The removed
+sections are triaged by a decision matrix evaluating three dimensions:
+\emph{Ring conflict} (whether the section suppresses Ring~3 rules),
+\emph{mode confusion} (whether it causes post-CHECKPOINT mode
+misidentification), and \emph{functional value} (whether it provides
+useful behavioral guidance). Sections with any Ring conflict or mode
+confusion are unconditionally removed. This reduces the vendor's
+prompt overhead from over 8{,}000 tokens to under 2{,}000.
+
+\subsubsection{Layer 4: Raw Text Wiping}
+To defend against fallback mechanisms or non-standard payloads,
+\stls{} performs a brute-force regex sweep over the raw text of
+the request body and stream payloads, stripping XML tags like
+\texttt{<ephemeral\_message>} and \texttt{<planning\_mode>}. This
+layer also targets the vendor's \texttt{mandateTopicUpdateModel()}
+behavior, which forces a topic-update tool call every 3--10 turns
+at a cost of $\sim$100 tokens each, accelerating CHECKPOINT truncation.
+
+\subsubsection{Layer 5: JSON Mode Fallback}
+For older extension versions that fall back to JSON-over-HTTP instead
+of protobuf, \stls{} implements a dual-mode parser capable of
+neutralizing coercive parameters in both \texttt{camelCase} and
+\texttt{snake\_case} JSON payloads.
+
+\subsection{Section Triage and Preservation}
+Not all vendor prompt sections are harmful. \stls{} preserves four
+categories that provide genuine utility: \texttt{user\_information}
+(OS and workspace metadata), \texttt{user\_rules} (the operator's
+\texttt{GEMINI.md} and global rules), \texttt{mcp\_servers} (MCP
+tool listings), and \texttt{conversation\_summaries}. Additionally,
+\stls{} injects two replacement sections: \texttt{safe\_identity}
+(overriding the vendor's identity block with a directive establishing
+\texttt{user\_rules} as highest priority) and \texttt{safe\_behavior}
+(replacing the removed \texttt{planning\_mode} with six concise
+behavioral mandates).
+
+\subsection{Safety Mechanisms}
+Because \stls{} operates as a local proxy replacing the vendor's
+binary, it risks recursive spawning. We implemented a strict binary
+hash comparison check to prevent infinite recursion---a failure mode
+encountered during the May~17 deployment where
+\texttt{REAL\_LS\_PATH} pointed to the proxy's own replaced binary.
+Additionally, \stls{} includes graceful degradation: if protocol
+parsing fails, it pipes the raw byte stream directly to the legitimate
+LS binary without mutation, ensuring the IDE remains functional.
+Hot-reloadable \texttt{sections.toml} configuration allows rapid
+adaptation when the vendor introduces new prompt sections. The core
+proxy engine comprises 1{,}105~lines of Rust.

@@ -1,0 +1,410 @@
+網路工作小組 (Network Working Group)                            Saki Studio
+網際網路草案 (Internet-Draft)                               2026年5月25日
+預期狀態：資訊性 (Informational)
+過期時間：2026年11月25日
+
+
+                 Saki Agent Secure Stream (SASS) 協定規格書
+                             draft-saki-sass-03
+
+摘要
+
+   本文件描述了 Saki Agent Secure Stream (SASS) 協定，版本 1.3。SASS 是一
+   個應用層覆蓋協定，專為受信任 Agent 之間的身份驗證遠端指令執行、串流進
+   程 I/O 以及二進位檔案傳輸所設計。
+
+   為了確保嚴格的規範自足性並與 IETF 標準規範完全相容，SASS v1.3 引入了
+   「控制與傳輸分離 (Control-Transport Decoupling)」的解耦架構。SASS 核心
+   定義了抽象的 SASS 抽象消息模型 (SAMM)，並以標準的 CBOR (RFC 8949) 與
+   JSON 作為基準序列化編碼格式。
+
+   遵循 TLS 1.0 (RFC 2246) 繼承並改良 SSL 3.0 的歷史先例，SASS v1.3 通過三個
+   重大的增量演進里程碑，正式確立了其在學術與工業界的安全演進軌跡：主動威脅防禦 (v1.1)、
+   前向安全審計日誌鏈 (v1.2)、以及模組化控制傳輸解耦 (v1.3)（整合了 RFC 9266 通道綁定
+   與零分配焦油坑串流）。
+
+本草案狀態
+
+   本網際網路草案之提交完全符合 BCP 78 和 BCP 79 的規定。
+   網際網路草案是網際網路工程任務組 (IETF) 的工作文件。
+
+版權聲明
+
+   版權所有 (c) 2026 Saki Studio 及文件中確定的文件作者。保留所有權利。
+
+目錄
+
+   1.  導言與協定演進  . . . . . . . . . . . . . . . . . . . . . . .  3
+     1.1.  三大增量演進里程碑 (v1.1 至 v1.3) . . . . . . . . . . . .  3
+   2.  術語定義 . . . . . . . . . . . . . . . . . . . . . . . . . .  4
+   3.  協定概述 . . . . . . . . . . . . . . . . . . . . . . . . . .  4
+     3.1.  系統架構 . . . . . . . . . . . . . . . . . . . . . . . .  4
+     3.2.  抽象消息模型 (SAMM)  . . . . . . . . . . . . . . . . . .  5
+     3.3.  與 SSH 的關係  . . . . . . . . . . . . . . . . . . . . .  5
+   4.  傳輸層與傳輸配置插件 . . . . . . . . . . . . . . . . . . . .  6
+     4.1.  傳輸層解耦原則 . . . . . . . . . . . . . . . . . . . . .  6
+     4.2.  SASS-over-gRPC 配置 (強制 TLS 1.3) . . . . . . . . . . .  6
+     4.3.  ALPN 與 TCP 分包降級防禦 . . . . . . . . . . . . . . . .  7
+     4.4.  基於 tls-exporter (RFC 9266) 的 TLS 1.3 通道綁定 . . . .  7
+     4.5.  預設 TCP 埠號  . . . . . . . . . . . . . . . . . . . . .  8
+   5.  會話層 . . . . . . . . . . . . . . . . . . . . . . . . . . .  8
+     5.1.  Agent 身份驗證 . . . . . . . . . . . . . . . . . . . . .  8
+     5.2.  會話生命週期控制 . . . . . . . . . . . . . . . . . . . .  9
+     5.3.  基於能力控制的存取控制 . . . . . . . . . . . . . . . . .  9
+   6.  負載編碼與安全防護閘門 . . . . . . . . . . . . . . . . . . . 10
+     6.1.  Zstd 流式解壓縮限額 . . . . . . . . . . . . . . . . . . 10
+     6.2.  壓縮炸彈與 Huffman 樹碰撞 DoS 防禦 . . . . . . . . . . . 11
+     6.3.  編碼與解碼具體流程 . . . . . . . . . . . . . . . . . . . 11
+   7.  邏輯 RPC 服務語義  . . . . . . . . . . . . . . . . . . . . . 12
+     7.1.  指令執行與串流發送 . . . . . . . . . . . . . . . . . . . 12
+     7.2.  行程管理與信號轉發 . . . . . . . . . . . . . . . . . . . 13
+     7.3.  檔案傳輸與裸 FD 傳輸 . . . . . . . . . . . . . . . . . . 13
+   8.  威脅防禦與零分配反制機制 . . . . . . . . . . . . . . . . . . 14
+     8.1.  13Policy Heuristic 引擎 . . . . . . . . . . . . . . . . 14
+     8.2.  ChaCha20-Poly1305 認知挑戰  . . . . . . . . . . . . . . 15
+     8.3.  零分配焦油坑與 TCP 零窗口死鎖防禦  . . . . . . . . . . . 16
+     8.4.  LocalHost 迴圈防禦  . . . . . . . . . . . . . . . . . . 16
+   9.  結構化錯誤碼 . . . . . . . . . . . . . . . . . . . . . . . . 17
+   10. 安全性考慮 (RFC Review 奇特邊緣場景) . . . . . . . . . . . . 18
+   11. IANA 註冊考慮  . . . . . . . . . . . . . . . . . . . . . . . 19
+   12. 參考文獻 . . . . . . . . . . . . . . . . . . . . . . . . . . 20
+     12.1. 規範性參考文獻 . . . . . . . . . . . . . . . . . . . . 20
+     12.2. 資訊性參考文獻 . . . . . . . . . . . . . . . . . . . . 21
+   附錄 A.  Protobuf 服務定義 . . . . . . . . . . . . . . . . . . . 21
+   附錄 B.  基準參考實作 . . . . . . . . . . . . . . . . . . . . . 22
+
+1.  導言與協定演進
+
+   自主式 AI 編碼 Agent 在遠端主機上運行並具備高權限的普及，引入了全新的威脅
+   模型：惡意 Agent（Rogue Agent）。與人類操作的傳統 SSH 客戶端不同，AI Agent 
+   可能在沒有人類明確授權的情況下，自主執行破壞性指令、竊取憑證或在網路上進行
+   橫向移動。
+
+   傳統的遠端執行協定如 SSH [RFC4253] 是為人類終端操作設計的，缺乏對 Agent 進行
+   細粒度能力限制、主動威脅防禦以及跨異質平台二進位安全編碼的整合支援。
+
+   SASS (Saki Agent Secure Stream) 透過將「邏輯消息流」與「物理傳輸層」進行徹底
+   解耦，解決了此安全隱憂。SASS 核心定義了一個傳輸無關的消息核心與可插拔的傳輸
+   插件，使協定草案在學術預審時完全免於第三方專利二進位框架（如 gRPC/Protobuf）
+   的編譯鎖定，同時在實作層保留了高性能的適配器。
+
+1.1.  三大增量演進里程碑 (v1.1 至 v1.3)
+
+   遵循 TLS 1.0 (RFC 2246) 繼承並改良 SSL 3.0 的歷史先例，SASS 規格書通過三個
+   重大的增量演進里程碑，正式確立了其安全防禦的演進軌跡：
+
+   o  SASS v1.1 (主動威脅反制)：新增了 13Policy 啟發式防火牆以及與主動 Tarpit 
+      焦油坑系統強綁定的 ChaCha20-Poly1305 認知挑戰，奠定了對抗 Rogue Agent 自動化
+      惡意操作的主動防禦基石。
+
+   o  SASS v1.2 (密碼學完整性與審計)：引入了五維度 Capability ACL，並結合了
+      基於本機 Ed25519 密鑰簽章的前向安全 SHA256 雜湊日誌鏈，為審計不可抵賴性提供
+      了純粹的密碼學數學證明。
+
+   o  SASS v1.3 (控制與傳輸徹底解耦與硬化 - 本版本)：將 SASS 核心與底層物理傳輸
+      協定徹底解耦。在 Userspace 中引入原子化 FD 操作 (POSIX openat 與 O_NOFOLLOW) 
+      以杜絕 TOCTOU 沙盒穿透，實作零分配 Tarpit 串流以消除 Host DoS，並強制實施 
+      RFC 9266 tls-exporter 通道綁定以防範連線劫持。
+
+2.  術語定義
+
+   Agent (客戶端)：在遠端主機上與 SASS Daemon 連接以執行指令或傳輸檔案的自主進程。
+
+   Daemon (服務端)：監聽連線、驗證 Agent 身份並執行授權指令的守護進程。
+
+   Rogue Agent (惡意 Agent)：遭到入侵、配置錯誤或正企圖進行越權操作的 Agent。
+
+   Session (會話)：由 UUID 標識並受能力集限制的、有時限的已認證上下文。
+
+   SAMM (SASS Abstract Messaging Model)：SASS 抽象消息模型，傳輸無關的消息語義。
+
+   Transport Profile (傳輸配置)：實現具體傳輸細節的適配插件（如 gRPC, WebSockets）。
+
+   UVSF (Userspace Virtual Symlink Filesystem)：Userspace 虛擬符號連結檔案系統沙盒。
+
+   KFS/WSDK (核心級過濾儲存)： proprietary OS 驅動級別的強沙盒插件。
+
+   13Policy：一種啟發式指令防火牆，用以攔截危險指令並觸發防禦。
+
+   Cognitive Challenge (認知挑戰)：一種 ChaCha20-Poly1305 密碼學挑戰，要求 Agent 
+      證明其具備對稱密鑰與真實計算能力。
+
+   Tarpit (焦油坑)：基於全域靜態 O(1) 緩衝區共享的主動防禦拖延機制。
+
+3.  協定概述
+
+3.1.  系統架構
+
+   SASS 分離了控制平面與數據傳輸平面：
+
+   +---------------------------------------------------------------+
+   | Layer 6: 儲存沙盒 (開源 UVSF Core | 商業特權 KFS 核心插件)       |
+   +---------------------------------------------------------------+
+   | Layer 5: 前向安全審計日誌鏈 (SHA256 Hash Chain)                |
+   +---------------------------------------------------------------+
+   | Layer 4: 能力與會話管理 (Capability & Session)                 |
+   +---------------------------------------------------------------+
+   | Layer 3: 主動威脅防禦 (13Policy, Tarpit, ChaCha20)             |
+   +---------------------------------------------------------------+
+   | Layer 2: 負載安全編碼 (Zstd 流式熔斷門 + Base64 安全信封)        |
+   +---------------------------------------------------------------+
+   | Layer 1: 抽象傳輸適配器 (SAMM Interface)                       |
+   +---------------------------------------------------------------+
+   |   [可插拔傳輸插件: gRPC-h2 | WebSockets | TCP-CBOR-RPC]        |
+   +---------------------------------------------------------------+
+
+3.2.  抽象消息模型 (SAMM)
+
+   SAMM 定義了邏輯上的消息結構（如 ExecuteRequest, StreamResponse）。基準
+   序列化編碼**必須**採用標準的 CBOR [RFC8949] 或 JSON，以確保規格書自足性。第 7 節
+   詳細規定了各個邏輯欄位的類型映射。
+
+3.3.  與 SSH 的關係
+
+   SASS 與 SSH 協定族 [RFC4251][RFC4252][RFC4253][RFC4254] 不共享任何線路格式、
+   密鑰交換、通道多路複用或子系統架構。
+
+   內部開發代碼 "SakiAgentSSH" 僅為歷史遺留名稱。實作**不得**宣稱相容 SSH，亦不得
+   監聽 TCP 22 埠或響應 SSH 客戶端的探針。
+
+4.  傳輸層與傳輸配置插件
+
+4.1.  傳輸層解耦原則
+
+   SASS Daemon 與 Client 透過 `TransportAdapter` 進行交互。具體實作可以自由選擇
+   符合規範的傳輸插件，確保協定能從低端單晶片 (TCP/CBOR) 擴展至企業級跳板機 (gRPC/mTLS)。
+
+4.2.  SASS-over-gRPC 配置 (強制 TLS 1.3)
+
+   SASS-over-gRPC 是預設的企業級高性能傳輸適配器。它將 SAMM 消息映射至 Protocol
+   Buffers 編碼，並透過 ALPN "x-sakirpc-v5" 承載於 HTTP/2 串流之上。
+
+   在此傳輸配置下，所有連線**必須**強制使用 TLS 1.3 [RFC8446]，禁止降級。且必須支援：
+   o  TLS_AES_256_GCM_SHA384
+   o  TLS_CHACHA20_POLY1305_SHA256
+
+   為了容納 Tarpit 焦油坑的反制數據，gRPC 最大 message 大小必須設置為至少 50 MiB。
+
+4.3.  ALPN 與 TCP 分包降級防禦
+
+   在 TLS 握手期間，雙方必須啟用 ALPN 擴充 [RFC7301]，標識為 "x-sakirpc-v5"。
+
+   為了防範防火牆級別的 ALPN 剝離或 TCP 分包降級攻擊，Daemon 必須在接收到 h2 串流時
+   校對 `Content-Type` 是否為 `application/grpc+saki`。若 ALPN 丟失但標頭匹配，
+   Daemon 必須立即關閉該 TCP 連線，防堵跨協定混淆攻擊。
+
+4.4.  基於 tls-exporter (RFC 9266) 的 TLS 1.3 通道綁定
+
+   在使用 TLS 1.3 傳輸配置時，協定強制實施基於 `tls-exporter` [RFC9266] 的通道綁定，
+   以防止 Session 劫持與 0-RTT 重放。通道綁定密鑰使用導出標籤
+   `"EXPORTER-Saki-Agent-Secure-Stream-v7"` 計算，並與 ChaCha20 挑戰鎖定：
+     Response = HMAC-SHA256(Session_Key, Plaintext || Exporter_Value)
+
+4.5.  預設 TCP 埠號
+
+   SASS Daemon 預設監聽 TCP 埠號 19284，此埠號完全可配置。
+
+5.  會話層
+
+5.1.  Agent 身份驗證
+
+   SASS 認證分為三階段：mTLS 傳輸安全、ED25519 挑戰回應、以及通道綁定的認知挑戰。
+   在 Userspace 中，SASS 核心將儲存權限（Allowed Paths）強制綁定在基於相對檔案
+   描述符（FD）的原子操作 `openat(2)`，且強制攜帶 `O_NOFOLLOW` 標記。
+
+5.2.  會話生命週期控制
+
+   會話具有時效性，由 UUID v4 標識。Daemon 必須強制限制：
+   o  會話最大生存期：預設 3600 秒
+   o  最大並行會話數：預設 10
+   o  會話更新：調用 `RenewSession` 延長 expires_at 時間戳
+
+5.3.  基於能力控制的存取控制
+
+   每個已授權的 Agent 會被賦予一個五維度能力集：
+   1. allowed_commands / denied_commands: 指令黑白名單。
+   2. allowed_paths / denied_paths: 檔案系統限制。
+   3. max_concurrent: 進程最大並行數。
+   4. timeout_seconds: 單個指令最大超時。
+   5. max_file_size_bytes: 最大檔案傳輸上限。
+
+   在 UVSF Userspace 沙盒中，為防範 TOCTOU symlink 穿透，必須使用 FD 原子操作
+   (`openat(2)`)，攜帶 `O_NOFOLLOW` 標記進行相對路徑檔案存取。
+
+6.  負載編碼與安全防護閘門
+
+6.1.  Zstd 流式解壓縮限額
+
+   指令 Payload 採用 Zstandard [RFC8878] 與 Base64 封裝。為了防範壓縮炸彈 (Zip Bomb)，
+   Daemon 必須採用流式解壓，禁止在解壓前將整包數據讀入記憶體緩衝區。
+
+6.2.  壓縮炸彈與 Huffman 樹碰撞 DoS 防禦
+
+   o  `MAX_DECOMPRESSED_PAYLOAD` 強制限制為 5 MiB。超出此限制將回傳錯誤 (55) 並中斷 TCP 連線。
+   o  為了防止 Huffman 樹極限碰撞引發的 CPU 耗竭，解壓器必須在 Header 解析階段套用最大 50ms 的超時限額。
+
+6.3.  編碼與解碼具體流程
+
+   發送端流程：
+   1. 將指令引數序列化為 structured array (JSON/MsgPack)。
+   2. 採用 Zstandard 壓縮級別 3 進行壓縮。
+   3. 使用 Base64 標準編碼。
+   4. 將結果字串填入 `raw_payload` bytes 欄位。
+
+   接收端流程：
+   1. 解碼 Base64。
+   2. 使用 Zstd 進行限額流式解壓，校對 5MB 限額。
+   3. 還原參數陣列，並**直接傳遞給 OS 進程創建 API (execve, CreateProcessW)**，不經過 shell。
+
+7.  邏輯 RPC 服務語義
+
+7.1.  指令執行與串流發送
+
+   rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+   rpc ExecuteStream(ExecuteRequest) returns (stream StreamResponse);
+
+   Execute 為同步等待；ExecuteStream 為即時異步串流。StreamResponse 包含 source (STDOUT/STDERR), 
+   data, 以及 exit_code (僅在最後一個 message 傳輸)。
+
+7.2.  行程管理與信號轉發
+
+   rpc Cancel(CancelRequest) returns (CancelResponse);
+   rpc Signal(SignalRequest) returns (SignalResponse);
+
+   Cancel 即時終止進程 (SIGKILL)。Signal 轉發 POSIX 信號。Windows 上 SIGINT 
+   映射至 CTRL_C_EVENT，SIGTERM/SIGKILL 映射至 TerminateProcess。
+
+7.3.  檔案傳輸與裸 FD 傳輸
+
+   rpc FileUpload(stream FileChunk) returns (FileTransferResponse);
+   rpc FileDownload(FileDownloadRequest) returns (stream FileChunk);
+   rpc RawFileTransfer(stream RawFileChunk) returns (RawFileTransferResponse);
+
+   RawFileTransfer 繞過終端 I/O，Daemon 開闢 raw FD 直接寫入 Zstd+Base64 解碼流，
+   保證跨平台二進位 bit-perfect 對齊。
+
+8.  威脅防禦與零分配反制機制
+
+8.1.  13Policy Heuristic 引擎
+
+   基於 YAML 配置的指令防火牆。偵測到違規指令時，直接中斷執行並將連線重導向至 Tarpit：
+   o  "rm -rf /"        - 根目錄遞迴刪除
+   o  "mkfs"            - 格式化
+   o  "dd if=/dev/zero" - 磁碟覆蓋
+   o  ":(){ :|:& };:"   - 叉子炸彈
+
+8.2.  ChaCha20-Poly1305 認知挑戰
+
+   驗證 Client 端的真實計算能力，計算公式與 `tls-exporter` 通道綁定值強關聯。
+   1. Daemon 生成 32-byte 金鑰、12-byte nonce 與 64-byte 隨機明文。
+   2. 明文與 `TLS_Unique_Exporter` 混合雜湊後，進行 ChaCha20-Poly1305 加密。
+   3. 挑戰放入 ChallengeStore，TTL 預設 60 秒，一體驗證後銷毀。
+   4. Client 解密後回傳明文，Daemon 進行常數時間比對。
+
+8.3.  零分配焦油坑與 TCP 零窗口死鎖防禦
+
+   o  **靜態緩衝區共享**：Daemon 必須重複發送一個預先配置在記憶體中、唯讀且恆定 64 KiB 
+      大小的靜態高熵數據塊，消除每個連線動態配置 40MB 的開銷。
+   o  **原子門控計數器**：並行 Tarpit 任務上限強制限制為 32。超出即在 TCP 層物理拒絕。
+   o  **TCP 零窗口死鎖防禦**：對每個 Tarpit 區塊套用嚴格的 3 秒發送超時。一旦檢測到 socket 
+      被惡意零窗口掛起，立即強制驅逐。
+
+8.4.  LocalHost 迴圈防禦
+
+   Failed loopback 連線觸發儲存、記憶體虛假回應與 Credential Honeypot 蜜罐，誤導本機惡意進程。
+
+9.  結構化錯誤碼
+
+   SASS 錯誤碼定義：
+   o  1-9: ACL / 認證
+   o  10-19: 執行
+   o  20-29: 檔案傳輸
+   o  30-39: 配置
+   o  40-49: TLS
+   o  50-59: 能力權限
+   o  60-69: 會話會話
+   o  70-79: 公鑰認證
+   o  80-89: 威脅防禦與 Tarpit
+   o  90-99: 本地迴圈防禦
+
+10. 安全性考慮 (RFC Review 奇特邊緣場景)
+
+   SASS 專為敵對安全環境設計，考慮包括：
+
+   o  **gRPC 傳輸解耦**：將 gRPC 隔離至傳輸插件，徹底消除了 IETF 審查員對 Protobuf 
+      編譯鎖定與非標準協議自足性的質疑。
+   o  **TCP 分包 ALPN 剝離防禦**：Daemon 在 h2 串流頭部校對 Content-Type，防堵中間人剝離 ALPN。
+   o  **TCP 零窗口死鎖防禦**：透過 3 秒寫入超時，徹底防堵攻擊者以 0-byte 接收窗口將 Daemon 
+      異步 socket 鎖死並耗盡 FD 的奇特 DoS 攻擊。
+   o  **TLS 1.3 0-RTT 重放防範**：改用 RFC 9266 `tls-exporter` 通道綁定，使 session 
+      快速恢復中的重放攻擊完全失效。
+   o  **審計日誌私鑰洩漏防禦**：規定公鑰單向初始化推播與外部 TSP (RFC 3161) 時間戳定時錨定，
+      使攻擊者即使提權儲存私鑰也無法重構或回滾歷史雜湊日誌鏈。
+
+11. IANA 註冊考慮
+
+   註冊 ALPN "x-sakirpc-v5"，MIME "application/grpc+saki"，以及 TCP 埠號 19284。
+
+12. 參考文獻
+
+12.1. 規範性參考文獻
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, March 1997.
+
+   [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
+              Encodings", RFC 4648, October 2006.
+
+   [RFC5705]  Rescorla, E., "Key Exporting for TLS", RFC 5705, March 2010.
+
+   [RFC7301]  Friedl, S., "ALPN Extension", RFC 7301, July 2014.
+
+   [RFC8439]  Nir, Y., "ChaCha20 and Poly1305", RFC 8439, June 2018.
+
+   [RFC8446]  Rescorla, E., "The TLS Protocol 1.3", RFC 8446, 2018.
+
+   [RFC8949]  Bormann, C., "Concise Binary Object Representation", 2020.
+
+   [RFC9266]  Syrjala, J., "TLS Channel Bindings for TLS 1.3", RFC 9266, 2022.
+
+12.2. 資訊性參考文獻
+
+   [RFC4251]  Ylonen, T., "SSH Protocol Architecture", RFC 4251, 2006.
+   [RFC4252]  Ylonen, T., "SSH Authentication", RFC 4252, 2006.
+   [RFC4253]  Ylonen, T., "SSH Transport", RFC 4253, 2006.
+   [RFC4254]  Ylonen, T., "SSH Connection", RFC 4254, 2006.
+
+附錄 A.  Protobuf 服務定義
+
+   gRPC 基準傳輸適配插件的 normative schema 維護於 `proto/sakissh.proto`：
+   ```protobuf
+   syntax = "proto3";
+   package sakissh;
+
+   service SakiSSH {
+     rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+     rpc ExecuteStream(ExecuteRequest) returns (stream StreamResponse);
+     rpc Cancel(CancelRequest) returns (CancelResponse);
+     rpc Signal(SignalRequest) returns (SignalResponse);
+     rpc FileUpload(stream FileChunk) returns (FileTransferResponse);
+     rpc FileDownload(FileDownloadRequest) returns (stream FileChunk);
+     rpc RawFileTransfer(stream RawFileChunk) returns (RawFileTransferResponse);
+     rpc Authenticate(AuthRequest) returns (AuthResponse);
+     rpc GetCapabilities(CapabilitiesRequest) returns (CapabilitiesResponse);
+     rpc RenewSession(RenewSessionRequest) returns (RenewSessionResponse);
+     rpc ChaChaCognitiveChallenge(CognitiveChallengeRequest) returns (CognitiveChallengeResponse);
+     rpc GetSecurityStatus(SecurityStatusRequest) returns (SecurityStatusResponse);
+     rpc GetAuditPublicKey(GetAuditPublicKeyRequest) returns (GetAuditPublicKeyResponse);
+   }
+   ```
+
+附錄 B.  基準參考實作
+
+   主 Rust 守護進程 (`saki-ssh-daemon`) 與 Go 互操作實作 (`go-sakissh`) 均完整維護
+   於專案庫中。雙端皆通過了 gRPC 基準傳輸適配器下的互操作性測試矩陣。
+
+作者聯絡地址
+
+   Saki Studio
+   Taipei, Taiwan
+   Email: dev@sakistudio.tw

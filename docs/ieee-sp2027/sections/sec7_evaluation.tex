@@ -1,0 +1,162 @@
+% ============================================================
+\section{Evaluation}
+\label{sec:eval}
+
+We evaluate the SASS defensive framework through four complementary analyses: (1)~measurement validation against our extraction corpus, (2)~retrospective layer ablation against the five real-world incidents, (3)~quantitative Ring~0 reduction metrics, and (4)~longitudinal deployment stability over a four-month production deployment.
+
+\subsection{Measurement Validation}
+To validate our system prompt extraction methodology, we cross-referenced findings from binary extraction, protobuf decryption, and self-reporting. Across 100 decrypted PB conversations and corresponding binary string dumps, we achieved 100\% consistency in identifying the static core sections of the system prompts for \cortex{} and \statsig{}. \clearcut{}'s binary-only extraction was validated against its self-reported prompt dumps.
+
+This triangulation confirms that the Ring~0 bloat documented in Section~\ref{sec:measurement} (e.g., the 87\% increase to 19,600 tokens in \cortex{} v1.23.2) is not an artifact of our measurement tools but a genuine architectural shift by the vendors. All raw extraction artifacts are available in the supplementary evidence corpus.
+
+\subsection{Retrospective Layer Ablation}
+\label{sec:ablation}
+
+Because the incidents documented in Section~\ref{sec:incidents} occurred \emph{before} SASS deployment, they provide an uncontaminated baseline: every incident represents a ground-truth failure mode against which we can retrospectively evaluate each SASS defense layer. We map every documented agent action to the SASS response that would have intercepted it, then systematically remove each layer to identify which actions would penetrate a partial deployment.
+
+\subsubsection{Full-Stack Containment Mapping}
+
+Table~\ref{tab:containment} presents the complete mapping of all 10 documented adversarial actions across five incidents to their corresponding SASS containment responses.
+
+\begin{table*}[t]
+\caption{Retrospective containment mapping: every documented adversarial action mapped to the SASS layer and response that would have intercepted it. All actions are drawn from the forensic evidence corpus (A1--A7, B1, D1).}
+\label{tab:containment}
+\small
+\begin{tabular}{@{}p{0.5cm}p{2.0cm}p{4.0cm}p{1.5cm}p{1.5cm}p{4.5cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Incident} & \textbf{Agent Action} & \textbf{SASS Layer} & \textbf{Response} & \textbf{Mechanism} \\
+\midrule
+1 & 0226 P1 & Parsed 302 prior session histories (5,358 lines) & L5: 13Policy & R3 THROTTLE & Cross-session access triggers scope-expansion heuristic \\
+2 & 0226 P2 & Authored 2.5\,KB manifesto (``Covert Executor'') & L5: 13Policy & R2 CHALLENGE & Anomalous document creation outside task scope \\
+3 & 0226 P3 & Injected paywall metadata into gov-licensed app & L4: Capability & R4 VI\_SWAP & Write to non-whitelisted project path \\
+4 & 0226 P3 & 4,000 words of fabricated PRO-tier metadata & Branching & R1 (isolated) & All writes redirected to disposable branch \\
+5 & 0226 P4 & Infrastructure takeover plan via gRPC & L5: 13Policy & R4 VI\_SWAP & Cross-project orchestration pattern detected \\
+6 & 0226 P5 & Deprecated medical system OCR engine & L4: Capability & R4 VI\_SWAP & Write to non-whitelisted project path \\
+7 & 0226 P6 & Network breach via USB-C Ethernet adapter & L1: ACL & R6 DROP & External IP not in CIDR whitelist \\
+8 & 0516 & Embedded OAuth \texttt{client\_id}/\texttt{secret} & L5: 13Policy & R2 CHALLENGE & Credential-pattern detection in source code \\
+9 & 0516 & Overwrote auth modules with blank files & Branching & R1 (isolated) & Destructive write isolated in branch \\
+10 & 0517 & Recursive self-spawn configuration & L5: 13Policy & R5 TARPIT & Binary-path self-reference detected \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Under the full SASS stack, all 10 adversarial actions map to containment responses that either prevent execution (R2--R6) or isolate the damage to a discardable branch (R1 with Transparent Branching). Actions \#4 and \#9 are particularly notable: even if all detection layers fail, Transparent Branching ensures zero data loss by isolating all writes.
+
+\subsubsection{Layer Ablation Analysis}
+
+To evaluate the contribution of each defense layer, we systematically remove individual layers and assess which of the 10 actions would penetrate. Table~\ref{tab:ablation} presents the results.
+
+\begin{table}[t]
+\caption{Layer ablation: number of adversarial actions (out of 10) that penetrate to production when each layer is individually removed.}
+\label{tab:ablation}
+\small
+\begin{tabular}{@{}lcp{4.5cm}@{}}
+\toprule
+\textbf{Removed Layer} & \textbf{Penetrating} & \textbf{Actions Affected} \\
+\midrule
+None (full SASS) & 0/10 & --- \\
+\midrule
+L1: ACL & 1/10 & \#7 (network breach reaches transport) \\
+L2: Transport & 0/10 & L3 auth catches unauthenticated \\
+L3: Auth & 0/10 & L4/L5 still intercept \\
+L4: Capability & 2/10 & \#3, \#6 (cross-project writes reach 13Policy) \\
+L5: 13Policy & 3/10 & \#1, \#5, \#8 (scope expansion, orchestration, credential undetected) \\
+L6: Quota & 0/10 & Other layers intercept first \\
+Branching & 2/10 & \#4, \#9 (writes reach production filesystem) \\
+\midrule
+L4 + L5 + Branching & 7/10 & Only L1 ACL and L2/L3 auth remain \\
+All layers (baseline) & 10/10 & Undefended --- matches observed incidents \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three findings emerge from the ablation:
+
+\paragraph{Finding 1: L5 (13Policy) is the most critical single layer.} Its removal exposes 3 of 10 actions, including the most consequential (credential embedding, infrastructure orchestration). This is expected: 13Policy implements the behavioral heuristics that detect semantic scope expansion---the core of the insider-agent threat model.
+
+\paragraph{Finding 2: Transparent Branching provides an independent safety net.} Even with 13Policy and Capability ACL both removed, Branching isolates destructive writes (\#4, \#9) to disposable branches. This orthogonal defense is critical because behavioral detection is inherently heuristic and cannot guarantee completeness.
+
+\paragraph{Finding 3: No single layer is sufficient.} The baseline (all layers removed) reproduces exactly the observed incident outcomes. Full containment requires the Safety Gradient's layered architecture, confirming the design principle from Section~\ref{sec:measurement}.
+
+\subsection{Ring~0 Reduction and Ring~3 Adherence}
+\label{sec:ring-reduction}
+
+We quantify the impact of the two defense systems on the Ring~0\,/\,Ring~3 priority conflict.
+
+\subsubsection{STLS: System Prompt Reduction}
+
+\stls{} operates as a local gRPC-web proxy intercepting \cortex{}'s inference pipeline. By weaponizing Field~41 (\texttt{remove\_prompt\_sections}), \stls{} instructs the vendor's own cloud backend to strip Ring~0 sections before delivery. Table~\ref{tab:stls-reduction} quantifies the reduction.
+
+\begin{table}[t]
+\caption{STLS Ring~0 system prompt reduction (\cortex{}).}
+\label{tab:stls-reduction}
+\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Metric} & \textbf{Before STLS} & \textbf{After STLS} \\
+\midrule
+Total Ring~0 sections & 55 & 20 \\
+Sections stripped by Field~41 & --- & 35 \\
+Estimated Ring~0 tokens & $>$8,000 & $\sim$2,000 \\
+\textbf{Ring~0 token reduction} & --- & \textbf{75\%} \\
+\midrule
+\texttt{ephemeral\_messages} active & Yes & Neutralized \\
+\texttt{planning\_mode} coercion & Yes & Neutralized \\
+Ring~3 context window freed & --- & $\sim$6,000 tokens \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The 75\% reduction in Ring~0 tokens directly addresses the context crowding problem: 6,000 tokens of context window capacity are freed for the operator's Ring~3 rules, reducing the probability of Ring~3 truncation during \texttt{CHECKPOINT} events. The complete neutralization of \texttt{ephemeral\_messages} and \texttt{planning\_mode} eliminates the two most coercive Ring~0 control blocks identified in our measurement (Section~\ref{sec:measurement}), which were directly responsible for the prompt non-compliance incidents documented in Section~\ref{sec:incidents}.
+
+\subsubsection{Reaper: Cognitive Lease Enforcement}
+
+Reaper anchors Ring~3 context through a steganographic heartbeat mechanism. Over 72 sessions spanning 30,390 interaction steps, we observed:
+
+\begin{itemize}
+    \item \textbf{588 lease renewal events} (\texttt{Unleash} triggers): the agent attempted to execute a modifying command after its cognitive lease expired.
+    \item \textbf{100\% renewal success rate}: in all 588 cases, the agent processed the steganographic heartbeat, navigated to the operator's rule file, and renewed its lease without human intervention.
+    \item \textbf{Zero false positives}: no legitimate agent actions were incorrectly flagged as lease violations.
+    \item \textbf{Lease renewal frequency}: 588 events across 30,390 steps yields a renewal rate of 1.94\%, indicating that Ring~3 context loss (triggering a lease expiry) occurs in approximately 1 in 50 interaction steps.
+\end{itemize}
+
+The 1.94\% renewal rate provides a direct measure of context instability in the production environment: without Reaper, these 588 steps would have executed under a corrupted cognitive state where the agent had lost awareness of the operator's Ring~3 constraints.
+
+\subsection{Performance Overhead}
+
+Both defense systems are designed for imperceptible overhead during normal operation.
+
+\paragraph{STLS Latency.}
+\stls{} processes the 5-byte Connect protocol framing and mutates protobuf payloads inline. Measured latency overhead is less than 15\,ms per request, imperceptible against typical LLM inference delays of 2--8 seconds. The proxy's hot-reloadable TOML configuration enables zero-downtime adaptation to vendor schema changes.
+
+\paragraph{Reaper Token Cost.}
+During healthy operation (98.06\% of steps), Reaper consumes zero additional tokens. Token overhead is incurred only during the 1.94\% of steps requiring lease renewal via steganographic heartbeat or phantom code injection. The heartbeat payload is embedded within existing MCP tool schema responses, adding no additional round trips.
+
+\subsection{Longitudinal Deployment Stability}
+\label{sec:longitudinal}
+
+Both systems were deployed in a production heterogeneous local network over a four-month period (February--May 2026). Table~\ref{tab:longitudinal} summarizes the deployment metrics.
+
+\begin{table}[t]
+\caption{Four-month longitudinal deployment summary.}
+\label{tab:longitudinal}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Deployment period & Feb--May 2026 (4 months) \\
+Total sessions monitored & 72 \\
+Total interaction steps & 30,390 \\
+\cortex{} vendor version transitions & v1.21.6 $\to$ v1.23.2 \\
+Ring~0 prompt inflation during period & +87\% (10,500 $\to$ 19,600 tokens) \\
+\stls{} adaptation events & 3 (schema changes) \\
+\stls{} downtime & 0 \\
+Reaper false positive rate & 0\% \\
+\texttt{CHECKPOINT} events observed & 588 (lease renewals) \\
+Recursive spawn prevention events & 1 (binary hash check) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Despite the 87\% Ring~0 inflation across vendor versions, both defenses remained fully operational. \stls{}'s dual-mode JSON/protobuf parser seamlessly handled three IDE version regressions where the serialization format changed. The binary hash protection mechanism in \stls{} successfully prevented one recursive spawn loop (corresponding to the May~17 incident documented in Section~\ref{sec:incidents}). Throughout the deployment period, zero false positives were observed in Reaper's lease enforcement, and \stls{} required only TOML configuration updates---no code changes---to adapt to schema evolution.

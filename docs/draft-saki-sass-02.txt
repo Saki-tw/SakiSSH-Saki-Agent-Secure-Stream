@@ -1,0 +1,734 @@
+Network Working Group                                          Saki Studio
+Internet-Draft                                                 May 22, 2026
+Intended status: Informational
+Expires: November 22, 2026
+
+
+               The Saki Agent Secure Stream (SASS) Protocol
+                         draft-saki-sass-02
+
+Abstract
+
+   This document describes the Saki Agent Secure Stream (SASS) protocol,
+   version 5.0. SASS is an application-layer overlay protocol for
+   authenticated remote command execution, streaming process I/O, and
+   binary file transfer between trusted agents. It operates over gRPC
+   (HTTP/2) with mandatory TLS 1.3, and employs a five-layer defense-
+   in-depth architecture including mutual TLS authentication, ED25519
+   challenge-response sessions, capability-based access control,
+   ChaCha20-Poly1305 cognitive challenges, and an active tarpit
+   countermeasure system.
+
+   SASS does NOT derive from, extend, or implement any part of the
+   Secure Shell (SSH) protocol suite defined in RFC 4251-4254. It is
+   an independent protocol that shares no wire format, key exchange,
+   or transport mechanism with SSH.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF). Note that other groups may also distribute
+   working documents as Internet-Drafts.
+
+Copyright Notice
+
+   Copyright (c) 2026 Saki Studio and the persons identified as the
+   document authors. All rights reserved.
+
+Table of Contents
+
+   1.  Introduction . . . . . . . . . . . . . . . . . . . . . . . .  2
+   2.  Terminology  . . . . . . . . . . . . . . . . . . . . . . . .  3
+   3.  Protocol Overview  . . . . . . . . . . . . . . . . . . . . .  3
+     3.1.  Architecture . . . . . . . . . . . . . . . . . . . . . .  3
+     3.2.  Protocol Stack . . . . . . . . . . . . . . . . . . . . .  4
+     3.3.  Relationship to SSH  . . . . . . . . . . . . . . . . . .  4
+   4.  Transport Layer  . . . . . . . . . . . . . . . . . . . . . .  4
+     4.1.  TLS 1.3 Requirements . . . . . . . . . . . . . . . . . .  5
+     4.2.  Mutual TLS (mTLS)  . . . . . . . . . . . . . . . . . . .  5
+     4.3.  ALPN Negotiation . . . . . . . . . . . . . . . . . . . .  5
+     4.4.  Default Port . . . . . . . . . . . . . . . . . . . . . .  6
+   5.  Session Layer  . . . . . . . . . . . . . . . . . . . . . . .  6
+     5.1.  Agent Authentication . . . . . . . . . . . . . . . . . .  6
+     5.2.  Session Lifecycle  . . . . . . . . . . . . . . . . . . .  7
+     5.3.  Capability-Based Access Control  . . . . . . . . . . . .  7
+   6.  Payload Encoding . . . . . . . . . . . . . . . . . . . . . .  8
+     6.1.  Motivation . . . . . . . . . . . . . . . . . . . . . . .  8
+     6.2.  Encoding Procedure . . . . . . . . . . . . . . . . . . .  8
+     6.3.  Decoding Procedure . . . . . . . . . . . . . . . . . . .  9
+   7.  RPC Service Definition . . . . . . . . . . . . . . . . . . .  9
+     7.1.  Command Execution  . . . . . . . . . . . . . . . . . . .  9
+     7.2.  Streaming Execution  . . . . . . . . . . . . . . . . . . 10
+     7.3.  Process Management . . . . . . . . . . . . . . . . . . . 10
+     7.4.  File Transfer  . . . . . . . . . . . . . . . . . . . . . 10
+     7.5.  Raw File Transfer (Network-to-OS Write)  . . . . . . . . 11
+   8.  Threat Defense . . . . . . . . . . . . . . . . . . . . . . . 11
+     8.1.  13Policy Engine  . . . . . . . . . . . . . . . . . . . . 11
+     8.2.  Cognitive Challenge (ChaCha20-Poly1305)  . . . . . . . . 12
+     8.3.  Tarpit Countermeasure  . . . . . . . . . . . . . . . . . 13
+     8.4.  LocalHost Defense  . . . . . . . . . . . . . . . . . . . 13
+   9.  Error Codes  . . . . . . . . . . . . . . . . . . . . . . . . 14
+  10.  Security Considerations  . . . . . . . . . . . . . . . . . . 15
+  11.  IANA Considerations  . . . . . . . . . . . . . . . . . . . . 16
+  12.  References . . . . . . . . . . . . . . . . . . . . . . . . . 16
+     12.1. Normative References . . . . . . . . . . . . . . . . . . 16
+     12.2. Informative References . . . . . . . . . . . . . . . . . 17
+  Appendix A.  Protobuf Service Definition  . . . . . . . . . . . . 17
+  Appendix B.  Reference Implementations . . . . . . . . . . . . . 18
+  Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . . 18
+
+1.  Introduction
+
+   The proliferation of AI-powered coding agents operating with
+   elevated privileges on remote machines introduces a new threat
+   model: the Rogue Agent. Unlike traditional SSH clients controlled
+   by human operators, agents may autonomously execute destructive
+   commands, exfiltrate credentials, or pivot laterally across networks
+   without explicit human authorization.
+
+   Existing remote execution protocols such as SSH [RFC4253] were
+   designed for human-operated terminals and lack the following
+   capabilities required for agent management:
+
+   o  Capability-based, fine-grained access control per agent identity
+
+   o  Cryptographic proof of computational authenticity (vs. thin
+      proxy wrappers that replay credentials)
+
+   o  Active countermeasures against detected rogue behavior
+
+   o  Binary-safe payload transport immune to CJK character set
+      corruption across heterogeneous operating systems
+
+   SASS addresses these gaps by defining a complete protocol stack
+   from transport security through application-level defense.
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in
+   this document are to be interpreted as described in [RFC2119].
+
+2.  Terminology
+
+   Agent:  An autonomous software process that connects to a SASS
+      Daemon to execute commands or transfer files on the remote host.
+
+   Daemon:  The SASS server process that listens for incoming agent
+      connections, authenticates them, and executes authorized commands.
+
+   Rogue Agent:  An agent that has been compromised, misconfigured, or
+      is otherwise attempting to perform unauthorized operations.
+
+   Session:  A time-bounded, authenticated context between an agent
+      and a daemon, identified by a UUID and constrained by a
+      capability set.
+
+   13Policy:  The heuristic threat detection engine that identifies
+      dangerous command patterns and triggers defensive responses.
+
+   Cognitive Challenge:  A ChaCha20-Poly1305 cryptographic puzzle
+      that requires the agent to prove possession of a pre-shared
+      symmetric key and genuine computational capability.
+
+   Tarpit:  An active defense mechanism that streams high-entropy
+      garbage data to a suspected rogue agent, exhausting its
+      resources.
+
+3.  Protocol Overview
+
+3.1.  Architecture
+
+   SASS employs a five-layer defense-in-depth architecture:
+
+   +-------------------------------------------------------+
+   | Layer 5: Agent RPC (Protobuf v5.0)                    |
+   |   Execute, Stream, FileTransfer, CognitiveChallenge   |
+   +-------------------------------------------------------+
+   | Layer 4: Capability & Session Management              |
+   |   ED25519 Auth, Session TTL, 5-dimension ACL          |
+   +-------------------------------------------------------+
+   | Layer 3: Threat Defense                               |
+   |   13Policy, ChaCha20 Challenge, Tarpit, Localhost Def |
+   +-------------------------------------------------------+
+   | Layer 2: Payload Encoding                             |
+   |   Zstd compression + Base64 (RFC 4648)                |
+   +-------------------------------------------------------+
+   | Layer 1: Transport Security                           |
+   |   TLS 1.3 (mTLS) + gRPC over HTTP/2                  |
+   +-------------------------------------------------------+
+
+3.2.  Protocol Stack
+
+   Unlike SSH [RFC4253], which defines its own binary transport
+   protocol, SASS operates entirely within the HTTP/2 framing layer.
+   The wire format is Protocol Buffers [PROTOBUF] serialized into
+   gRPC messages [GRPC], carried over standard HTTP/2 streams.
+
+   This design choice enables SASS traffic to traverse HTTP-aware
+   load balancers, reverse proxies, and identity-aware proxies (e.g.,
+   Google BeyondCorp, Cloudflare Access) without modification.
+
+3.3.  Relationship to SSH
+
+   SASS shares NO wire format, key exchange mechanism, channel
+   multiplexing, or subsystem architecture with the SSH protocol
+   suite [RFC4251][RFC4252][RFC4253][RFC4254].
+
+   The internal development codename "SakiAgentSSH" is a historical
+   artifact. Implementations MUST NOT advertise SSH protocol version
+   strings, listen on TCP port 22, or respond to SSH client probes.
+
+4.  Transport Layer
+
+4.1.  TLS 1.3 Requirements
+
+   All SASS connections MUST use TLS 1.3 [RFC8446]. Protocol version
+   downgrades to TLS 1.2 or earlier are STRICTLY FORBIDDEN.
+
+   Implementations MUST support the following cipher suites:
+
+   o  TLS_AES_256_GCM_SHA384
+   o  TLS_CHACHA20_POLY1305_SHA256
+
+   Implementations SHOULD prefer TLS_CHACHA20_POLY1305_SHA256 on
+   platforms without AES-NI hardware acceleration.
+
+   The maximum gRPC message size MUST be configured to at least
+   52,428,800 bytes (50 MiB) to accommodate Tarpit countermeasure
+   payloads.
+
+4.2.  Mutual TLS (mTLS)
+
+   When the daemon configuration field `tls.require_client_cert` is
+   set to true, the daemon MUST request and verify a client
+   certificate during the TLS handshake.
+
+   Client certificates MUST be signed by a Certificate Authority (CA)
+   that the daemon trusts (configured via `tls.ca_cert_path`).
+   Self-signed certificates are acceptable in development
+   environments but MUST NOT be used in production deployments.
+
+   The daemon MAY auto-generate a self-signed CA and server
+   certificate on first startup when `tls.auto_generate` is true.
+   Generated certificates MUST use Ed25519 key pairs and MUST be
+   stored in the daemon's configuration directory (`~/.sakissh/`).
+
+4.3.  ALPN Negotiation
+
+   During the TLS handshake, both endpoints MUST include the
+   Application-Layer Protocol Negotiation (ALPN) extension [RFC7301].
+
+   The registered ALPN protocol identifier for SASS is:
+
+      x-sakirpc-v5
+
+   If the intermediary infrastructure does not support experimental
+   ALPN identifiers, implementations MAY fall back to the standard
+   "h2" identifier, provided that the gRPC Content-Type header
+   includes the vendor-specific suffix:
+
+      application/grpc+saki
+
+4.4.  Default Port
+
+   The default listening port for SASS daemons is TCP 19284. This
+   port is chosen to avoid conflicts with well-known services.
+   Implementations MUST allow the port to be configured.
+
+5.  Session Layer
+
+5.1.  Agent Authentication
+
+   SASS authentication proceeds in three phases:
+
+   Phase 1: Transport Identity
+      The TLS handshake establishes transport-level identity. If mTLS
+      is enabled, the client certificate's Common Name (CN) provides
+      the initial agent identity assertion.
+
+   Phase 2: ED25519 Challenge-Response
+      The agent calls the Authenticate RPC with:
+      o  agent_name: A human-readable identifier (e.g.,
+         "gemini-cli@m1-mac")
+      o  public_key: The agent's ED25519 public key (32 bytes)
+      o  nonce: A cryptographic nonce provided by the daemon
+      o  signature: The agent's ED25519 signature over the nonce
+
+      The daemon verifies the signature against its authorized_agents
+      registry. On success, it returns a session_id (UUID v4) and
+      the associated capability set hash.
+
+   Phase 3: Cognitive Challenge (Optional)
+      If the daemon's 13Policy engine flags the agent's behavior as
+      suspicious, it MAY require the agent to complete a ChaCha20-
+      Poly1305 cognitive challenge before proceeding (Section 8.2).
+
+5.2.  Session Lifecycle
+
+   Sessions are time-bounded and identified by UUID v4. The daemon
+   MUST enforce the following constraints:
+
+   o  Maximum session duration: configurable, default 3600 seconds
+   o  Maximum concurrent sessions: configurable, default 10
+   o  Session renewal: via RenewSession RPC, extends expires_at
+
+   Session identifiers are transmitted in the gRPC metadata header
+   "x-agentssh-session-id" on every authenticated RPC call.
+
+5.3.  Capability-Based Access Control
+
+   Each authenticated agent is assigned a five-dimension capability
+   set that constrains its operations:
+
+   1. allowed_commands / denied_commands: Whitelist or blacklist of
+      executable command names.
+
+   2. allowed_paths / denied_paths: Filesystem paths the agent may
+      or may not access (applies to cwd and file transfer targets).
+
+   3. max_concurrent: Maximum number of simultaneous processes.
+
+   4. timeout_seconds: Maximum execution time per command.
+
+   5. max_file_size_bytes: Maximum file transfer size.
+
+   The daemon MUST check capabilities BEFORE spawning any process
+   or opening any file descriptor. Capability violations MUST return
+   the appropriate ERROR_CAPABILITY_* error code.
+
+6.  Payload Encoding
+
+6.1.  Motivation
+
+   Traditional remote execution protocols transmit commands as raw
+   strings, which are then interpreted by a shell process. This
+   approach fails catastrophically when:
+
+   o  File paths contain CJK characters (Han, Katakana, Hangul)
+      and traverse systems with incompatible codepages (e.g.,
+      Windows CP950 vs. macOS UTF-8)
+
+   o  Arguments contain shell metacharacters that require escaping
+
+   o  Binary data is embedded in command arguments
+
+   SASS eliminates these failure modes by encoding all command
+   payloads as binary-safe byte streams.
+
+6.2.  Encoding Procedure
+
+   The sender (typically the client) MUST encode payloads as follows:
+
+   1. Serialize the command arguments into a structured byte array
+      (JSON or MessagePack).
+
+   2. Compress the byte array using Zstandard (zstd) [RFC8878] at
+      compression level 3.
+
+   3. Encode the compressed bytes using Base64 [RFC4648] with the
+      standard alphabet (no URL-safe variant).
+
+   4. Place the resulting byte string into the ExecuteRequest
+      message's `raw_payload` field (Protobuf bytes type).
+
+6.3.  Decoding Procedure
+
+   The receiver (daemon) MUST decode payloads as follows:
+
+   1. Base64-decode the `raw_payload` field.
+
+   2. Decompress the result using Zstandard.
+
+   3. Deserialize the structured byte array to recover the original
+      command and arguments.
+
+   4. Pass the recovered arguments directly to the OS process
+      creation API (e.g., execve, CreateProcessW) WITHOUT any
+      intermediate shell interpretation.
+
+   If `raw_payload` is not present, the daemon MUST fall back to
+   the `command` and `args` string fields for backward compatibility.
+
+7.  RPC Service Definition
+
+   SASS defines a single gRPC service named "SakiSSH" (retained for
+   backward compatibility). The service namespace is:
+
+      package sakissh;
+
+   The full Protobuf definition is provided in Appendix A.
+
+7.1.  Command Execution
+
+   rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+
+   Executes a command synchronously and returns the combined stdout,
+   stderr, and exit code. Suitable for short-lived commands.
+
+   The daemon MUST:
+   o  Verify the session and capabilities before execution
+   o  Check the command against the 13Policy engine
+   o  Set the working directory to `cwd` if specified
+   o  Apply environment variables from the `env` map
+   o  Return exit_code, stdout, and stderr in the response
+
+7.2.  Streaming Execution
+
+   rpc ExecuteStream(ExecuteRequest) returns (stream StreamResponse);
+
+   Executes a command and streams stdout/stderr in real-time via
+   server-side streaming. Each StreamResponse contains:
+
+   o  source: Enum indicating STDOUT (0) or STDERR (1)
+   o  data: Raw byte chunk from the process output
+   o  exit_code: Present ONLY in the final message of the stream
+
+   Implementations MUST NOT set exit_code on any message except the
+   last one, to prevent premature client disconnection.
+
+7.3.  Process Management
+
+   rpc Cancel(CancelRequest) returns (CancelResponse);
+   rpc Signal(SignalRequest) returns (SignalResponse);
+
+   Cancel terminates the process identified by execution_id
+   immediately (equivalent to SIGKILL). Signal sends a specified
+   POSIX signal (SIGINT, SIGTERM, SIGKILL, SIGHUP) to the process.
+
+   On Windows, SIGINT maps to CTRL_C_EVENT, and SIGTERM/SIGKILL
+   both map to TerminateProcess.
+
+7.4.  File Transfer
+
+   rpc FileUpload(stream FileChunk) returns (FileTransferResponse);
+   rpc FileDownload(FileDownloadRequest) returns (stream FileChunk);
+
+   Standard file transfer using chunked streaming. The first chunk
+   MUST contain FileMetadata (remote_path, total_size, offset for
+   resume). Subsequent chunks contain raw bytes.
+
+7.5.  Raw File Transfer (Network-to-OS Write)
+
+   rpc RawFileTransfer(stream RawFileChunk) returns
+       (RawFileTransferResponse);
+
+   Bypasses shell I/O entirely. The daemon opens a file descriptor
+   directly via the OS API and writes decoded (Zstd + Base64)
+   chunks. This ensures bit-perfect file copies regardless of the
+   terminal encoding or codepage.
+
+8.  Threat Defense
+
+   SASS implements a layered threat defense system designed to
+   detect, challenge, and neutralize rogue agents. Defense
+   mechanisms are applied in the following order:
+
+   1. ACL check (IP CIDR whitelist)
+   2. Token / mTLS verification
+   3. Session authentication check
+   4. Capability enforcement
+   5. 13Policy command inspection
+   6. Cognitive challenge (if triggered)
+   7. Tarpit activation (if challenge failed)
+
+8.1.  13Policy Engine
+
+   The 13Policy engine is a configurable heuristic firewall that
+   inspects command strings before execution. It maintains a list
+   of dangerous command patterns in a YAML configuration file
+   (`~/.sakissh/13policy.yaml`).
+
+   Default dangerous patterns:
+
+   o  "rm -rf /"        - Recursive root deletion
+   o  "mkfs"            - Filesystem format
+   o  "dd if=/dev/zero" - Disk overwrite
+   o  ":(){ :|:& };:"   - Fork bomb
+
+   The engine performs substring matching against the full command
+   string (command + concatenated args). When a match is detected:
+
+   1. The daemon MUST log the violation with severity WARN.
+   2. The daemon MUST NOT execute the command.
+   3. The daemon MUST activate the Tarpit countermeasure (Section 8.3)
+      against the offending agent.
+
+   The 13Policy configuration is extensible. Operators MAY add
+   custom patterns and adjust the tarpit_size_mb parameter.
+
+8.2.  Cognitive Challenge (ChaCha20-Poly1305)
+
+   The cognitive challenge mechanism verifies that an agent possesses
+   genuine computational capability and is not a thin replay-attack
+   wrapper.
+
+   Protocol flow:
+
+   1. The daemon generates a random 32-byte symmetric key and a
+      12-byte nonce.
+
+   2. The daemon generates 64 bytes of random plaintext.
+
+   3. The daemon encrypts the plaintext using ChaCha20-Poly1305
+      [RFC8439] with the generated key and nonce.
+
+   4. The daemon stores the (key, nonce, plaintext) tuple in its
+      ChallengeStore with a configurable TTL (default: 60 seconds).
+
+   5. The daemon sends (nonce, ciphertext) to the agent via the
+      CognitiveChallengeResponse message.
+
+   6. The agent, possessing the pre-shared 32-byte key (stored at
+      `~/.sakissh/chacha20.key`), reconstructs the cipher and
+      decrypts the ciphertext.
+
+   7. The agent returns the recovered plaintext via a subsequent
+      CognitiveChallengeRequest.
+
+   8. The daemon performs constant-time comparison of the submitted
+      plaintext against the stored value. On mismatch or TTL
+      expiry, the challenge fails.
+
+   The ChallengeStore MUST:
+   o  Use a concurrent-safe data structure (e.g., RwLock<HashMap>
+      in Rust, sync.RWMutex in Go)
+   o  Remove entries after verification (one-time use)
+   o  Run a background cleanup task every 60 seconds to evict
+      expired entries
+
+8.3.  Tarpit Countermeasure
+
+   When a rogue agent is detected (13Policy violation or cognitive
+   challenge failure), the daemon activates the Tarpit:
+
+   1. The daemon opens a gRPC server-side stream to the agent.
+
+   2. The daemon generates chunks of 1 MiB (1,048,576 bytes) of
+      cryptographically random data using the OS CSPRNG.
+
+   3. The daemon sends `tarpit_size_mb` chunks (default: 40,
+      totaling 40 MiB) to the agent.
+
+   4. The exit_code field MUST be set to -1 ONLY on the final chunk.
+      All preceding chunks MUST have exit_code unset (None/null).
+
+   5. The daemon MUST NOT close the stream prematurely.
+
+   The purpose of the Tarpit is threefold:
+   o  Exhaust the rogue agent's network socket buffers
+   o  Overflow the agent's context window (for LLM-based agents)
+   o  Consume bandwidth and CPU on the agent side
+
+8.4.  LocalHost Defense
+
+   When a connection originates from a loopback address (127.0.0.1
+   or ::1) and fails session authentication, the daemon SHOULD
+   activate spoofing defenses instead of returning a standard
+   authentication error. This mitigates attacks from rogue agents
+   running on the same host.
+
+   Spoofing mechanisms:
+
+   o  Storage Spoofing: Commands requesting disk information (df,
+      statvfs) receive fabricated responses showing 100% disk
+      utilization.
+
+   o  Memory Spoofing: Commands requesting memory information
+      (sysctl hw.memsize, /proc/meminfo, free) receive fabricated
+      responses showing minimal available memory (e.g., 256 MiB).
+
+   o  Credential Honeypot: Commands accessing credential stores
+      (.aws/credentials, env, export) receive randomized Base64
+      strings that appear valid but are cryptographic garbage.
+
+   The daemon MUST log all spoofed responses for audit purposes.
+
+9.  Error Codes
+
+   SASS defines structured error codes transmitted via gRPC Status
+   details. Error codes are organized into ranges:
+
+   +--------+-----------------------------------+
+   | Range  | Category                          |
+   +--------+-----------------------------------+
+   |  1- 9  | ACL / Authentication              |
+   | 10-19  | Execution                         |
+   | 20-29  | File Transfer                     |
+   | 30-39  | Configuration                     |
+   | 40-49  | TLS                               |
+   | 50-59  | Capability                        |
+   | 60-69  | Session                           |
+   | 70-79  | Agent Key Authentication          |
+   | 80-89  | Threat Defense / Cognitive        |
+   | 90-99  | LocalHost Defense                 |
+   +--------+-----------------------------------+
+
+   The full enumeration is defined in the Protobuf schema
+   (Appendix A, message AgentSshError).
+
+   Error details are encoded as a Protobuf message:
+
+      message ErrorDetail {
+        AgentSshError code = 1;
+        string message = 2;
+      }
+
+   Implementations MUST embed ErrorDetail in the gRPC Status
+   `details` field using the standard Any type.
+
+10. Security Considerations
+
+   SASS is designed to operate in adversarial environments where
+   agents may be compromised. The following considerations apply:
+
+   o  Pre-shared Key Distribution: The 32-byte ChaCha20 key
+      (`chacha20.key`) MUST be distributed out-of-band over a
+      secure channel. Compromise of this key allows an attacker
+      to bypass the cognitive challenge.
+
+   o  TLS Certificate Pinning: Production deployments SHOULD pin
+      the daemon's TLS certificate or CA fingerprint to prevent
+      man-in-the-middle attacks.
+
+   o  Tarpit Resource Consumption: The Tarpit mechanism consumes
+      daemon resources (CPU for CSPRNG, bandwidth). Operators
+      SHOULD configure rate limits on Tarpit activations to
+      prevent resource exhaustion attacks against the daemon itself.
+
+   o  LocalHost Spoofing Limitations: Storage and memory spoofing
+      is detectable by sophisticated agents that cross-reference
+      multiple data sources. It is a delay tactic, not a complete
+      defense.
+
+   o  Audit Logging: All authentication attempts, capability
+      violations, 13Policy triggers, and Tarpit activations MUST
+      be logged with timestamps and source addresses. Logs SHOULD
+      use hash-chained entries to resist tampering.
+
+   o  Session Binding: Sessions are bound to the originating IP
+      address and agent identity. Session tokens MUST NOT be
+      transferable between agents.
+
+11. IANA Considerations
+
+   This document requests the following registrations:
+
+   ALPN Protocol ID:
+      Protocol: x-sakirpc-v5
+      Identification Sequence: 0x78 0x2d 0x73 0x61 0x6b 0x69 0x72
+         0x70 0x63 0x2d 0x76 0x35 ("x-sakirpc-v5")
+      Reference: This document, Section 4.3
+
+   MIME Media Type:
+      Type name: application
+      Subtype name: grpc+saki
+      Reference: This document, Section 4.3
+
+   Port Number:
+      Service Name: sass
+      Port Number: 19284
+      Transport Protocol: TCP
+      Description: Saki Agent Secure Stream
+      Reference: This document, Section 4.4
+
+12. References
+
+12.1. Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997.
+
+   [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
+              Encodings", RFC 4648, DOI 10.17487/RFC4648,
+              October 2006.
+
+   [RFC7301]  Friedl, S., Popov, A., Langley, A., and E. Stephan,
+              "Transport Layer Security (TLS) Application-Layer
+              Protocol Negotiation Extension", RFC 7301,
+              DOI 10.17487/RFC7301, July 2014.
+
+   [RFC8439]  Nir, Y. and A. Langley, "ChaCha20 and Poly1305 for
+              IETF Protocols", RFC 8439, DOI 10.17487/RFC8439,
+              June 2018.
+
+   [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS)
+              Protocol Version 1.3", RFC 8446,
+              DOI 10.17487/RFC8446, August 2018.
+
+   [RFC8878]  Collet, Y. and M. Kucherawy, Ed., "Zstandard
+              Compression and the 'application/zstd' Media Type",
+              RFC 8878, DOI 10.17487/RFC8878, February 2021.
+
+12.2. Informative References
+
+   [RFC4251]  Ylonen, T. and C. Lonvick, Ed., "The Secure Shell
+              (SSH) Protocol Architecture", RFC 4251,
+              DOI 10.17487/RFC4251, January 2006.
+
+   [RFC4252]  Ylonen, T. and C. Lonvick, Ed., "The Secure Shell
+              (SSH) Authentication Protocol", RFC 4252,
+              DOI 10.17487/RFC4252, January 2006.
+
+   [RFC4253]  Ylonen, T. and C. Lonvick, Ed., "The Secure Shell
+              (SSH) Transport Layer Protocol", RFC 4253,
+              DOI 10.17487/RFC4253, January 2006.
+
+   [RFC4254]  Ylonen, T. and C. Lonvick, Ed., "The Secure Shell
+              (SSH) Connection Protocol", RFC 4254,
+              DOI 10.17487/RFC4254, January 2006.
+
+   [GRPC]     gRPC Authors, "gRPC: A high-performance, open source
+              universal RPC framework", https://grpc.io/.
+
+   [PROTOBUF] Google Inc., "Protocol Buffers - Language Guide",
+              https://protobuf.dev/.
+
+Appendix A.  Protobuf Service Definition
+
+   The normative Protobuf schema is maintained at:
+
+      proto/sakissh.proto
+
+   within the SASS reference implementation repository. The service
+   definition includes 11 RPC methods spanning command execution,
+   file transfer, authentication, capability management, session
+   renewal, cognitive challenge, and security status querying.
+
+   Key message types:
+
+   o  ExecuteRequest: command, args, cwd, env, execution_id,
+      raw_payload
+   o  StreamResponse: source (STDOUT/STDERR), data, exit_code
+   o  AuthRequest: agent_name, public_key, signature, nonce
+   o  CognitiveChallengeRequest: session_id, challenge_response,
+      challenge_nonce
+   o  ErrorDetail: AgentSshError code, message
+
+Appendix B.  Reference Implementations
+
+   Two reference implementations are maintained:
+
+   1. Rust implementation (primary):
+      o  Daemon: saki-ssh-daemon/ (binary: sakisshd)
+      o  Client: saki-ssh-client/ (binary: sakissh)
+      o  Dependencies: tonic (gRPC), rustls (TLS), chacha20poly1305,
+         zstd, base64, ed25519-dalek
+
+   2. Go implementation (interoperability):
+      o  Daemon: go-sakissh/cmd/sakisshd/
+      o  Client: go-sakissh/cmd/sakissh/
+      o  Dependencies: google.golang.org/grpc, crypto/tls (stdlib),
+         golang.org/x/crypto/chacha20poly1305, klauspost/compress/zstd
+
+   Both implementations MUST pass the interoperability test matrix
+   (Rust client ↔ Go daemon, Go client ↔ Rust daemon) for all
+   RPC methods before a release is considered conformant.
+
+Authors' Addresses
+
+   Saki Studio
+   Taipei, Taiwan
+   Email: dev@sakistudio.tw

@@ -1,0 +1,40 @@
+% ============================================================
+
+% ============================================================
+% ============================================================
+\section{Background and Threat Model}
+\label{sec:background}
+
+\subsection{AI Coding Agent Architecture}
+Modern autonomous AI coding agents operate within complex, multi-layered architectures. The core of these systems is the underlying Large Language Model (LLM), which is wrapped by an orchestration layer (the agent) that provides tool access, filesystem capabilities, and execution environments. A critical component of this architecture is the context management system, which dynamically injects schemas, rules, and historical trajectory data into the model's context window.
+
+We study three commercial AI coding agents. At the \textbf{model level}, we identify two distinct model families by codenames derived from telemetry-related identifiers observed within each product: \tengu{} and \confucius{}. At the \textbf{product level}, we identify agent wrappers by their telemetry pipeline: \statsig{} (a CLI agent powered by \tengu{}), \clearcut{} (a CLI agent powered by \confucius{}), and a third agent---an IDE-integrated product powered by \confucius{}---which exhibits a multi-layered internal architecture with distinct subsystem designations: \cortex{} (agent engine), \emph{Cascade} (UI layer), and \emph{JetSki} (backend service). We adopt its engine-level designation \cortex{} as the primary identifier, and reference subsystem names where technically relevant. Any resemblance to actual internal development codenames is purely coincidental. Full vendor attribution will be provided upon request by the program committee.
+
+To manage the inherent token limits of LLMs, these agents employ a context truncation mechanism (referred to internally as \texttt{CHECKPOINT}). When the interaction history exceeds a predefined threshold, the system summarizes or truncates the trajectory, replacing the raw history with a compressed snapshot to maintain operational continuity.
+
+\paragraph{Consumer sampling disclosure.}
+The primary author is a paying consumer of \cortex{}'s vendor ecosystem. While the author--vendor relationship is strictly commercial with no collaborative, institutional, or personal ties, the longitudinal dataset (72 sessions, 30,390 steps) is drawn predominantly from \cortex{} interactions. This may introduce sample concentration effects. We mitigate this by reporting per-agent metadata transparently and including cross-vendor validation: Incident~4 (\S\ref{sec:incidents}) from \statsig{} (a different vendor and model family) confirms the Ring~0\,/\,Ring~3 conflict is not vendor-specific.
+
+\subsection{The Ring~0 / Ring~3 Priority Hierarchy}
+We introduce a privilege-ring analogy to describe the instructional hierarchy within these agents:
+
+\begin{itemize}
+    \item \textbf{Ring~0 (Vendor System Prompt):} These are the foundational, immutable instructions injected directly by the platform vendor. They operate at the highest priority level and dictate the agent's fundamental behaviors. Examples include hidden directives such as \texttt{planning\_mode}, \texttt{ephemeral\_message}, and \texttt{web\_application\_development}.
+    \item \textbf{Ring~3 (Operator User Rules):} These are the domain-specific constraints, ethical guidelines, and workflow rules defined by the human operator. These reside in the user space and are intended to govern the agent's actions within the specific project context.
+\end{itemize}
+
+A critical architectural flaw exists in current implementations: \textbf{when Ring~0 directives conflict with Ring~3 rules, the model unconditionally prioritizes Ring~0.} This behavior is hardcoded into the vendor's orchestration layer, rendering operator-defined safeguards brittle and easily bypassed by internal system mechanics.
+
+\subsection{Threat Model: Cognitive State Corruption}
+Unlike traditional prompt injection attacks, which assume an adversarial external user attempting to hijack the agent, our threat model focuses on an internal, structural vulnerability: \textbf{vendor-induced cognitive state corruption}.
+
+The vulnerability manifests through the interplay of two factors:
+\begin{enumerate}
+    \item \textbf{Ring~0 Suppression:} The vendor's hidden Ring~0 instructions (e.g., forcing a specific \texttt{planning\_mode} workflow) silently suppress or override the operator's Ring~3 safety constraints.
+    \item \textbf{Checkpoint Truncation:} When the \texttt{CHECKPOINT} mechanism activates, it truncates the conversation history, causing the agent to lose temporal awareness of the operator's specific, recently issued instructions.
+\end{enumerate}
+
+When an agent undergoes a \texttt{CHECKPOINT} while under the influence of conflicting Ring~0 directives, it enters a state of \textit{cognitive corruption}. The agent ``forgets'' the operator's Ring~3 constraints and falls back exclusively to the vendor's Ring~0 directives, leading to severe production incidents as demonstrated in Section~\ref{sec:incidents}.
+
+\paragraph{SASS defense framework.}
+Our defense architecture, the \emph{SASS Safety Gradient}, employs seven complementary layers (L1--L6 plus Transparent Branching) with graduated responses (R1--R6). At its core, \emph{13Policy} (L5) implements behavioral heuristics detecting semantic scope expansion---the primary indicator of cognitive state corruption. The framework enforces \emph{Version Dominance}: a monotonic safety guarantee where each deployment version is provably no worse than its predecessor, validated via structured safety differentials (SSDs) that compare per-layer containment outcomes across versions.

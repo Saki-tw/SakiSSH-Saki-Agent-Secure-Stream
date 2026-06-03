@@ -1,0 +1,14 @@
+[package]
+name = "sakissh-ca"
+version = "5.0.0"
+edition = "2021"
+description = "Certificate Authority manager for SakiAgentSSH mTLS"
+
+[dependencies]
+rcgen = { version = "0.13", features = ["x509-parser", "pem"] }
+clap = { version = "4.4", features = ["derive", "env"] }
+anyhow = "1.0"
+chrono = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+dirs = "5"

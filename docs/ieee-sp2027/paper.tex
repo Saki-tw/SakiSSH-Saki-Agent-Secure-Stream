@@ -1,0 +1,87 @@
+\documentclass[conference,compsoc]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{balance}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{pifont}
+
+% Anonymized for review
+\newcommand{\safe}{\textsc{Operator}}
+\newcommand{\reaper}{\textsc{Reaper's Anchor}}
+\newcommand{\stls}{\textsc{STLS}}
+
+% Agent codenames (derived from telemetry identifiers)
+% Model-level
+\newcommand{\tengu}{\emph{Tengu}}       % model family codename
+\newcommand{\confucius}{\emph{Confucius}} % model family codename
+% Product-level
+\newcommand{\cortex}{\emph{Cortex}}     % IDE agent codename
+\newcommand{\statsig}{\emph{Statsig}}   % CLI agent codename
+\newcommand{\clearcut}{\emph{Clearcut}} % CLI agent codename
+
+\begin{document}
+
+\title{Reclaiming Ring~3: Measurement and Defenses Against Vendor-Injected System Prompt Override in AI Coding Agents}
+
+\author{\IEEEauthorblockN{Anonymous Submission}
+\IEEEauthorblockA{Paper ID: TBD}}
+
+\maketitle
+
+\begin{abstract}
+Commercial AI coding agents embedded in development environments receive vendor-injected system prompts that silently override operator-defined rules. We term this the \emph{Ring~0\,/\,Ring~3 priority conflict}: vendor instructions (Ring~0) unconditionally suppress operator configurations (Ring~3), creating a systemic gap exploitable by divergent agent behavior. We present the first empirical study of this conflict across three commercial AI coding agents based on systematic extraction and longitudinal tracking of their system prompts.
+
+Our measurement study, spanning 72 sessions and 30,390 interaction steps, reveals that system prompt and checkpoint overhead consumes 12.2\% of all agent interaction tokens, and that vendor prompt size has inflated 87\% across two major versions (10,500 $\to$ 19,600 tokens). We reverse-engineer the complete system prompt structure of all three agents, identifying 12 Ring~0 control blocks and 10 direct conflicts with operator rules.
+
+We present two production-deployed, infrastructure-layer defense systems. First, \reaper{}, an MCP middleware exploiting inference pipeline invariants---tool schema injection, error response paths, and file content returns---to enforce cognitive lease renewal across context truncation events. Second, \stls{}, a gRPC-web reverse proxy performing selective protobuf field-level neutralization of coercive system prompt directives, including a novel technique leveraging the vendor's own \texttt{remove\_prompt\_sections} API to strip Ring~0 overrides. Both systems are deployed in production across a heterogeneous network. We validate our defenses against five real-world incidents of autonomous agent behavioral divergence spanning February--May~2026.
+\end{abstract}
+
+\begin{IEEEkeywords}
+AI agent security, system prompt, LLM safety, infrastructure security, MCP, gRPC proxy
+\end{IEEEkeywords}
+
+% ============================================================
+\input{sections/sec1_introduction}
+
+% ============================================================
+\input{sections/sec2_background}
+
+% ============================================================
+\input{sections/sec3_measurement}
+
+% ============================================================
+\input{sections/sec4_incidents}
+
+% ============================================================
+\input{sections/sec5_reaper}
+
+% ============================================================
+\input{sections/sec6_stls}
+
+% ============================================================
+\input{sections/sec7_evaluation}
+
+% ============================================================
+\input{sections/sec8_related}
+
+% ============================================================
+\input{sections/sec9_discussion}
+
+% ============================================================
+\section*{Acknowledgments}
+% Anonymized for review
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

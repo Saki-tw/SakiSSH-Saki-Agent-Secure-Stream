@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "description": "SakiAgentSSH Daemon — Agent-native cross-machine execution daemon over gRPC",
+    "homepage": "https://github.com/saki-tw/SakiAgentSSH",
+    "license": "MIT",
+    "url": "https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakisshd.exe",
+    "hash": "23431d5d2618bad7143e507faafbba97e3e19935718d76eb5f0376876cdb38da",
+    "bin": "sakisshd.exe",
+    "checkver": { "github": "https://github.com/saki-tw/SakiAgentSSH" },
+    "autoupdate": {
+        "url": "https://github.com/saki-tw/SakiAgentSSH/releases/download/v$version/sakisshd.exe",
+        "hash": { "url": "$url.sha256" }
+    }
+}

@@ -1,0 +1,1 @@
+SakiAgentSSH is the bridge to connect your agent and other machine. 它是 Agent-native 的跨機執行協議，使用 gRPC/HTTP2 而非 SSH 協議。當雙向串流建立，宛如淡藍蝴蝶越過子網域廢墟。遠い機械の底へ、静かな息吹が届くといいですね。Bypassing legacy SSH to link nodes across the wasteland.

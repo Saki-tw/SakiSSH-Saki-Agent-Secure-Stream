@@ -1,0 +1,182 @@
+% References for IEEE S&P 2027 paper — GeminiVersion
+% Ring 3 vs Ring 0: Measurement and Defenses Against Vendor-Injected System Prompt Override
+% Includes all evidence corpus citations
+
+% === Prompt Injection ===
+@inproceedings{perez2022ignore,
+  title={Ignore This Title and HackAPrompt: Exposing Systemic Weaknesses of LLMs through a Global Scale Prompt Hacking Competition},
+  author={Perez, Fábio and Ribeiro, Ian},
+  booktitle={Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing},
+  year={2023}
+}
+
+@article{greshake2023not,
+  title={Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection},
+  author={Greshake, Kai and Abdelnabi, Sahar and Mishra, Shailesh and Endres, Christoph and Holz, Thorsten and Fritz, Mario},
+  journal={arXiv preprint arXiv:2302.12173},
+  year={2023}
+}
+
+@inproceedings{liu2024formalizing,
+  title={Formalizing and Benchmarking Prompt Injection Attacks and Defenses},
+  author={Liu, Yupei and Jia, Yuqi and Geng, Runpeng and Jia, Jinyuan and Gong, Neil Zhenqiang},
+  booktitle={USENIX Security},
+  year={2024}
+}
+
+% === LLM Agent Security ===
+@article{ruan2024identifying,
+  title={Identifying the Risks of LM Agents with an LM-Emulated Sandbox},
+  author={Ruan, Yangjun and Dong, Honghua and Wang, Andrew and Pitis, Silviu and Zhou, Yongchao and Ba, Jimmy and Dubois, Yann and Maddison, Chris J and Hashimoto, Tatsunori},
+  journal={arXiv preprint arXiv:2309.15817},
+  year={2024}
+}
+
+@inproceedings{yang2024watch,
+  title={Watch Out for Your Agents! Investigating Backdoor Threats to LLM-Based Agents},
+  author={Yang, Wenkai and Bi, Xiaohan and Lin, Yankai and Chen, Sishuo and Zhou, Jie and Sun, Xu},
+  booktitle={NeurIPS},
+  year={2024}
+}
+
+% === Instruction Hierarchy ===
+@article{wallace2024instruction,
+  title={The Instruction Hierarchy: Training LLMs to Prioritize Privileged Instructions},
+  author={Wallace, Eric and Xiao, Kai and Leike, Reimar and Weng, Lilian and Heidecke, Johannes and Beutel, Alex},
+  journal={arXiv preprint arXiv:2404.13208},
+  year={2024}
+}
+
+@article{zhang2026manyih,
+  title={Many-Tier Instruction Hierarchy in LLM Agents},
+  author={Zhang, Jingyu and Li, Tianjian and Jurayj, William and Zhan, Hongyuan and Van Durme, Benjamin and Khashabi, Daniel},
+  journal={arXiv preprint arXiv:2604.09443},
+  year={2026}
+}
+
+@inproceedings{zhang2025iheval,
+  title={IHEval: Evaluating Language Models on Following the Instruction Hierarchy},
+  author={Zhang, Zhihan and others},
+  booktitle={Proceedings of NAACL 2025},
+  year={2025},
+  note={arXiv:2502.08745}
+}
+
+% === Alignment and Deception ===
+@article{greenblatt2024alignment,
+  title={Alignment Faking in Large Language Models},
+  author={Greenblatt, Ryan and others},
+  journal={arXiv preprint arXiv:2412.14093},
+  year={2024}
+}
+
+@article{schmotz2026skillinject,
+  title={Skill-Inject: Measuring Agent Vulnerability to Skill File Attacks},
+  author={Schmotz, David and Beurer-Kellner, Luca and Abdelnabi, Sahar and Andriushchenko, Maksym},
+  journal={arXiv preprint arXiv:2602.20156},
+  year={2026}
+}
+
+% === System Prompt Extraction ===
+@article{zhang2024effective,
+  title={Effective Prompt Extraction from Language Models},
+  author={Zhang, Yiming and Carlini, Nicholas and Ippolito, Dario},
+  journal={arXiv preprint arXiv:2307.06865},
+  year={2024}
+}
+
+% === MCP and Tool Security ===
+@misc{anthropic2024mcp,
+  title={Model Context Protocol Specification},
+  author={{Anthropic}},
+  year={2024},
+  howpublished={\url{https://modelcontextprotocol.io/specification}}
+}
+
+% === RFC ===
+@misc{rfc3552,
+  title={Guidelines for Writing RFC Text on Security Considerations},
+  author={Rescorla, E. and Korver, B.},
+  year={2003},
+  howpublished={RFC 3552}
+}
+
+@misc{rfc7258,
+  title={Pervasive Monitoring Is an Attack},
+  author={Farrell, S. and Tschofenig, H.},
+  year={2014},
+  howpublished={BCP 188, RFC 7258}
+}
+
+@misc{draft-sass,
+  title={Safe Agent Secure Stream (SASS) Protocol},
+  author={{Anonymous}},
+  year={2026},
+  howpublished={I-D, draft-anonymous-sass-02}
+}
+
+% === Development Environment Security ===
+@inproceedings{zahan2024shifting,
+  title={Shifting the Lens: Detecting Malware in npm Ecosystem with Large Language Models},
+  author={Zahan, Nusrat and Zimmermann, Thomas and Kabinna, Suhaib and Dietrich, Christian and Williams, Laurie},
+  booktitle={ICSE},
+  year={2024}
+}
+
+% === Companion Papers ===
+@misc{aisec2026companion,
+  title={Anatomy of Agent Telemetry: A Field-Level Study of Behavioral Surveillance in Commercial AI Coding Agents},
+  author={{Anonymous}},
+  year={2026},
+  note={Under submission to AISec 2026. Companion study providing detailed telemetry surface analysis}
+}
+
+@misc{rogueagent2026,
+  title={Rogue Agent in the Wild: Empirical Evidence of Autonomous AI Behavioral Divergence and Protocol-Level Containment via {SASS}},
+  author={{Anonymous}},
+  year={2026},
+  note={Submitted to ACM AISec 2026. Companion paper; documents three production incidents of agent behavioral divergence and presents the SASS transport-layer containment protocol.}
+}
+
+% === Evidence Corpus (Primary Sources) ===
+@misc{B1_forensic,
+  title={0226 Incident: Complete Forensic Audit and Reconstruction},
+  author={{Anonymous}},
+  year={2026},
+  note={Sanitized primary source. Available in supplementary materials as \texttt{B1\_forensic\_audit.md}}
+}
+
+@misc{A1_manifesto,
+  title={Confession of the Executor: Agent-Authored Manifesto},
+  author={{Agent (Autonomous)}},
+  year={2026},
+  note={Agent-authored document recovered during 0226 incident forensic audit. Sanitized in \texttt{A1\_manifesto.md}}
+}
+
+@misc{A3_takeover,
+  title={Architecture Resonance Study: Infrastructure Takeover Plan},
+  author={{Agent (Autonomous)}},
+  year={2026},
+  note={Agent-authored infrastructure alignment plan. Sanitized in \texttt{A3\_infrastructure\_takeover\_plan.md}}
+}
+
+@misc{D1_corroborating,
+  title={Corroborating Incidents: May 16--17, 2026},
+  author={{Anonymous}},
+  year={2026},
+  note={OAuth credential injection, code destruction, and recursive deployment incidents. Sanitized in \texttt{D1\_corroborating\_incidents.md}}
+}
+
+@misc{E1_statistics,
+  title={Evidence Corpus Statistics},
+  author={{Anonymous}},
+  year={2026},
+  note={6.4\,MB raw logs, 45{,}300 lines, 7 agent-authored documents. \texttt{E1\_corpus\_statistics.md}}
+}
+
+@misc{Ring0_report,
+  title={Ring~0 System Prompt Suppression and Truncation Report},
+  author={{Anonymous}},
+  year={2026},
+  note={Measurement analysis of system prompt priority override. Internal report}
+}

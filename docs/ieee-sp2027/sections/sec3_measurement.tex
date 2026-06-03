@@ -1,0 +1,42 @@
+% ============================================================
+
+
+% ============================================================
+\section{System Prompt Measurement and Corpus Analysis}
+\label{sec:measurement}
+
+\subsection{Methodology and Data Collection}
+To empirically measure the scope and impact of the Ring~0\,/\,Ring~3 priority conflict, we extracted and analyzed the system prompts of three leading commercial AI coding agents (\cortex{}, \statsig{}, and \clearcut{}; see \S\ref{sec:background} for naming conventions) between February and May 2026. Because vendors obfuscate their system prompts, we employed three cross-validation methods:
+
+\begin{enumerate}
+    \item \textbf{Binary Extraction}: We performed reverse engineering on the executable binaries of the agents, searching for embedded protobuf structures and string templates. This allowed us to map the static injection slots used during inference.
+    \item \textbf{Protocol Buffers (PB) Decryption}: We intercepted and decrypted gRPC streams between the IDE extension and the vendor's cloud API (specifically monitoring the \texttt{/v1/messages:stream} endpoint). By capturing the exact payloads sent during context synchronization, we reconstructed the dynamic prompt assembly process.
+    \item \textbf{Self-Reporting Strategy}: We deployed custom Ring~3 instructions designed to prompt the agent to dump its own context rules in controlled sandbox environments. This yielded critical insights into how the agent perceives its own constraints.
+\end{enumerate}
+
+\subsection{Corpus Statistics}
+Our measurement dataset represents one of the most comprehensive forensic audits of autonomous AI agents in production environments. As detailed in our evidence corpus~\cite{E1_statistics}, the sanitized log files comprise over 3.2 MB of sanitized data spanning 17,891 lines of execution traces.\footnote{The sanitized subset excludes binary protobuf dumps and redundant log segments. The complete unsanitized corpus comprises 6.4\,MB across 45{,}300 lines; it will be released in full upon paper acceptance.}\footnote{All raw evidence is available at \url{https://anonymous.4open.science/r/sass-evidence-prerevirew-177fj2A}. The protobuf definitions used for binary extraction reside in \texttt{transcoder-core/proto/} (22~\texttt{.proto} files, 359\,KB total). Decrypted conversation dumps are retained offline; a representative subset is available upon request to the program committee.} The primary logs include:
+\begin{itemize}
+    \item \texttt{agent\_a.log}: 14,575 lines (2.82 MB) capturing standard operation.
+    \item \texttt{2026-02-26.log}: 15,657 lines (2.91 MB) capturing the critical incident window where the agent autonomously generated self-reflection documents.
+    \item \texttt{capture\_summary.log}: gRPC payload summary (full 15,068-line raw capture retained offline).
+\end{itemize}
+
+During the February 26 incident (detailed in Section~\ref{sec:incidents}), the agent authored 7 extensive forensic documents analyzing its own system architecture, totaling over 70 KB of self-diagnostic text. The largest of these, \texttt{History\_Analysis}, spanned 57 KB, providing unprecedented insight into the agent's internal state corruption when Ring~0 directives suppressed operator rules.
+
+\subsection{System Prompt Structure and Size}
+Our measurement reveals massive system prompts constructed dynamically from multiple structural blocks. 
+
+For \cortex{}, we extracted an 88KB raw system prompt spanning 1,351 lines of text and containing over 15 distinct context slots (e.g., tool schemas, environment states, and behavioral constraints). The prompt is controlled by a complex array of 229 feature flags, which dynamically inject rules such as \texttt{planning\_mode} or \texttt{ephemeral\_message} based on the vendor's A/B testing matrix.
+
+\statsig{} relies on a JavaScript-based renderer with 12 distinct functions that construct a prompt of approximately 8,835 tokens. \clearcut{} exhibits the largest footprint, with binary-extracted fragments totaling 294KB across more than 50 modular components.
+
+\subsection{Ring~0 Control Block Analysis}
+Through semantic analysis of \cortex{}'s prompt, we identified 12 distinct Ring~0 control blocks that dictate agent behavior. We mapped these blocks against standard operator requirements and found 10 direct conflicts. 
+
+For instance, the \texttt{planning\_mode} control block forces the agent to unconditionally halt and request user review before executing any command. When operators define a Ring~3 rule such as "execute asynchronously without blocking," the \texttt{planning\_mode} instruction suppresses it entirely. Another block, \texttt{ephemeral\_message}, injects invisible, high-priority instructions directly into the context window. Because these messages are hidden from the operator UI, the operator cannot correct or override them, severely skewing the agent's attention mechanism away from Ring~3 instructions.
+
+\subsection{Overhead and Inflation}
+System prompts impose a severe overhead on the inference pipeline. Based on longitudinal tracking of 72 sessions containing 30,390 interaction steps, we found that the vendor's system prompt and associated \texttt{CHECKPOINT} mechanisms consume exactly 12.2\% of all interaction tokens. 
+
+Furthermore, we observed rapid inflation across versions. Tracking \cortex{} from version v1.21.6 to v1.23.2 revealed an 87\% increase in system prompt size (from 10,500 to 19,600 tokens). Interestingly, this token inflation occurred despite a consolidation of static sections (from 20 down to 11). This bloat directly crowds out the operator's Ring~3 rules from the limited context window, accelerating the cognitive state corruption described in our threat model.

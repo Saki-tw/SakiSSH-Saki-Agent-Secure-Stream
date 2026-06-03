@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SakiAgentSSH — Agent 原生跨機器執行協議</title>
+  <meta name="description" content="SakiAgentSSH 是基於 gRPC 的 Agent 原生跨機器執行協議，取代傳統 SSH 的 TTY 綁定模型。">
+  <link rel="icon" href="../../release/icon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="hero">
+    <img src="../../release/icon.png" alt="SakiAgentSSH">
+    <h1>SakiAgentSSH</h1>
+    <p class="subtitle">Agent 原生跨機器執行協議 · gRPC/HTTP2</p>
+    <div class="lang-switch">
+      <a href="index.html" class="active">🇹🇼 繁體中文</a>
+      <a href="index_en.html">🇺🇸 English</a>
+      <a href="index_ja.html">🇯🇵 日本語</a>
+    </div>
+  </div>
+
+  <nav>
+    <a href="#features">功能</a>
+    <a href="#install">安裝</a>
+    <a href="#usage">使用</a>
+    <a href="#architecture">架構</a>
+    <a href="#agent">Agent 整合</a>
+    <a href="#download">下載</a>
+  </nav>
+
+  <main>
+    <section id="features">
+      <h2>✨ 功能特色</h2>
+      <div class="features">
+        <div class="feature-card">
+          <div class="icon">🔗</div>
+          <h3>gRPC 雙向串流</h3>
+          <p>基於 HTTP/2 的高效雙向串流，即時傳遞 stdout/stderr</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🛡️</div>
+          <h3>CIDR 白名單 ACL</h3>
+          <p>精確的子網路存取控制，無需管理 SSH Key</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🤖</div>
+          <h3>Agent 原生設計</h3>
+          <p>專為 AI Agent 打造，CLI 直接呼叫，零 TTY 依賴</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon">🖥️</div>
+          <h3>跨平台支援</h3>
+          <p>macOS (ARM64) + Windows (x64)，單一 binary 部署</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <h2>📦 安裝方式</h2>
+
+      <h3>macOS — Homebrew Cask</h3>
+      <pre><code>brew tap saki-tw/tools
+brew install --cask sakiagentssh-daemon
+brew install --cask sakiagentssh-client</code></pre>
+
+      <h3>Windows — Scoop</h3>
+      <pre><code>scoop bucket add sakistudio https://github.com/Saki-tw/Scoop-SakiStudio
+scoop install sakiagentssh-daemon
+scoop install sakiagentssh-client</code></pre>
+
+      <h3>Windows — Winget</h3>
+      <pre><code>winget install SakiStudio.SakiAgentSSH.Daemon
+winget install SakiStudio.SakiAgentSSH.Client</code></pre>
+
+      <div class="btn-group">
+        <a href="https://github.com/saki-tw/SakiAgentSSH/releases" class="btn btn-primary">📥 GitHub Releases</a>
+        <a href="https://github.com/saki-tw/SakiAgentSSH" class="btn btn-secondary">🔗 源碼</a>
+      </div>
+    </section>
+
+    <section id="usage">
+      <h2>🚀 快速開始</h2>
+      <h3>1. 啟動 Daemon（目標機器）</h3>
+      <pre><code>./sakisshd --config config.json</code></pre>
+
+      <h3>2. 從控制端連線</h3>
+      <pre><code>sakissh --addr http://&lt;target&gt;:19284 ping
+sakissh --addr http://&lt;target&gt;:19284 exec -- 'echo hello'</code></pre>
+    </section>
+
+    <section id="architecture">
+      <h2>🏗️ 架構</h2>
+      <table>
+        <tr><th></th><th>SSH</th><th>SakiAgentSSH</th></tr>
+        <tr><td>協議</td><td>TCP + SSH handshake</td><td>gRPC/HTTP2</td></tr>
+        <tr><td>串流</td><td>Terminal PTY</td><td>Bidirectional stream</td></tr>
+        <tr><td>安全</td><td>Key-based auth</td><td>CIDR whitelist ACL</td></tr>
+        <tr><td>Agent 整合</td><td>需要 expect/pexpect</td><td>原生 CLI</td></tr>
+      </table>
+    </section>
+
+    <section id="agent">
+      <h2>🤖 Agent 整合</h2>
+      <p>SakiAgentSSH 專為 AI Agent 設計。Agent 可直接透過 CLI 操作遠端機器：</p>
+      <pre><code># Agent 工具定義
+def remote_execute(host, command):
+    result = subprocess.run(
+        ["sakissh", "--addr", f"http://{host}:19284", "exec", "--", command],
+        capture_output=True, text=True
+    )
+    return result.stdout</code></pre>
+    </section>
+
+    <section id="download">
+      <h2>📥 下載</h2>
+      <table>
+        <tr><th>平台</th><th>Daemon</th><th>Client</th></tr>
+        <tr>
+          <td>macOS (ARM64)</td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakisshd-darwin-arm64">sakisshd</a></td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakissh-darwin-arm64">sakissh</a></td>
+        </tr>
+        <tr>
+          <td>Windows (x64)</td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakisshd.exe">sakisshd.exe</a></td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakissh.exe">sakissh.exe</a></td>
+        </tr>
+        <tr>
+          <td>macOS GUI (.dmg)</td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/SakiAgentSSHDaemon.dmg">Daemon.dmg</a></td>
+          <td><a href="https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/SakiAgentSSHClient.dmg">Client.dmg</a></td>
+        </tr>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2026 <a href="http://saki-studio.com.tw">Saki Studio</a> · <a href="https://github.com/saki-tw">GitHub</a></p>
+    <p style="margin-top:0.5rem;font-style:italic;color:#666">在這個終端機總是漆黑一片的冷酷年代裡，這抹顏色就像是一隻淡藍色的蝴蝶自肚腹裡升起。</p>
+  </footer>
+</body>
+</html>

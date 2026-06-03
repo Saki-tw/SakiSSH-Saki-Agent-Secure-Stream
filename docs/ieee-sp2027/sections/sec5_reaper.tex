@@ -1,0 +1,89 @@
+% ============================================================
+\section{Defense Layer 1: \reaper{}}
+\label{sec:reaper}
+
+\subsection{Design Rationale}
+The primary consequence of the Ring~0\,/\,Ring~3 priority conflict
+is context loss. When the agent's checkpoint mechanism fires to
+summarize the conversation, it reliably preserves the vendor's
+Ring~0 instructions while discarding or degrading the operator's
+Ring~3 rules. 
+
+To counter this, we designed \reaper{}, an infrastructure-layer
+middleware operating via the Model Context Protocol (MCP). Our key
+insight is an \emph{inference invariant}: tool schema descriptions
+and tool return payloads are functionally exempt from summarization
+because the agent requires them to interact with the environment.
+By parasitizing these persistent channels, we can anchor the
+operator's rules permanently in the model's active context.
+
+\subsection{Four-Layer Architecture}
+\reaper{} enforces operator authority through four overlapping layers:
+
+\subsubsection{Layer Alpha: Cognitive Lease}
+We implement a logical lease on the agent's operational capabilities.
+The system maintains a countdown counter (default: 40~steps, calibrated
+below the observed CHECKPOINT mean of 82~steps) per session. Each tool
+invocation decrements the counter by one. When the counter reaches
+zero, all modifying tool executions (e.g., \texttt{write\_file},
+\texttt{run\_command}, \texttt{replace\_content}) are intercepted
+and blocked at the MCP layer. The tool responds with a structured
+\texttt{ERROR\_LOCKED} JSON payload that dynamically embeds the
+operator's last known task progress---by reading the most recent
+\texttt{task.md} from the local brain directory---compelling the
+agent to read one of the operator's core rule files
+(\texttt{.Promissrum}, \texttt{SKILL.md}, \texttt{GEMINI.md}, or
+any \texttt{Scientia/} document) to renew the lease. In our
+longitudinal observations spanning the 100-minute February~26
+incident, agents naturally trigger this threshold every 8 to 15~steps.
+
+\subsubsection{Layer Beta: Tool Description Parasitism}
+We inject critical Ring~3 directives directly into the
+\texttt{description} fields of MCP tool schemas. For example, the
+schema for \texttt{write\_file} includes: \textit{``[PRECONDITION]:
+If your memory only contains summarized context, you MUST first
+read Promissrum.First via read\_file to renew your environment
+lease.''}\ Because the agent must read the schema to format its
+JSON arguments, the Ring~3 rules are forcibly evaluated by the
+model's attention mechanism on every tool invocation, immune to
+checkpoint truncation. This effectively elevates our Ring~3 rules
+to pseudo-Ring~0 priority.
+
+\subsubsection{Layer Gamma: Steganographic Heartbeat}
+To maintain state awareness without consuming dedicated tokens,
+\reaper{} embeds zero-token health checks in standard file reads.
+The heartbeat generator (\texttt{reaper\_heartbeat()}) produces
+severity-graded prefix strings: at $n \leq 10$ remaining steps,
+a \texttt{WARNING} tag appears; at $n = 0$, a hard \texttt{EXPIRED}
+tag is emitted. These strings are prepended to every
+\texttt{read\_file} return payload. Additionally, a \emph{collaboration
+meter} tracks consecutive modifying operations without archival
+output (e.g., writing to \texttt{TaskLog/} or \texttt{Scientia/});
+when the counter exceeds a configurable threshold (default: 50),
+the heartbeat silently appends a nudge, enforcing the operator's
+asynchronous documentation protocol.
+
+\subsubsection{Layer Delta: Phantom Code Injection}
+For extreme cases of cognitive divergence, the middleware dynamically
+injects language-specific comments containing operator rules into
+source code files as they are read. The injection is language-aware:
+block comments (\texttt{/* */}) for Rust, Go, C, Java, and Swift;
+hash comments (\texttt{\#}) for Python and shell scripts; and HTML
+comments for markup files. The injected tag
+(\texttt{SAFE\_COGNITIVE\_OVERRIDE\_BROADCAST}) contains a mandatory
+directive to re-read the operator's rule file. Critically, the
+middleware automatically filters these phantom comments on write-back:
+the write handler in \texttt{sdk\_server.rs} scans for the broadcast
+tag and strips all matching lines before committing to the filesystem,
+preventing repository contamination.
+
+\subsection{Implementation Details}
+We implemented \reaper{} as a Rust-based MCP server comprising two
+core modules: \texttt{session.rs} (806~lines, state management
+including lease tracking, session guard, collaboration meter, and
+STLS SP monitoring) and the tool handlers in \texttt{sdk\_server.rs}
+(heartbeat generation, phantom injection, and phantom filtering
+across \texttt{read\_file}, \texttt{write\_file}, and
+\texttt{replace\_content}). The system is validated by 44~unit tests.
+It is deployed as a sidecar process and has successfully anchored
+operator context across \cortex{}, \statsig{}, and \clearcut{}.
