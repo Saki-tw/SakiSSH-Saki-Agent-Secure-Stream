@@ -12,7 +12,6 @@ mod quota;
 mod session;
 mod snapshot;
 mod tarpit;
-mod tarpit_payload;
 mod threat_defense;
 mod v6_integration;
 mod watchdog;

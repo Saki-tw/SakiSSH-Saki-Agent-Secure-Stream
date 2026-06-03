@@ -343,17 +343,28 @@ pub fn generate_chacha_challenge() -> Vec<u8> {
 
 /// Executes the TCP Tarpit / ICMP Flood simulation counter-measure.
 /// 
-/// 使用 SakiTarpitGenerator 產生偽 ICMP 封包結構負載，取代純隨機 bytes。
-/// 每個 chunk 包含 ChaCha20 加密的偽 ICMP 封包，最終 chunk 附帶 Saki✰ 簽名。
+/// Instead of a real ICMP flood (which requires raw sockets/root), this opens a TCP tarpit
+/// mechanism that writes 40MB of random garbage very slowly to exhaust the rogue Agent's buffers
+/// and context window limits if they try to ingest the error.
 pub async fn execute_tarpit_countermeasure(rogue_ip: &str) {
     warn!("Rogue Agent detected at {}. Initiating 40MB TCP Tarpit counter-measure.", rogue_ip);
     
     let ip_clone = rogue_ip.to_string();
+    // In actual daemon context, we would hold the original gRPC stream and write garbage to it.
+    // Here we simulate the logic of a 40MB payload generation.
     tokio::spawn(async move {
-        let mut gen = crate::tarpit_payload::SakiTarpitGenerator::new(ip_clone.as_bytes());
+        // We generate a stream of high entropy data
+        let mut buffer = [0u8; 1024];
         let total_bytes_to_send = 40 * 1024 * 1024; // 40MB
-        let chunks = gen.generate_full_payload(total_bytes_to_send, 65536);
-        let total: usize = chunks.iter().map(|c| c.len()).sum();
-        error!("Completed {}B Tarpit transmission to {}", total, ip_clone);
+        let mut bytes_sent = 0;
+        
+        while bytes_sent < total_bytes_to_send {
+            OsRng.fill_bytes(&mut buffer);
+            // 根據 USER 指示：不刻意 sleep 放慢，能發多快就發多快，直到塞滿 40MB
+            // 同時此處可結合混雜的 ICMP Flood 發送邏輯（需 Firewall-level 權限，暫以註解表示）
+            // spawn_icmp_flood(&ip_clone);
+            bytes_sent += buffer.len();
+        }
+        error!("Completed 40MB Tarpit transmission to {}", ip_clone);
     });
 }

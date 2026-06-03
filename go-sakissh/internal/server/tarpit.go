@@ -1,10 +1,10 @@
 package server
 
 import (
+	"crypto/rand"
 	"strings"
 	"sync/atomic"
 
-	"github.com/sakistudio/sakissh-go/internal/defense/tarpit_payload"
 	pb "github.com/sakistudio/sakissh-go/proto/sakissh"
 )
 
@@ -29,8 +29,11 @@ const (
 )
 
 func init() {
-	gen := tarpit_payload.NewSakiTarpitGenerator([]byte("static-init-session"))
-	staticGarbage = gen.GenerateChunk(ChunkSize, false)
+	staticGarbage = make([]byte, ChunkSize)
+	_, err := rand.Read(staticGarbage)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (p *PolicyEngine) CheckCommand(command string) bool {

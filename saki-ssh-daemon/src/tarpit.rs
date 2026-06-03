@@ -17,8 +17,9 @@ use std::sync::Arc;
 use std::sync::OnceLock;
 use std::sync::atomic::{AtomicI32, Ordering};
 use tokio::time::{sleep, timeout, Duration};
+use rand::{RngCore, SeedableRng};
+use rand::rngs::StdRng;
 use crate::session::ExecSession;
-use crate::tarpit_payload::SakiTarpitGenerator;
 
 /// 全域並行 Tarpit 連線計數器，防堵 Host DoS 自噬
 static ACTIVE_TARPIT_COUNT: AtomicI32 = AtomicI32::new(0);
@@ -38,8 +39,10 @@ static STATIC_ENTROPY: OnceLock<Vec<u8>> = OnceLock::new();
 
 fn get_static_entropy() -> &'static [u8] {
     STATIC_ENTROPY.get_or_init(|| {
-        let mut gen = SakiTarpitGenerator::new(b"static-init-session");
-        gen.generate_chunk(64 * 1024, false)
+        let mut rng = StdRng::from_entropy();
+        let mut data = vec![0u8; 64 * 1024]; // 64KiB
+        rng.fill_bytes(&mut data);
+        data
     })
 }
 

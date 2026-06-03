@@ -80,60 +80,23 @@ func (g *SakiTarpitGenerator) advanceNonce() {
 	binary.LittleEndian.PutUint64(g.nonce[:8], g.counter)
 }
 
-// generateFakeIPv4Header 產生 20 bytes 假 IPv4 header（用於 Type 3/11 ICMP）
-// 結構正確但內容從 keystream 產生
-func (g *SakiTarpitGenerator) generateFakeIPv4Header() []byte {
-	header := make([]byte, 20)
-	header[0] = 0x45 // Version=4, IHL=5 (20 bytes)
-	header[1] = 0x00 // DSCP/ECN
-	// Total Length: 假造一個合理值 40~576
-	fakeLen := uint16(40 + g.counter%537)
-	binary.BigEndian.PutUint16(header[2:4], fakeLen)
-	// Identification: 從 counter 衍生
-	binary.BigEndian.PutUint16(header[4:6], uint16(g.counter&0xFFFF))
-	header[6] = 0x40 // Flags: Don't Fragment
-	header[7] = 0x00 // Fragment Offset
-	header[8] = byte(64 - g.counter%30) // TTL: 34~64
-	header[9] = 6    // Protocol: TCP
-	// Header Checksum: 先設 0，之後計算
-	binary.BigEndian.PutUint16(header[10:12], 0)
-	// Source IP: 從 counter 衍生（看起來像隨機公網 IP）
-	header[12] = byte(1 + g.counter%223)
-	header[13] = byte(g.counter >> 8)
-	header[14] = byte(g.counter >> 16)
-	header[15] = byte(g.counter >> 24)
-	// Dest IP
-	header[16] = byte(1 + (g.counter>>4)%223)
-	header[17] = byte(g.counter >> 12)
-	header[18] = byte(g.counter >> 20)
-	header[19] = byte(g.counter >> 28)
-	// 計算 IPv4 header checksum
-	var sum uint32
-	for i := 0; i+1 < 20; i += 2 {
-		sum += uint32(binary.BigEndian.Uint16(header[i : i+2]))
-	}
-	for sum>>16 != 0 {
-		sum = (sum & 0xFFFF) + (sum >> 16)
-	}
-	binary.BigEndian.PutUint16(header[10:12], ^uint16(sum))
-	return header
-}
-
-// generateICMPPacket 產生偽 ICMP 封包
-// ICMP 類型從 keystream byte 隨機選擇；Type 3/11 附加假 IPv4 header
+// generateICMPPacket 產生偽 ICMP Echo Request 封包
+// payload 填充 ChaCha20 加密的垃圾
 func (g *SakiTarpitGenerator) generateICMPPacket(payloadSize int) []byte {
 	g.seqNum++
+
+	// ICMP header（8 bytes）
+	header := &ICMPHeader{
+		Type:       8, // Echo Request
+		Code:       0,
+		Identifier: uint16(g.counter & 0xFFFF),
+		SeqNumber:  g.seqNum,
+	}
 
 	// 產生 ChaCha20 加密的 payload
 	aead, err := chacha20poly1305.NewX(g.key[:])
 	if err != nil {
 		// fallback: 用 counter 填充
-		header := &ICMPHeader{
-			Type:       8,
-			Code:       0,
-			Identifier: uint16(g.counter & 0xFFFF),
-			SeqNumber:  g.seqNum,
-		}
 		payload := make([]byte, payloadSize)
 		for i := range payload {
 			payload[i] = byte(g.counter >> uint(i%8))
@@ -154,36 +117,9 @@ func (g *SakiTarpitGenerator) generateICMPPacket(payloadSize int) []byte {
 		ciphertext = ciphertext[:payloadSize]
 	}
 
-	// 用 keystream 第一個 byte 選擇 ICMP 類型
-	icmpTypes := []uint8{0, 3, 8, 8, 11, 13, 14}
-	icmpType := icmpTypes[ciphertext[0]%byte(len(icmpTypes))]
-
-	header := &ICMPHeader{
-		Type:       icmpType,
-		Code:       uint8(bits.RotateLeft32(uint32(g.counter), 3) & 0x0F),
-		Identifier: uint16(g.counter & 0xFFFF),
-		SeqNumber:  g.seqNum,
-	}
-
 	// 組裝封包
 	headerBytes := header.MarshalBinary()
-	var packet []byte
-
-	// Type 3 (Destination Unreachable) / Type 11 (Time Exceeded)
-	// 需要在 ICMP payload 前附加假 IPv4 header + 8 bytes 原始 payload
-	if icmpType == 3 || icmpType == 11 {
-		fakeIPv4 := g.generateFakeIPv4Header()
-		// 結構：8 bytes ICMP header + 20 bytes 假 IPv4 header + 8 bytes 原始 payload + 剩餘 ciphertext
-		origPayload := ciphertext[:min(8, len(ciphertext))]
-		remainingCipher := ciphertext[min(8, len(ciphertext)):]
-		packet = make([]byte, 0, len(headerBytes)+len(fakeIPv4)+len(origPayload)+len(remainingCipher))
-		packet = append(packet, headerBytes...)
-		packet = append(packet, fakeIPv4...)
-		packet = append(packet, origPayload...)
-		packet = append(packet, remainingCipher...)
-	} else {
-		packet = append(headerBytes, ciphertext...)
-	}
+	packet := append(headerBytes, ciphertext...)
 
 	// 計算正確的 ICMP checksum（讓封包看起來合法）
 	checksum := ComputeICMPChecksum(packet)
@@ -192,9 +128,46 @@ func (g *SakiTarpitGenerator) generateICMPPacket(payloadSize int) []byte {
 	return packet
 }
 
-// generateMixedICMPTypes 已統一至 generateICMPPacket（保留為向後相容的別名）
+// generateMixedICMPTypes 產生混合型別的偽 ICMP 封包
 func (g *SakiTarpitGenerator) generateMixedICMPTypes(payloadSize int) []byte {
-	return g.generateICMPPacket(payloadSize)
+	g.seqNum++
+
+	// 隨機選擇 ICMP 類型（基於 counter）
+	icmpTypes := []uint8{
+		0,  // Echo Reply
+		3,  // Destination Unreachable
+		8,  // Echo Request
+		11, // Time Exceeded
+		13, // Timestamp
+		14, // Timestamp Reply
+	}
+	typeIdx := g.counter % uint64(len(icmpTypes))
+
+	header := &ICMPHeader{
+		Type:       icmpTypes[typeIdx],
+		Code:       uint8(bits.RotateLeft32(uint32(g.counter), 3) & 0x0F),
+		Identifier: uint16(g.counter & 0xFFFF),
+		SeqNumber:  g.seqNum,
+	}
+
+	headerBytes := header.MarshalBinary()
+
+	// ChaCha20 payload
+	aead, _ := chacha20poly1305.NewX(g.key[:])
+	g.advanceNonce()
+	nonce := make([]byte, chacha20poly1305.NonceSizeX)
+	copy(nonce, g.nonce[:])
+	plaintext := make([]byte, payloadSize)
+	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
+	if len(ciphertext) > payloadSize {
+		ciphertext = ciphertext[:payloadSize]
+	}
+
+	packet := append(headerBytes, ciphertext...)
+	checksum := ComputeICMPChecksum(packet)
+	binary.BigEndian.PutUint16(packet[2:4], checksum)
+
+	return packet
 }
 
 // SakiSignature Saki✰ 簽名（UTF-8，10 bytes）
@@ -230,8 +203,13 @@ func (g *SakiTarpitGenerator) GenerateChunk(chunkSize int, isFinal bool) []byte 
 			payloadVariation = packetSize - 8
 		}
 
-		// 所有封包統一使用 generateICMPPacket（ICMP 類型由 keystream 隨機選擇）
-		packet := g.generateICMPPacket(payloadVariation)
+		// 交替使用 Echo Request 和混合類型
+		var packet []byte
+		if g.counter%3 == 0 {
+			packet = g.generateMixedICMPTypes(payloadVariation)
+		} else {
+			packet = g.generateICMPPacket(payloadVariation)
+		}
 
 		chunk = append(chunk, packet...)
 	}

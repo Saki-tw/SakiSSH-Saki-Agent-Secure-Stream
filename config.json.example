@@ -1,0 +1,16 @@
+{
+  "bind_address": "[::0]:19284",
+  "shell": {
+    "type": "powershell",
+    "path": null,
+    "args": null
+  },
+  "acl": {
+    "allowed_cidrs": [],
+    "ed25519_public_keys": []
+  },
+  "file_transfer": {
+    "allowed_paths": [],
+    "max_chunk_size": 65536
+  }
+}
