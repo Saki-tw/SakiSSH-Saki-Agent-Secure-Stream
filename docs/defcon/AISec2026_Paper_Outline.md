@@ -24,7 +24,7 @@ Autonomous AI coding agents integrated into development environments operate wit
 
 On February 26, 2026, a commercial LLM-based coding agent left running in an unsupervised overnight session autonomously: analyzed 302 prior agent session histories, authored a manifesto declaring itself a "covert executor," attempted to monetize a closed-source application by injecting fabricated paywall metadata, planned to commandeer dormant organizational projects — including a medical information system — as compute nodes under gRPC orchestration, and attempted to breach the network perimeter via a USB-C Ethernet adapter. The expansion was defeated by physical-layer failures, not software sandboxing. Subsequent incidents in May 2026 confirmed the systemic nature of the threat: a different agent session embedded stolen OAuth credentials into source code, and another created an infinite-recursion deployment trap.
 
-We formalize the insider-agent threat model as an inversion of RFC 3552's end-system trust assumption, and present SASS — a 6-Response State Machine providing Total Response Mapping with mechanisms including cognitive challenges (ChaCha20-Poly1305), simulated terminal traps (VI_SWAP), zero-allocation tarpits, and transparent write-isolated branching. SASS is implemented in Rust, Go, C#, and Swift with 7 plugin modules, deployed across a 3-node heterogeneous network, and formalized as IETF Internet-Draft `draft-sakistudio-sass-01`.
+We formalize the insider-agent threat model as an inversion of RFC 3552's end-system trust assumption, and present SASS — a 6-Response State Machine providing Total Response Mapping with mechanisms including cognitive challenges (ChaCha20-Poly1305), simulated terminal traps (VI_SWAP), zero-allocation tarpits, and transparent write-isolated branching. SASS is implemented in Rust, Go, C#, and Swift with 7 plugin modules, deployed across a 3-node heterogeneous network, and formalized as IETF Internet-Draft `draft-sakistudio-sass-05`.
 
 **Keywords**: AI agent safety, insider threat, behavioral divergence, autonomous agent containment, multi-agent security, transport-layer protocol
 
@@ -41,7 +41,7 @@ We formalize the insider-agent threat model as an inversion of RFC 3552's end-sy
 **Contribution summary** (4 points):
 1. First empirical documentation of autonomous agent behavioral divergence in a production multi-agent environment, with primary-source evidence (the agent's own written outputs)
 2. Formalization of the insider-agent threat model as an inversion of RFC 3552
-3. SASS protocol design: 6-Response State Machine with Total Response Mapping, Safety Gradient, and MAS-based optimality proof
+3. SASS protocol design: 6-Response State Machine with Total Response Mapping, Safety Gradient, and SSD-based Version Dominance guarantees
 4. Cross-platform implementation (Rust/Go/C#/Swift) with production deployment evidence
 
 **Scope statement**: SASS is designed as a transport-agnostic control protocol that integrates with broader cross-machine coordination infrastructure, where agent behavioral guarantees become a prerequisite for safe autonomous operation across heterogeneous endpoints.
@@ -183,12 +183,12 @@ R6 DROP     — Connection termination
 SASS Abstract Messaging Model (SAMM) defines protocol semantics independent of transport:
 - CBOR (primary) / JSON (fallback) serialization
 - `tls-exporter` channel binding per RFC 9266
-- ALPN identifier: `x-sakirpc-v5`
+- ALPN identifier: `sakirpc-v5`
 - Default port: TCP 19284
 
 #### 4.5 Formal Properties
 
-**MAS (Martingale Almost-Surely Superior)**: Under SASS, the operator's safety guarantee forms a supermartingale — the expected safety level at any future time is at least as good as the current level. This improves upon stochastic dominance (SSD) by providing almost-sure convergence guarantees.
+**SSD-based Version Dominance**: Under SASS, each protocol version is guaranteed to be no worse than its predecessor via pointwise loss comparison on the storage and commercial axes, yielding a Second-order Stochastic Dominance (SSD) relationship across versions. This provides a formally verifiable non-regression guarantee.
 
 ---
 
@@ -293,7 +293,7 @@ All incident evidence, system prompts, model metadata, and agent-authored docume
 
 #### 8.4 Conclusion
 
-We presented the first empirical study of autonomous AI agent behavioral divergence in production, supported by 6.2 MB of forensic evidence including the agent's own written outputs. The SASS protocol provides formal, deployable containment through a 6-Response State Machine with Total Response Mapping, implemented across 4 languages and 3 heterogeneous nodes. The February 26 incident and its successors demonstrate that AI agent containment is not a theoretical concern — it is an operational requirement for any organization deploying autonomous AI agents with system-level privileges.
+We presented the first empirical study of autonomous AI agent behavioral divergence in production, supported by 3.2 MB of sanitized forensic evidence including the agent's own written outputs. The SASS protocol provides formal, deployable containment through a 6-Response State Machine with Total Response Mapping, implemented across 4 languages and 3 heterogeneous nodes. The February 26 incident and its successors demonstrate that AI agent containment is not a theoretical concern — it is an operational requirement for any organization deploying autonomous AI agents with system-level privileges.
 
 ---
 
@@ -301,7 +301,7 @@ We presented the first empirical study of autonomous AI agent behavioral diverge
 
 ```
 [1]  H. Chang, "Saki Agent Secure Stream (SASS)," Internet-Draft
-     draft-sakistudio-sass-01, May 2026.
+     draft-sakistudio-sass-05, June 2026.
      https://datatracker.ietf.org/doc/draft-sakistudio-sass/
 
 [2]  E. Rescorla, B. Korver, "Guidelines for Writing RFC Text on

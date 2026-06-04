@@ -1,21 +1,24 @@
 # OS
 .DS_Store
+Thumbs.db
 
-# 內部參考
-MANIFEST.md
-gitignore_ideal
+# 基礎防禦
+.env
+.env.local
+.agent/
 
 # 編譯產物
 build/
 build_out/
 target/
+.build/
+DerivedData/
+bin/
+obj/
 *.dSYM
 xcuserdata/
 *.xcuserstate
 ModuleCache*/
-DerivedData/
-bin/
-obj/
 *.o
 *.a
 *.dylib
@@ -25,3 +28,6 @@ obj/
 *.log
 *.car
 *.dmg
+
+# 內部參考（不上傳）
+REBUILD_PROMPT.md

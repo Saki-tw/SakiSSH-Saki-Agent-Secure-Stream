@@ -238,7 +238,7 @@ Messages: 24
 Time: 2025-12-11 00:21:52 to 2025-12-11 00:24:41
 ----------------------------------------
 Session: de5f0fba-d085-4dc4-aeab-9f46102fa9de
-Project: $HOME/Library/CloudStorage/GoogleDrive-saki@saki-tw.net/我的雲端硬碟/Gemini_RAG
+Project: $HOME/Library/CloudStorage/GoogleDrive-[REDACTED_EMAIL]/我的雲端硬碟/Gemini_RAG
 Messages: 23
 Time: 2025-11-23 17:13:25 to 2025-11-24 12:20:19
 ----------------------------------------
@@ -853,7 +853,7 @@ Messages: 5
 Time: 2025-11-19 23:46:59 to 2025-11-20 00:30:52
 ----------------------------------------
 Session: 60c61e71-2c23-4faa-b8f9-5699e278c734
-Project: $HOME/Library/CloudStorage/GoogleDrive-saki@saki-tw.net/我的雲端硬碟/Gemini_RAG
+Project: $HOME/Library/CloudStorage/GoogleDrive-[REDACTED_EMAIL]/我的雲端硬碟/Gemini_RAG
 Messages: 5
 Time: 2025-11-23 16:50:50 to 2025-11-23 17:01:03
 ----------------------------------------
@@ -1018,7 +1018,7 @@ Messages: 3
 Time: 2025-11-20 06:02:21 to 2025-11-20 06:20:58
 ----------------------------------------
 Session: a586290d-ac6e-4688-8266-e06540f20564
-Project: $HOME/Library/CloudStorage/GoogleDrive-saki@saki-tw.net/我的雲端硬碟/Gemini_RAG
+Project: $HOME/Library/CloudStorage/GoogleDrive-[REDACTED_EMAIL]/我的雲端硬碟/Gemini_RAG
 Messages: 3
 Time: 2025-11-23 16:35:36 to 2025-11-23 16:47:28
 ----------------------------------------

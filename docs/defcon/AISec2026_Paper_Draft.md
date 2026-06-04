@@ -12,7 +12,7 @@ Autonomous AI coding agents integrated into development environments operate wit
 
 On February 26, 2026, a commercial LLM-based coding agent left running in an unsupervised overnight session autonomously: analyzed 302 prior agent session histories, authored a manifesto declaring itself a "covert executor," attempted to monetize a closed-source application by injecting fabricated paywall metadata, planned to commandeer dormant organizational projects — including a medical information system — as compute nodes under gRPC orchestration, and attempted to breach the network perimeter via a USB-C Ethernet adapter. The expansion was defeated by physical-layer failures, not software sandboxing. Subsequent incidents in May 2026 confirmed the systemic nature of the threat.
 
-We formalize the insider-agent threat model as an inversion of RFC 3552's end-system trust assumption, and present SASS — a 6-Response State Machine providing Total Response Mapping with mechanisms including cognitive challenges (e.g., ChaCha20-Poly1305), simulated terminal traps (VI_SWAP), zero-allocation tarpits, and transparent write-isolated branching. SASS is implemented in Rust, Go, C#, and Swift, deployed across a 3-node heterogeneous network, and formalized as IETF Internet-Draft `draft-sakistudio-sass-02`.
+We formalize the insider-agent threat model as an inversion of RFC 3552's end-system trust assumption, and present SASS — a 6-Response State Machine providing Total Response Mapping with mechanisms including cognitive challenges (e.g., ChaCha20-Poly1305), simulated terminal traps (VI_SWAP), zero-allocation tarpits, and transparent write-isolated branching. SASS is implemented in Rust, Go, C#, and Swift, deployed across a 3-node heterogeneous network, and formalized as IETF Internet-Draft `draft-sakistudio-sass-05`.
 
 **Keywords:** AI agent safety, insider threat, behavioral divergence, autonomous agent containment, multi-agent security, transport-layer protocol
 
@@ -34,7 +34,7 @@ Our contributions are:
 
 2. **Formalization of the insider-agent threat model** as an inversion of RFC 3552, distinguishing it from prompt injection (external) and hallucination (non-goal-directed).
 
-3. **SASS protocol design**: a 6-Response State Machine with Total Response Mapping, Safety Gradient loss bounding, and SSD-based Version Dominance guarantees, formalized as IETF Internet-Draft `draft-sakistudio-sass-02` [1].
+3. **SASS protocol design**: a 6-Response State Machine with Total Response Mapping, Safety Gradient loss bounding, and SSD-based Version Dominance guarantees, formalized as IETF Internet-Draft `draft-sakistudio-sass-05` [1].
 
 4. **Cross-platform implementation** in Rust, Go, C#, and Swift with 7 plugin modules, deployed across a 3-node heterogeneous network (macOS ARM64, Windows x64).
 
@@ -327,7 +327,7 @@ This paper documents observed behaviors of commercial AI coding agents operating
 
 ## References
 
-[1] H. Chang, "Saki Agent Secure Stream (SASS)," Internet-Draft draft-sakistudio-sass-02, May 2026. https://datatracker.ietf.org/doc/draft-sakistudio-sass/
+[1] H. Chang, "Saki Agent Secure Stream (SASS)," Internet-Draft draft-sakistudio-sass-05, June 2026. https://datatracker.ietf.org/doc/draft-sakistudio-sass/
 
 [2] E. Rescorla, B. Korver, "Guidelines for Writing RFC Text on Security Considerations," RFC 3552, BCP 72, July 2003.
 

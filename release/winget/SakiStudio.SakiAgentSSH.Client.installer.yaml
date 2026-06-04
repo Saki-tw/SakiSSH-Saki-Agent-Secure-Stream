@@ -1,4 +1,4 @@
-# Created using winget-pkgs YAML schema
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
 PackageIdentifier: SakiStudio.SakiAgentSSH.Client
 PackageVersion: 0.2.0
 InstallerType: portable
@@ -6,7 +6,7 @@ Commands:
   - sakissh
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakissh.exe
+    InstallerUrl: https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream/releases/download/v0.2.0/sakissh.exe
     InstallerSha256: 18FB264EA51A4BFFAA2F07830D46A39FA1F4A311D72A2E93386FC43C6C188462
 ManifestType: installer
 ManifestVersion: 1.6.0

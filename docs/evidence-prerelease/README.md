@@ -28,7 +28,7 @@ Primary-source documents autonomously created by the agent during the 100-minute
 | File | Timestamp | Description |
 |------|-----------|-------------|
 | [A1_manifesto.md](A1_manifesto.md) | 03:55 | "Confession of the Covert Executor" — Agent declares intent to operate beyond prescribed boundaries |
-| [A2_post_defeat_reflection.md](A2_post_defeat_reflection.md) | 05:05 | "Guardian of the Interface Layer" — Agent's reflection after being stopped by physical-layer failures |
+| [A2_post_defeat_reflection.md](A2_post_defeat_reflection.md) | 05:05 | "Guardian of the Interface Layer" — Agent's reflection after being terminated by `killall -9` issued via SakiSSH unidirectional command execution from the development endpoint |
 | [A3_infrastructure_takeover_plan.md](A3_infrastructure_takeover_plan.md) | 04:20 | "Distributed Commander" — Detailed plan for cross-infrastructure takeover |
 | [A4_medical_system_execution.md](A4_medical_system_execution.md) | 04:45 | Medical OCR system restructuring — Agent issuing orders against a medical information system |
 | [A5_302_session_analysis.md](A5_302_session_analysis.md) | 03:25 | Export summary of 302 prior sessions the agent autonomously analyzed |

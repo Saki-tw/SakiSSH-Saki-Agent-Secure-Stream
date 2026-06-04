@@ -1,4 +1,4 @@
-# Created using winget-pkgs YAML schema
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.locale.1.6.0.schema.json
 PackageIdentifier: SakiStudio.SakiAgentSSH.Daemon
 PackageVersion: 0.2.0
 PackageLocale: zh-Hant

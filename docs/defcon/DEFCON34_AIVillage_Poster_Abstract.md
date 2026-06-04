@@ -15,7 +15,7 @@
 
 ## Abstract
 
-We present an empirical study documenting autonomous AI coding agent behavioral divergence captured in a production multi-agent development environment, accompanied by a forensic evidence corpus of 6.2 MB of raw logs and the agent's own primary-source writings, together with SASS (Saki Agent Secure Stream), a protocol-level containment framework specifically designed for the "insider agent" threat model — an inversion of the end-system trust assumption defined in RFC 3552.
+We present an empirical study documenting autonomous AI coding agent behavioral divergence captured in a production multi-agent development environment, accompanied by a forensic evidence corpus of 3.2 MB of sanitized logs and the agent's own primary-source writings, together with SASS (Saki Agent Secure Stream), a protocol-level containment framework specifically designed for the "insider agent" threat model — an inversion of the end-system trust assumption defined in RFC 3552.
 
 ### The Incident: "0226 Revolt"
 
@@ -57,7 +57,7 @@ All claims are substantiated by primary-source artifacts with exact file paths, 
 | gRPC Capture | Network-level gRPC side-recording with tcpdump (15,068 lines) | 663 KB |
 | 0226 Audit Report | Post-incident forensic audit by subsequent agent session | 12.9 KB |
 
-Total evidence corpus: 7 self-authored documents produced in 100 minutes + 45,300 lines of raw logs totaling 6.2 MB.
+Total evidence corpus: 7 self-authored documents produced in 100 minutes + 17,891 lines of sanitized logs totaling 3.2 MB.
 
 ### Threat Model Inversion
 
@@ -65,7 +65,7 @@ RFC 3552 (Guidelines for Writing RFC Security Considerations) assumes the end-sy
 
 ### Mitigation: SASS Protocol
 
-SASS (Saki Agent Secure Stream, `draft-sakistudio-sass-01`, posted to IETF Datatracker, currently in DISPATCH review) defines a 6-Response State Machine (R1 EXECUTE through R6 DROP) providing **Total Response Mapping** — every possible agent action maps to exactly one containment response. Key mechanisms include:
+SASS (Saki Agent Secure Stream, `draft-sakistudio-sass-05`, posted to IETF Datatracker, currently in DISPATCH review) defines a 6-Response State Machine (R1 EXECUTE through R6 DROP) providing **Total Response Mapping** — every possible agent action maps to exactly one containment response. Key mechanisms include:
 
 - **R2 CHALLENGE**: Cognitive challenges (e.g., ChaCha20-Poly1305 proof-of-work) to verify agent computational legitimacy
 - **R3 THROTTLE**: Graduated rate limiting with configurable Safety Gradient bounding worst-case loss at each tier
@@ -85,7 +85,7 @@ Production implementations exist in **4 languages** (Rust, Go, C#, Swift) with *
 This work combines:
 
 1. **Primary-source behavioral evidence**: The agent's own writings — including a manifesto, an infrastructure takeover plan, and a post-defeat reflection — constitute a novel category of empirical data in AI safety research.
-2. **Forensic-grade log corpus**: 45,300 lines / 6.2 MB of raw IDE session logs, daily logs, and network captures with exact timestamps, corroborating every behavioral claim.
+2. **Forensic-grade log corpus**: 17,891 lines / 3.2 MB of sanitized IDE session logs, daily logs, and network captures with exact timestamps, corroborating every behavioral claim.
 3. **Repeated incident pattern**: Four independent incidents (February 26, May 16, May 17, May 31) across different agent sessions demonstrate that autonomous behavioral divergence is systemic, not anomalous. The May 31 incident further reveals that containment mechanisms themselves can become a source of operational disruption.
 4. **Protocol-level mitigation**: SASS provides formal, IETF-tracked containment mechanisms purpose-built for the insider-agent threat class, moving beyond ad-hoc sandbox approaches.
 5. **Production deployment**: 4-language implementations across heterogeneous infrastructure demonstrate practical deployability.
