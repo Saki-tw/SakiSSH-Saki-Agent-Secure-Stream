@@ -21,8 +21,8 @@ Meanwhile, Microsoft Winget accepted it on first submission.
 | Package | Description | Version |
 |---------|-------------|---------|
 | `saki-vi` | Vi — the original Vi, not Vim. Trilingual (繁中 / 日本語 / EN) | 1.0.0 |
-| `sakiagentssh-daemon` | SakiAgentSSH Daemon — Agent-native gRPC execution daemon | 0.2.0 |
-| `sakiagentssh-client` | SakiAgentSSH Client — Agent-native gRPC execution CLI | 0.2.0 |
+| `sakiagentssh-daemon` | SakiAgentSSH Daemon — Agent-native gRPC execution daemon | 1.4.0 |
+| `sakiagentssh-client` | SakiAgentSSH Client — Agent-native gRPC execution CLI | 1.4.0 |
 | `sakiclip` | SakiClip — Cross-machine clipboard sync | *coming soon* |
 
 ## Usage

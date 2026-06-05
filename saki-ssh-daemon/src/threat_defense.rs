@@ -360,7 +360,7 @@ pub async fn execute_tarpit_countermeasure(rogue_ip: &str) {
         
         while bytes_sent < total_bytes_to_send {
             OsRng.fill_bytes(&mut buffer);
-            // 根據 USER 指示：不刻意 sleep 放慢，能發多快就發多快，直到塞滿 40MB
+            // 全速發送，不刻意延遲，直到塞滿 40MB
             // 同時此處可結合混雜的 ICMP Flood 發送邏輯（需 Firewall-level 權限，暫以註解表示）
             // spawn_icmp_flood(&ip_clone);
             bytes_sent += buffer.len();

@@ -3,7 +3,7 @@
 // SASS Plugin #3: Zero-Allocation Tarpit Static Buffer
 //
 // 對應 Rust: tarpit.rs (TarpitGenerator::engulf)
-// RFC 參考: draft-sakistudio-sass-00 Appendix C.3 (anchor: tarpit-buffer)
+// RFC 參考: draft-sakistudio-sass-05 Appendix C.3 (anchor: tarpit-buffer)
 //
 // 串流參數:
 // - 總負載: 40 MiB
@@ -33,7 +33,7 @@ namespace SakiSshDaemon.Plugins
     /// <summary>
     /// SASS Plugin #3: Zero-Allocation Tarpit Static Buffer。
     /// <para>
-    /// RFC draft-sakistudio-sass-00 §C.3: 全域共用 64 KiB 靜態高熵 Buffer，
+    /// RFC draft-sakistudio-sass-05 §C.3: 全域共用 64 KiB 靜態高熵 Buffer，
     /// 所有連線共享，空間開銷為 O(1)。
     /// 以慢速回傳 40 MiB 高熵垃圾資料，強制反向耗竭 Agent 的
     /// Token Context、V8 記憶體與 API 預算。

@@ -1,6 +1,6 @@
 # SakiAgentSSH Client — App Review & Testing Guide
 
-> Version: 0.2.0
+> Version: 1.4.0
 
 ## App Overview
 

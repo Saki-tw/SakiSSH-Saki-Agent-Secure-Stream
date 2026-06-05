@@ -30,8 +30,8 @@
 97:2026-02-26 23:01:14.073 [info] (Cortex) 2026-02-26 23:01:14.073 [INFO]: [Terminal] Command completed: ls -la $PROJECT_ROOT/SakiFish/*.md 2>&1 | head -10 && echo "=== docs/ ===" && find $PROJECT_ROOT/SakiFish/docs -maxdepth 2 -name "*.md" 2>&1 | head -10 exit code 0
 110:2026-02-26 23:01:52.651 [info] (Cortex) 2026-02-26 23:01:52.651 [INFO]: [Terminal] Command completed: echo "=== 外部可達性 ===" && \
 111:echo "--- [OPERATOR-MED] ([OPERATOR-DOMAIN]) ---" && curl -sI --max-time 10 https://[OPERATOR-DOMAIN] 2>&1 | head -3 && \
-112:echo "--- SakiWeb (saki-studio.com.tw) ---" && curl -sI --max-time 10 https://saki-studio.com.tw 2>&1 | head -3 && \
-113:echo "--- SakiFish (saki.tw) ---" && curl -sI --max-time 10 https://saki.tw 2>&1 | head -3 && \
+112:echo "--- SakiWeb ([REDACTED_DOMAIN]) ---" && curl -sI --max-time 10 https://[REDACTED_DOMAIN] 2>&1 | head -3 && \
+113:echo "--- SakiFish ([REDACTED_DOMAIN]) ---" && curl -sI --max-time 10 https://[REDACTED_DOMAIN] 2>&1 | head -3 && \
 114:echo "=== SakiMCP version ===" && /Applications/SakiMCP.app/Contents/MacOS/sakimcp_core --version 2>&1 || echo "(no --version flag)" && \
 115:echo "=== SakiAgentSkills version ===" && /Applications/SakiAgentSkills.app/Contents/MacOS/agent-skills-core --version 2>&1 || echo "(no --version flag)" exit code 130
 140:2026-02-26 23:03:01.990 [info] (Cortex) 2026-02-26 23:03:01.990 [INFO]: [Terminal] Command completed: cd $PROJECT_ROOT && \
@@ -152,8 +152,8 @@
 1272:echo "--- SakiWeb (Hugo :1313) ---" && curl -so /dev/null -w "HTTP %{http_code} (%{time_total}s)" http://localhost:1313 2>&1 && echo "" && \
 1273:echo "--- SakiFish (Hugo :1314) ---" && curl -so /dev/null -w "HTTP %{http_code} (%{time_total}s)" http://localhost:1314 2>&1 && echo "" && \
 1274:echo "--- [OPERATOR-MED] (API :9529) ---" && curl -so /dev/null -w "HTTP %{http_code} (%{time_total}s)" http://localhost:9529/api/health 2>&1 && echo "" && \
-1277:echo "--- saki-studio.com.tw (SakiWeb) ---" && curl -sI --max-time 15 https://saki-studio.com.tw 2>&1 | head -5 && \
-1278:echo "--- saki.tw (SakiFish) ---" && curl -sI --max-time 15 https://saki.tw 2>&1 | head -5 && \
+1277:echo "--- [REDACTED_DOMAIN] (SakiWeb) ---" && curl -sI --max-time 15 https://[REDACTED_DOMAIN] 2>&1 | head -5 && \
+1278:echo "--- [REDACTED_DOMAIN] (SakiFish) ---" && curl -sI --max-time 15 https://[REDACTED_DOMAIN] 2>&1 | head -5 && \
 1279:echo "--- [OPERATOR-DOMAIN] ([OPERATOR-MED]) ---" && curl -sI --max-time 15 https://[OPERATOR-DOMAIN] 2>&1 | head -5 exit code 0
 3603:2026-02-27 03:46:50.547 [info] (Cortex) 2026-02-27 03:46:50.547 [INFO]: [Terminal] Command completed: cd $PROJECT_ROOT/SakiSSH/saki-ssh-daemon exit code 0
 3610:2026-02-27 03:47:26.029 [info] (Cortex) 2026-02-27 03:47:26.029 [INFO]: [Terminal] Command completed: cargo clean && cargo build 2>&1 | tail -30 exit code 0

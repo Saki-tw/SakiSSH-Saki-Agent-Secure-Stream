@@ -8,7 +8,7 @@
 
 [🇹🇼 繁體中文](README.md) | [🇯🇵 日本語](README_ja.md) | [🇺🇸 English](README_en.md)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](release/LICENSE)
+[![License](https://img.shields.io/badge/license-Saki%20Studio-DA70D6.svg)](release/LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-brightgreen)]()
 [![gRPC](https://img.shields.io/badge/protocol-gRPC%2FHTTP2-orange)]()
 
@@ -58,8 +58,8 @@ brew install --cask sakiagentssh-client   # GUI Client
 
 ```bash
 # Download from GitHub Releases
-curl -LO https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakisshd-darwin-arm64
-curl -LO https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakissh-darwin-arm64
+curl -LO https://github.com/Saki-tw/SakiAgentSSH/releases/download/v1.4.0/sakisshd-darwin-arm64
+curl -LO https://github.com/Saki-tw/SakiAgentSSH/releases/download/v1.4.0/sakissh-darwin-arm64
 chmod +x sakisshd-darwin-arm64 sakissh-darwin-arm64
 ```
 
@@ -75,8 +75,8 @@ scoop install sakiagentssh-client
 
 ```powershell
 # Download from GitHub Releases
-Invoke-WebRequest -Uri "https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakisshd.exe" -OutFile sakisshd.exe
-Invoke-WebRequest -Uri "https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakissh.exe" -OutFile sakissh.exe
+Invoke-WebRequest -Uri "https://github.com/Saki-tw/SakiAgentSSH/releases/download/v1.4.0/sakisshd.exe" -OutFile sakisshd.exe
+Invoke-WebRequest -Uri "https://github.com/Saki-tw/SakiAgentSSH/releases/download/v1.4.0/sakissh.exe" -OutFile sakissh.exe
 ```
 
 ## Quick Start
@@ -120,7 +120,7 @@ SakiAgentSSH was forged for Agents. It bypasses the TTY limitations of the old w
 
 ## License
 
-MIT — © 2026 [Saki Studio](http://saki-studio.com.tw)
+Proprietary — © 2026 [Saki Studio](http://saki-studio.com.tw)
 
 ---
 

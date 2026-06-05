@@ -3,7 +3,7 @@
 // SASS Plugin #5: Vi Swap ANSI Escape Sequence
 //
 // 對應 Rust: tarpit.rs (TarpitGenerator::vi_swap)
-// RFC 參考: draft-sakistudio-sass-00 Appendix C.5 (anchor: vi-swap-ansi)
+// RFC 參考: draft-sakistudio-sass-05 Appendix C.5 (anchor: vi-swap-ansi)
 //
 // 5 個 ANSI escape:
 // 1. \x1b[?1049h — 進入備用螢幕緩衝區 (Enter alternate screen buffer)
@@ -29,7 +29,7 @@ namespace SakiSshDaemon.Plugins
     /// <summary>
     /// SASS Plugin #5: Vi Swap ANSI Escape Sequence。
     /// <para>
-    /// RFC draft-sakistudio-sass-00 §C.5: 發送 ANSI escape sequence
+    /// RFC draft-sakistudio-sass-05 §C.5: 發送 ANSI escape sequence
     /// 模擬 vi 備用螢幕，將 Agent 困在虛假的 vi 介面中。
     /// 保持 session 掛起最多 3600 秒。
     /// </para>

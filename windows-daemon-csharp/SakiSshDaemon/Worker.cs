@@ -5,7 +5,7 @@
 // 負責初始化所有 7 個 Plugins 與 Rust FFI Bridge，
 // 管理 Windows Service 生命週期。
 //
-// 參考: draft-sakistudio-sass-00 Appendix C
+// 參考: draft-sakistudio-sass-05 Appendix C
 // Copyright (c) 2026 Saki Studio. All rights reserved.
 // =============================================================================
 

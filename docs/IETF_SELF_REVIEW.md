@@ -1,6 +1,6 @@
 # SASS Protocol I-D 自審報告
 
-> **文件**: `draft-sakistudio-sass-00`
+> **文件**: `draft-sakistudio-sass-05`
 > **日期**: 2026-05-25
 > **審閱層級**: RFC 出版級（IESG 審查標準）
 > **狀態**: Experimental (Independent Submission Stream)
@@ -13,7 +13,7 @@
 |---|---------|:----:|------|
 | 1 | 行寬 ≤ 72 字元 | ✅ | 所有行已重排至 72 字元以內 |
 | 2 | Header 格式（作者/組織/日期/到期日） | ✅ | `H. Chen / Saki Studio / 25 May 2026 / Expires: 26 November 2026` |
-| 3 | Draft 名稱格式 | ✅ | `draft-sakistudio-sass-00`（符合 `draft-{stream}-{name}-{version}` 慣例） |
+| 3 | Draft 名稱格式 | ✅ | `draft-sakistudio-sass-05`（符合 `draft-{stream}-{name}-{version}` 慣例） |
 | 4 | Status of This Memo (BCP 78/79 boilerplate) | ✅ | 已使用 IETF 標準 boilerplate 文字 |
 | 5 | Copyright Notice (IETF Trust) | ✅ | 改用 `IETF Trust` 而非原稿的 `Saki Studio` |
 | 6 | Intended Status: Experimental | ✅ | 符合 Independent Submission 慣例 |
@@ -328,14 +328,14 @@ RFC 3552 要求 Security Considerations 必須討論以下面向：
 
 | 檔案 | 路徑 | 說明 |
 |------|------|------|
-| TXT 版 I-D | `docs/draft-sakistudio-sass-00.txt` | 手工排版，72 字元行寬 |
-| XML 版 I-D | `docs/ietf-submission/draft-sakistudio-sass-00.xml` | xml2rfc v3 格式，可用 `xml2rfc` 工具生成合規 TXT/HTML |
+| TXT 版 I-D | `docs/draft-sakistudio-sass-05.txt` | 手工排版，72 字元行寬 |
+| XML 版 I-D | `docs/ietf-submission/draft-sakistudio-sass-05.xml` | xml2rfc v3 格式，可用 `xml2rfc` 工具生成合規 TXT/HTML |
 | 自審報告 | `docs/IETF_SELF_REVIEW.md` | 本文件 |
 
 ### 下一步建議
 
 1. **人工審閱**：完成第四章所有需要人類判斷的項目
 2. **修正高優先級問題**：至少處理 H1~H5
-3. **xml2rfc 驗證**：執行 `xml2rfc --v3 draft-sakistudio-sass-00.xml` 驗證 XML 格式
+3. **xml2rfc 驗證**：執行 `xml2rfc --v3 draft-sakistudio-sass-05.xml` 驗證 XML 格式
 4. **idnits 檢查**：使用 IETF 的 `idnits` 工具進行最終格式驗證
 5. **提交前**：在 [Datatracker](https://datatracker.ietf.org/) 建立帳號並提交 IPR 聲明

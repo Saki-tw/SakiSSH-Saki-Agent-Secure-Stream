@@ -1,11 +1,11 @@
 [package]
 name = "saki-ssh-client"
-version = "0.2.0"
+version = "1.4.0"
 edition = "2021"
 description = "SakiAgentSSH Client — Agent-native remote execution CLI"
 authors = ["Saki Studio <sakistudio@saki.tw>"]
 license = "LicenseRef-SakiStudio"
-homepage = "https://github.com/saki-tw/SakiAgentSSH"
+homepage = "https://github.com/Saki-tw/SakiAgentSSH"
 
 [dependencies]
 tonic = { version = "0.12", features = ["tls"] }

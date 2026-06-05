@@ -129,7 +129,7 @@ struct AboutView: View {
     @EnvironmentObject var pluginManager: PluginManager
     @State private var showHelp = false
     @State private var showPluginStatus = false
-    private let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.2.0"
+    private let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.4.0"
     private let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
 
     var body: some View {
@@ -208,7 +208,7 @@ struct AboutView: View {
                             .font(.saki(12))
                             .foregroundStyle(.secondary)
                         Link("sakissh.exe (GitHub Release)",
-                             destination: URL(string: "https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakissh.exe")!)
+                             destination: URL(string: "https://github.com/nicetry-hackme/SakiAgentSSH/releases/download/v1.4.0/sakissh.exe")!)
                             .font(.saki(11))
                     }
 
@@ -280,7 +280,7 @@ struct CopyrightView: View {
             HStack(spacing: 12) {
                 Link("saki-studio.com.tw", destination: URL(string: "http://saki-studio.com.tw")!)
                     .font(.saki(10))
-                Link("GitHub", destination: URL(string: "https://github.com/saki-tw")!)
+                Link("GitHub", destination: URL(string: "https://github.com/nicetry-hackme")!)
                     .font(.saki(10))
             }
             Text("Saki@saki-studio.com.tw")

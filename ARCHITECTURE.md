@@ -2,7 +2,7 @@
 
 > **最後更新**：2026-05-25 18:36 (UTC+8)
 > **版本**：SASS v1.4 / SAKISSH-6.0
-> **狀態**：🔴 Phase 0 完成、Phase 1~6 進行中
+> **狀態**：✅ Active Development
 > **規模**：約 4,200+ 行原始碼（19 Rust 模組 + Proto + CA 工具）
 
 [🇹🇼 繁體中文](ARCHITECTURE.md) | [🇯🇵 日本語](ARCHITECTURE_ja.md) | [🇺🇸 English](ARCHITECTURE_en.md)
@@ -32,7 +32,7 @@ SASS 不枚舉攻擊，而是枚舉**回應**。所有 Agent 行為經過 7 層�
 
 ```mermaid
 graph TD
-    A["Agent (Antigravity / Claude Code / Gemini CLI)"] -->|CLI| B(saki-ssh-client)
+    A["Agent (AI Coding Agent)"] -->|CLI| B(saki-ssh-client)
     B -->|"gRPC/HTTP2 over TLS 1.3"| C(saki-ssh-daemon)
     
     C --> D["7 層協議堆疊"]
@@ -64,7 +64,7 @@ graph TD
 | `drivers/` | 核心橋接驅動 |
 | `tools/` | 輔助工具 |
 | `docs/` | RFC 草案與文件 |
-| `github/` | **賽博公開發佈子專案**（獨立 git repo）— 經白名單複製 + 脫敏後的唯一對外版本，含 `evidence-prerelease/` 學術匿名審查分支 |
+| `github/` | 公開發佈版本（獨立 git repo）|
 
 ---
 

@@ -1,6 +1,6 @@
 //! SASS v6.0 狀態駐留與冪等恢復管理器 (Idempotent Resumption Manager)
 //!
-//! 防禦 Antigravity 的 Checkpoint 截斷，支援 gRPC 斷線後無縫重連。
+//! 防禦 AI Agent 的 Checkpoint 截斷，支援 gRPC 斷線後無縫重連。
 //! 【主攻防禦升級】：Ring Buffer 容量上限與殭屍 Session 清理機制。
 
 use std::collections::{HashMap, VecDeque};

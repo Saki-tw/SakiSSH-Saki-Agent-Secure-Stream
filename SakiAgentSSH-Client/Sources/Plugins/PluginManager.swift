@@ -2,7 +2,7 @@
 // SakiAgentSSH Client — 統一 Plugin 管理器
 //
 // RFC 章節引用：
-//   draft-sakistudio-sass-00, Appendix C (anchor: plugins-reference)
+//   draft-sakistudio-sass-05, Appendix C (anchor: plugins-reference)
 //   "Saki Studio Plugins Reference Implementation"
 //
 // 管理的 Plugins：

@@ -33,7 +33,7 @@ brew uninstall --cask sakiagentssh-client
        ├── sakiagentssh-daemon.rb
        └── sakiagentssh-client.rb
    ```
-3. 在 `saki-tw/SakiAgentSSH` 的 GitHub Release v0.2.0 上傳：
+3. 在 `Saki-tw/SakiAgentSSH` 的 GitHub Release v1.4.0 上傳：
    - `SakiAgentSSHDaemon.dmg`
    - `SakiAgentSSHClient.dmg`
    - `sakisshd.exe`（Windows Daemon）

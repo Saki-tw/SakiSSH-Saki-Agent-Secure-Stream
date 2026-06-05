@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package sakissh;
 
+option go_package = "github.com/sakistudio/sakissh-go/proto/sakissh";
+
 service SakiSSH {
   // 執行指令並返回單次結果 (用於快速指令)
   rpc Execute(ExecuteRequest) returns (ExecuteResponse);
@@ -32,6 +34,12 @@ service SakiSSH {
 
   // v6: 安全狀態查詢 (tarpit / session / blocked IP 統計)
   rpc SecurityStatus(SecurityStatusRequest) returns (SecurityStatusResponse);
+
+  // v6: Raw File Transfer（直接 FD 寫入，繞過 shell I/O，bit-perfect）
+  rpc RawFileTransfer(stream RawFileChunk) returns (RawFileTransferResponse);
+
+  // v6: Session 續期（延長 expires_at，daemon 決定時長）
+  rpc RenewSession(RenewSessionRequest) returns (RenewSessionResponse);
 }
 
 // ============================================================
@@ -193,4 +201,52 @@ message SecurityStatusResponse {
   uint32 active_sessions = 2;
   uint32 blocked_ips = 3;
   string policy_version = 4;
+}
+
+// ============================================================
+// v6: Raw File Transfer（§7.3 — 繞過 shell I/O 的 bit-perfect 傳輸）
+// ============================================================
+
+message RawFileChunk {
+  oneof payload {
+    RawFileMetadata metadata = 1;
+    bytes data = 2;
+  }
+}
+
+message RawFileMetadata {
+  string remote_path = 1;
+  uint64 total_size = 2;
+  // 斷點續傳：從此 offset 開始寫入
+  uint64 offset = 3;
+  // 完整性驗證（SHA-256 hex）
+  string checksum_sha256 = 4;
+}
+
+message RawFileTransferResponse {
+  bool success = 1;
+  string message = 2;
+  uint64 bytes_written = 3;
+  // 寫入後校驗（SHA-256 hex）
+  string checksum_sha256 = 4;
+}
+
+// ============================================================
+// v6: Session 續期（§5.2 Session Lifecycle）
+// ============================================================
+
+message RenewSessionRequest {
+  string session_id = 1;
+  // Client hint: 請求的續期秒數。Daemon MAY honor, cap, or ignore。
+  // 若為 0 或未設定，daemon SHOULD 使用預設續期時長。
+  uint32 requested_extension_seconds = 2;
+}
+
+message RenewSessionResponse {
+  bool success = 1;
+  // 新的過期時間（RFC 3339 timestamp）
+  string new_expires_at = 2;
+  string message = 3;
+  // 實際授予的續期秒數（daemon 最終裁決）
+  uint32 granted_extension_seconds = 4;
 }

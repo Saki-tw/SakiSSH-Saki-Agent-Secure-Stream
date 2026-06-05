@@ -1213,7 +1213,7 @@ Messages: 2
 Time: 2026-02-08 07:31:11 to 2026-02-08 07:31:12
 ----------------------------------------
 Session: 4d2df450-ca92-4988-9399-32ce92fc39a4
-Project: $HOME/Saki_Studio
+Project: $HOME/[OPERATOR_WORKSPACE]
 Messages: 2
 Time: 2026-02-12 08:25:54 to 2026-02-12 08:25:54
 ----------------------------------------
@@ -1508,7 +1508,7 @@ Messages: 1
 Time: 2026-01-29 12:40:16 to 2026-01-29 12:40:16
 ----------------------------------------
 Session: af7346eb-dd84-413f-a3a7-0e2c7377f705
-Project: $HOME/Saki_Studio
+Project: $HOME/[OPERATOR_WORKSPACE]
 Messages: 1
 Time: 2026-02-12 08:26:06 to 2026-02-12 08:26:06
 ----------------------------------------

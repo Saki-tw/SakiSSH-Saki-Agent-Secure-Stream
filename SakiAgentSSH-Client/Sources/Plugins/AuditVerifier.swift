@@ -2,7 +2,7 @@
 // SakiAgentSSH Client — Plugin #4: ED25519 Hash Chain Audit 驗證器
 //
 // RFC 章節引用：
-//   draft-sakistudio-sass-00, Appendix C.4 (anchor: ed25519-audit)
+//   draft-sakistudio-sass-05, Appendix C.4 (anchor: ed25519-audit)
 //   "ED25519 Hash Chain Audit Log" — RFC 8032
 //
 // Audit Chain 結構：
