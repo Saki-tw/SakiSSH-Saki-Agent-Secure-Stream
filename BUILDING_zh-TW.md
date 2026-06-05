@@ -73,22 +73,70 @@ xcodegen generate
 xcodebuild build -configuration Release -scheme SakiAgentSSHClient
 ```
 
+### 執行 Swift 單元測試
+
+```bash
+# Client Plugin 合規性驗證
+cd SakiAgentSSH-Client
+xcodegen generate
+xcodebuild test -project SakiAgentSSHClient.xcodeproj \
+    -scheme SakiAgentSSHClientTests \
+    -destination 'platform=macOS'
+# 測試檔案：Tests/PluginTests.swift
+```
+
 > **注意**：我們極度建議不要把 `.xcodeproj` 檔案加入 Git 追蹤（已經寫入 `.gitignore`），請永遠依賴 `project.yml` 透過 `xcodegen` 來生成，這樣能避免各種令人抓狂的合併衝突。
 
+## 編譯 Go 版本
+
+Go 版本位於 `go-sakissh/` 目錄（注意不是 `sakissh-go/`）：
+
+```bash
+cd go-sakissh
+
+# Daemon
+go build -o bin/sakisshd ./cmd/sakisshd
+
+# Client
+go build -o bin/sakissh ./cmd/sakissh
+```
+
 ## 跨平台編譯 (Cross-Compilation)
+
+### Rust → Windows (x86_64)
 
 如果你需要在一台機器上（例如你的 M1 Mac）為另一台機器（例如 Loser PC 的 Windows）編譯：
 
 ```bash
 # 新增目標平台的 target
-rustup target add x86_64-pc-windows-msvc
+rustup target add x86_64-pc-windows-gnu
+brew install mingw-w64
 
-# 安裝跨平台編譯工具 (例如 cargo-zigbuild 或設定對應的 linker)
-# 接著執行：
-cargo build --release --target x86_64-pc-windows-msvc
+# 執行跨編譯
+cargo build --release --target x86_64-pc-windows-gnu
 ```
 
-但老實說，跨平台編譯常常會遇到 C++ 依賴的問題。在我們的架構中，如果需要 Windows 版本，直接丟給 Windows 節點去編譯通常是更乾脆的選擇。
+### C# Daemon → Windows (x86_64)
+
+```bash
+# 從 macOS 交叉編譯 Windows C# daemon
+cd windows-daemon-csharp
+dotnet publish -c Release -r win-x64 --self-contained
+# 產出物: SakiSshDaemon/bin/Release/net8.0/win-x64/publish/SakiSshDaemon.exe
+```
+
+需要 .NET SDK 8.0+：`brew install dotnet`
+
+### Windows 原生編譯 C# Daemon
+
+```powershell
+cd windows-daemon-csharp
+dotnet build -c Release
+# 產出物: SakiSshDaemon\bin\Release\net8.0\SakiSshDaemon.exe
+
+# 安裝為 Windows 服務
+sc.exe create SakiSshDaemon binPath= "C:\path\to\SakiSshDaemon.exe"
+```
 
 ## 故障排除 (Troubleshooting)
 

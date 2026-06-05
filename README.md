@@ -4,9 +4,9 @@
 
 # SakiAgentSSH — SASS Protocol v1.4
 
-**IETF Internet-Draft: draft-sakistudio-sass-00**
+**IETF Internet-Draft: draft-sakistudio-sass-05**
 
-![IETF](https://img.shields.io/badge/IETF-draft--sakistudio--sass--00-blue?style=flat-square)
+![IETF](https://img.shields.io/badge/IETF-draft--sakistudio--sass--05-blue?style=flat-square)
 ![SASS](https://img.shields.io/badge/SASS-v1.4-DA70D6?style=flat-square)
 ![Protocol](https://img.shields.io/badge/protocol-gRPC%2FHTTP2-00CED1?style=flat-square)
 ![Rust](https://img.shields.io/badge/Rust-1.95+-orange?style=flat-square&logo=rust)
@@ -25,7 +25,7 @@
 
 ## SakiAgentSSH — SASS Protocol v1.4
 
-**IETF Internet-Draft: draft-sakistudio-sass-00**
+**IETF Internet-Draft: draft-sakistudio-sass-05**
 
 ### 簡介
 
@@ -100,7 +100,7 @@ cd SakiAgentSSH-Client && xcodegen generate && xcodebuild build -configuration R
 |------|------|
 | IETF Datatracker | https://datatracker.ietf.org/doc/draft-sakistudio-sass/ |
 | 官方網站 | https://saki-studio.com.tw/sakiagentssh/ |
-| RFC 全文 (本地) | [docs/draft-sakistudio-sass-00.txt](docs/draft-sakistudio-sass-00.txt) |
+| RFC 全文 (本地) | [docs/draft-sakistudio-sass-05.txt](docs/draft-sakistudio-sass-05.txt) |
 | 架構說明 | [ARCHITECTURE.md](ARCHITECTURE.md) |
 
 ### 作者
@@ -120,7 +120,7 @@ Copyright © 2026 Saki Studio. All Rights Reserved.
 
 ## SakiAgentSSH — SASS Protocol v1.4
 
-**IETF Internet-Draft: draft-sakistudio-sass-00**
+**IETF Internet-Draft: draft-sakistudio-sass-05**
 
 ### Overview
 
@@ -197,7 +197,7 @@ For detailed build instructions, see [BUILDING.md](BUILDING.md).
 |----------|------|
 | IETF Datatracker | https://datatracker.ietf.org/doc/draft-sakistudio-sass/ |
 | Official Website | https://saki-studio.com.tw/sakiagentssh/ |
-| Full RFC (local) | [docs/draft-sakistudio-sass-00.txt](docs/draft-sakistudio-sass-00.txt) |
+| Full RFC (local) | [docs/draft-sakistudio-sass-05.txt](docs/draft-sakistudio-sass-05.txt) |
 | Architecture | [ARCHITECTURE_en.md](ARCHITECTURE_en.md) |
 
 ### Authors
@@ -217,7 +217,7 @@ See [LICENSE](LICENSE) for details.
 
 ## SakiAgentSSH — SASS Protocol v1.4
 
-**IETF Internet-Draft: draft-sakistudio-sass-00**
+**IETF Internet-Draft: draft-sakistudio-sass-05**
 
 ### 概要
 
@@ -294,7 +294,7 @@ cd SakiAgentSSH-Client && xcodegen generate && xcodebuild build -configuration R
 |----------|--------|
 | IETF Datatracker | https://datatracker.ietf.org/doc/draft-sakistudio-sass/ |
 | 公式ウェブサイト | https://saki-studio.com.tw/sakiagentssh/ |
-| RFC 全文（ローカル） | [docs/draft-sakistudio-sass-00.txt](docs/draft-sakistudio-sass-00.txt) |
+| RFC 全文（ローカル） | [docs/draft-sakistudio-sass-05.txt](docs/draft-sakistudio-sass-05.txt) |
 | アーキテクチャ | [ARCHITECTURE_ja.md](ARCHITECTURE_ja.md) |
 
 ### 著者

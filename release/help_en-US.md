@@ -7,7 +7,7 @@ Boot up the `SakiAgentSSHClientApp` or `SakiAgentSSHDaemonApp`. You'll notice th
 
 ## 2. The Daemon: Securing the Compute Plane
 You deploy the Daemon on your heavy-lifting nodes—like that 40GB RAM Loser PC rig operating deep in the ruins.
-1. **Status Check**: Launch it on macOS, and the UI verifies you are running "SakiAgentSSH Daemon v0.2.0". It means the node is active and listening.
+1. **Status Check**: Launch it on macOS, and the UI verifies you are running "SakiAgentSSH Daemon v1.4.0". It means the node is active and listening.
 2. **Vault-Grade Security (CIDR)**: You see "CIDR Whitelist Access Control" on the dashboard. That isn’t marketing fluff. If you open port `19284` without `check_acl`, The Corporation or rogue elements will compromise the node within seconds. Only IPs on the clearance list get through. Everything else is dropped into the void.
 3. **Deployment Protocol**:
    - **macOS**: Installed directly via the App Store. It runs silently, a ghost in the machine.

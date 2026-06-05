@@ -13,7 +13,7 @@ SakiAgentSSH は、gRPCを基盤とした機械をまたぐAgent実行の橋で�
 
 ```mermaid
 graph TD
-    A[Agent (Gemini CLI / Claude)] -->|CLI Command| B(saki-ssh-client)
+    A[Agent (AI Coding Agent)] -->|CLI Command| B(saki-ssh-client)
     B -->|gRPC / HTTP2| C(saki-ssh-daemon)
     C -->|Spawn & Track| D[Local Shell / Processes]
     C -->|Stream Read/Write| E[Local File System]
@@ -23,7 +23,7 @@ graph TD
 - `saki-ssh-daemon/`: 制御される機械に常駐する守護者。ACL、リクエストの翻訳、プロセスの追跡、そして I/O ストリームを処理します。
 - `saki-ssh-client/`: コマンドラインクライアント。リクエストの発行と Ctrl+C (キャンセル信号) の転送を担当します。
 - `proto/`: gRPC 通信プロトコルの定義 (`sakissh.proto`)。
-- `github/`: **サイバー公開リリースサブプロジェクト**（独立 git repo）— ホワイトリスト複製＋匿名化済みの唯一の対外バージョン。学術匿名査読用 `evidence-prerelease/` 分岐を含む。
+- `github/`: パブリックリリースバージョン（独立 git repo）。
 
 ## 2. 技術スタック (Technical Implementation)
 

@@ -30,13 +30,26 @@ func (s *SakiSshServer) Auth(ctx context.Context, req *pb.AuthRequest) (*pb.Auth
 	return nil, status.Errorf(codes.Unimplemented, "method Auth not implemented")
 }
 
-func (s *SakiSshServer) GetAuditPublicKey(ctx context.Context, req *pb.GetAuditPublicKeyRequest) (*pb.GetAuditPublicKeyResponse, error) {
-	pubKeyHex := GetAuditPublicKeyPEM()
-	if pubKeyHex == "" {
-		return nil, status.Errorf(codes.Internal, "Audit logger not initialized")
-	}
-	return &pb.GetAuditPublicKeyResponse{
-		PublicKeyHex:   pubKeyHex,
-		KeyFingerprint: "SASS-Ed25519-PEM-Go",
-	}, nil
+// NOTE: GetAuditPublicKey RPC 已從 proto 移除，此方法暫時停用
+// 若需要恢復，需先在 sakissh.proto 中定義對應的 RPC 和 Message
+// func (s *SakiSshServer) GetAuditPublicKey(ctx context.Context, req *pb.GetAuditPublicKeyRequest) (*pb.GetAuditPublicKeyResponse, error) {
+// 	pubKeyHex := GetAuditPublicKeyPEM()
+// 	if pubKeyHex == "" {
+// 		return nil, status.Errorf(codes.Internal, "Audit logger not initialized")
+// 	}
+// 	return &pb.GetAuditPublicKeyResponse{
+// 		PublicKeyHex:   pubKeyHex,
+// 		KeyFingerprint: "SASS-Ed25519-PEM-Go",
+// 	}, nil
+// }
+
+// v6: RawFileTransfer（§7.3 — 繞過 shell I/O 的 bit-perfect 傳輸）
+func (s *SakiSshServer) RawFileTransfer(stream pb.SakiSSH_RawFileTransferServer) error {
+	return status.Errorf(codes.Unimplemented, "RawFileTransfer not yet implemented")
 }
+
+// v6: RenewSession（§5.2 Session 續期）
+func (s *SakiSshServer) RenewSession(ctx context.Context, req *pb.RenewSessionRequest) (*pb.RenewSessionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "RenewSession not yet implemented")
+}
+

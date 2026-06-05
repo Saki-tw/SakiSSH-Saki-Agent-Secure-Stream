@@ -3,7 +3,7 @@
 // SASS Plugin #7: Volatile Cache Redirection (Environment Variable Injection)
 //
 // 對應 Rust: env_injector.rs (EnvInjector::inject_volume_reduction_env)
-// RFC 參考: draft-sakistudio-sass-00 Appendix C.7 (anchor: volatile-cache)
+// RFC 參考: draft-sakistudio-sass-05 Appendix C.7 (anchor: volatile-cache)
 //
 // 環境變數重導向表:
 // +-----------------+---------------------+---------------------------+
@@ -36,7 +36,7 @@ namespace SakiSshDaemon.Plugins
     /// <summary>
     /// SASS Plugin #7: Volatile Cache Redirection (EnvInjector)。
     /// <para>
-    /// RFC draft-sakistudio-sass-00 §C.7: 將 Agent 的垃圾與快取 I/O
+    /// RFC draft-sakistudio-sass-05 §C.7: 將 Agent 的垃圾與快取 I/O
     /// （如 npm cache, cargo build artifacts）動態卸載至臨時目錄，
     /// 避免污染儲存層的動態分支。
     /// </para>

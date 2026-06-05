@@ -2,6 +2,7 @@ package defense
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"sync"
 	"time"
 
@@ -83,12 +84,9 @@ func (s *ChallengeStore) VerifyResponse(nonce []byte, response []byte) bool {
 		return false
 	}
 
-	for i := range response {
-		if response[i] != entry.Plaintext[i] {
-			return false
-		}
-	}
-	return true
+	// constant-time 比對 — 防止 timing side-channel 攻擊
+	// 對齊 Rust: subtle::ConstantTimeEq
+	return subtle.ConstantTimeCompare(response, entry.Plaintext) == 1
 }
 
 func (s *ChallengeStore) cleanupLoop() {

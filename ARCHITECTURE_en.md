@@ -13,7 +13,7 @@ SakiAgentSSH is a gRPC-based cross-machine Agent execution bridge. Adopting a Cl
 
 ```mermaid
 graph TD
-    A[Agent (Gemini CLI / Claude)] -->|CLI Command| B(saki-ssh-client)
+    A[Agent (AI Coding Agent)] -->|CLI Command| B(saki-ssh-client)
     B -->|gRPC / HTTP2| C(saki-ssh-daemon)
     C -->|Spawn & Track| D[Local Shell / Processes]
     C -->|Stream Read/Write| E[Local File System]
@@ -23,7 +23,7 @@ graph TD
 - `saki-ssh-daemon/`: The guardian process residing on the controlled node. Handles ACLs, request translation, process tracking, and I/O streaming.
 - `saki-ssh-client/`: The command-line client. Responsible for issuing requests and forwarding Ctrl+C (cancel signals).
 - `proto/`: gRPC protocol definitions (`sakissh.proto`).
-- `github/`: **Curated public release sub-project** (independent git repo) — whitelist-copied and sanitized; the sole outward-facing version, including `evidence-prerelease/` for anonymous academic review.
+- `github/`: Public release version (independent git repo).
 
 ## 2. Technical Implementation
 

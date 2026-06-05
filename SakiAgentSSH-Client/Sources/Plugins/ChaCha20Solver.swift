@@ -2,7 +2,7 @@
 // SakiAgentSSH Client — Plugin #1: ChaCha20-Poly1305 認知挑戰
 //
 // RFC 章節引用：
-//   draft-sakistudio-sass-00, Appendix C.1 (anchor: chacha20-challenge)
+//   draft-sakistudio-sass-05, Appendix C.1 (anchor: chacha20-challenge)
 //   "ChaCha20-Poly1305 Cognitive Challenge" — RFC 8439
 //
 // 流程：

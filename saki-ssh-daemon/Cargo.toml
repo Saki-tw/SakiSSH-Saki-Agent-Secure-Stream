@@ -1,11 +1,11 @@
 [package]
 name = "saki-ssh-daemon"
-version = "0.2.0"
+version = "1.4.0"
 edition = "2021"
 description = "SakiAgentSSH Daemon — Agent-native cross-machine execution protocol over gRPC"
 authors = ["Saki Studio <sakistudio@saki.tw>"]
 license = "LicenseRef-SakiStudio"
-homepage = "https://github.com/saki-tw/SakiAgentSSH"
+homepage = "https://github.com/nicetry-hackme/SakiAgentSSH"
 
 [dependencies]
 # === 核心框架 ===

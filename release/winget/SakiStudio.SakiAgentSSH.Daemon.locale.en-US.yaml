@@ -1,21 +1,32 @@
-# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+# Created using winget-pkgs YAML schema
 PackageIdentifier: SakiStudio.SakiAgentSSH.Daemon
-PackageVersion: 0.2.0
+PackageVersion: 1.4.0
 PackageLocale: en-US
 Publisher: Saki Studio
-PublisherUrl: https://saki-studio.com.tw
-PublisherSupportUrl: https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream/issues
+PublisherUrl: http://saki-studio.com.tw
+PublisherSupportUrl: https://github.com/nicetry-hackme/SakiAgentSSH/issues
 Author: Chang Hua
 PackageName: SakiAgentSSH Daemon
-PackageUrl: https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream
+PackageUrl: https://github.com/nicetry-hackme/SakiAgentSSH
 License: Proprietary
-LicenseUrl: https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream/blob/main/release/LICENSE
-ShortDescription: Agent-native cross-machine execution daemon over gRPC
+LicenseUrl: https://github.com/nicetry-hackme/SakiAgentSSH/blob/main/release/LICENSE
+ReleaseDate: 2026-06-05
+ShortDescription: Agent-native cross-machine execution daemon over gRPC with Total Response Mapping
 Description: |-
   SakiAgentSSH Daemon listens for gRPC commands from AI agents, enabling secure
-  cross-machine execution without SSH. Features CIDR whitelist ACL, bidirectional
-  stdout/stderr streaming, and zero-dependency portable binary.
+  cross-machine execution without SSH. v1.4 introduces Total Response Mapping for
+  complete output capture, Safety Gradient for progressive permission escalation,
+  and Transparent Branching for parallel execution paths. Features CIDR whitelist
+  ACL, bidirectional stdout/stderr streaming, and zero-dependency portable binary.
   From the same developer as SakiStudio.SakiVi (VI-SakiWin64).
+ReleaseNotes: |-
+  v1.4.0 - Total Response Mapping Release
+  - Total Response Mapping: complete output capture with structured metadata
+  - Safety Gradient: progressive permission escalation based on trust level
+  - Transparent Branching: parallel execution paths with automatic merging
+  - Enhanced CIDR ACL with IPv6 support
+  - Improved gRPC streaming performance
+ReleaseNotesUrl: https://github.com/nicetry-hackme/SakiAgentSSH/releases/tag/v1.4.0
 Tags:
   - agent
   - grpc
@@ -23,5 +34,7 @@ Tags:
   - daemon
   - ssh-alternative
   - cli
+  - total-response-mapping
+  - safety-gradient
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0

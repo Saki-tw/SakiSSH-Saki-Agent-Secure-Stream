@@ -2,7 +2,7 @@
 // SakiAgentSSH Client — Plugin #7: Volatile Cache Redirection 客戶端
 //
 // RFC 章節引用：
-//   draft-sakistudio-sass-00, Appendix C.6 (anchor: volatile-cache)
+//   draft-sakistudio-sass-05, Appendix C.6 (anchor: volatile-cache)
 //   "Volatile Cache Redirection"
 //
 // 環境變數重導向表：

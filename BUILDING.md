@@ -97,6 +97,21 @@ xcodebuild build -project SakiAgentSSHDaemon.xcodeproj \
 
 對 Client 重複同樣步驟（替換 Daemon → Client）。
 
+### Run Swift Unit Tests
+
+```bash
+# Client test target (Plugin 合規性驗證)
+cd SakiAgentSSH-Client
+xcodegen generate
+xcodebuild test -project SakiAgentSSHClient.xcodeproj \
+    -scheme SakiAgentSSHClientTests \
+    -destination 'platform=macOS'
+# Test target: SakiAgentSSHClientTests (Tests/PluginTests.swift)
+```
+
+> **Note**: Test target 在 `project.yml` 中已定義為 `SakiAgentSSHClientTests`，
+> 依賴主 target `SakiAgentSSHClient`。
+
 ### Archive for App Store
 
 ```bash
@@ -122,6 +137,56 @@ hdiutil create -volname "SakiAgentSSH Daemon" \
 
 ---
 
+## Build Go Binaries
+
+```bash
+# Go 版本 (go-sakissh/)
+cd go-sakissh
+
+# Daemon
+go build -o bin/sakisshd ./cmd/sakisshd
+
+# Client
+go build -o bin/sakissh ./cmd/sakissh
+```
+
+---
+
+## Build Windows C# Daemon (.NET 8)
+
+### Prerequisites
+
+| 工具 | 版本 | 安裝方式 |
+|------|------|---------|
+| .NET SDK | ≥ 8.0 | macOS: `brew install dotnet` / Windows: [dot.net](https://dot.net) |
+| MSBuild | ≥ 17.0 | Bundled with .NET SDK |
+
+### Build (Windows native)
+
+```powershell
+cd windows-daemon-csharp
+dotnet build -c Release
+# Output: SakiSshDaemon/bin/Release/net8.0/SakiSshDaemon.exe
+```
+
+### Build (Cross-compile from macOS)
+
+```bash
+cd windows-daemon-csharp
+dotnet publish -c Release -r win-x64 --self-contained
+# Output: SakiSshDaemon/bin/Release/net8.0/win-x64/publish/SakiSshDaemon.exe
+```
+
+### Run as Windows Service
+
+```powershell
+# 安裝為 Windows 服務
+sc.exe create SakiSshDaemon binPath= "C:\path\to\SakiSshDaemon.exe"
+sc.exe start SakiSshDaemon
+```
+
+---
+
 ## Project Dependencies
 
 ### Rust Crates (CLI)
@@ -135,12 +200,30 @@ hdiutil create -volname "SakiAgentSSH Daemon" \
 | `serde` / `serde_json` | Config parsing |
 | `clap` | CLI argument parsing |
 
-### Swift Frameworks (GUI)
+### Swift Frameworks (GUI + Plugins)
 
 | Framework | Purpose |
 |-----------|---------|
 | SwiftUI | User interface |
+| CryptoKit | ChaCha20-Poly1305, HKDF, HMAC, Curve25519 (Plugins) |
+| Network | NWConnection TLS metadata (Plugin #2) |
 | Combine | Reactive event handling (Help menu) |
+
+### Go Modules (`go-sakissh/`)
+
+| Module | Purpose |
+|--------|---------|
+| `google.golang.org/grpc` | gRPC server/client |
+| `google.golang.org/protobuf` | Protocol Buffers |
+| `golang.org/x/crypto` | ED25519, ChaCha20 |
+
+### C# NuGet Packages (`windows-daemon-csharp/`)
+
+| Package | Purpose |
+|---------|---------|
+| `Grpc.AspNetCore` | gRPC server |
+| `Microsoft.Extensions.Hosting.WindowsServices` | Windows Service hosting |
+| `System.Security.Cryptography` | SHA256, HMAC, AES |
 
 ---
 
@@ -157,6 +240,9 @@ hdiutil create -volname "SakiAgentSSH Daemon" \
 [ ] Update Scoop manifest hash
 [ ] Update Homebrew Cask hash
 [ ] Update Winget manifest hash
+[ ] dotnet publish -r win-x64 (C# daemon)
+[ ] go build (go-sakissh daemon + client)
+[ ] xcodebuild test (Swift plugin tests)
 [ ] git tag vX.Y.Z
 [ ] Upload to GitHub Releases
 ```

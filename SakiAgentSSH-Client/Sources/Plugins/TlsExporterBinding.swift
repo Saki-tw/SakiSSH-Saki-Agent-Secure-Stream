@@ -2,7 +2,7 @@
 // SakiAgentSSH Client — Plugin #2: TLS Exporter Binding
 //
 // RFC 章節引用：
-//   draft-sakistudio-sass-00, Appendix C.2 (anchor: tls-exporter-binding)
+//   draft-sakistudio-sass-05, Appendix C.2 (anchor: tls-exporter-binding)
 //   "TLS Exporter Binding for Cognitive Challenge" — RFC 5705, RFC 9266
 //
 // 規格：

@@ -87,8 +87,9 @@ use sakissh::{
     AuthRequest, AuthResponse, CancelRequest, CancelResponse,
     ChallengeRequest, ChallengeResponse, ExecuteRequest, ExecuteResponse,
     FileChunk, FileDownloadRequest, FileTransferResponse, PingRequest,
-    PingResponse, PosixSignal, SecurityStatusRequest, SecurityStatusResponse,
-    SignalRequest, SignalResponse, StreamResponse,
+    PingResponse, PosixSignal, RawFileChunk, RawFileTransferResponse,
+    RenewSessionRequest, RenewSessionResponse, SecurityStatusRequest,
+    SecurityStatusResponse, SignalRequest, SignalResponse, StreamResponse,
 };
 
 // ============================================================
@@ -801,6 +802,26 @@ impl SakiSsh for MySsh {
             blocked_ips: 0,
             policy_version: "13Policy-v1.0".to_string(),
         }))
+    }
+
+    // --------------------------------------------------------
+    // v6: RawFileTransfer（§7.3 — 繞過 shell I/O 的 bit-perfect 傳輸）
+    // --------------------------------------------------------
+    async fn raw_file_transfer(
+        &self,
+        _request: Request<Streaming<RawFileChunk>>,
+    ) -> Result<Response<RawFileTransferResponse>, Status> {
+        Err(Status::unimplemented("RawFileTransfer not yet implemented"))
+    }
+
+    // --------------------------------------------------------
+    // v6: RenewSession（§5.2 Session 續期）
+    // --------------------------------------------------------
+    async fn renew_session(
+        &self,
+        _request: Request<RenewSessionRequest>,
+    ) -> Result<Response<RenewSessionResponse>, Status> {
+        Err(Status::unimplemented("RenewSession not yet implemented"))
     }
 }
 

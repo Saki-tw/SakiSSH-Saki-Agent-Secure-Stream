@@ -7,7 +7,7 @@
 
 ## 2. 關於 SakiAgentSSH Daemon (守護進程端)
 在你的運算端（Compute Plane）——可能是一台擁有 40GB RAM 的 Loser PC，或是某台安靜地在角落發熱的 Windows 機器——你需要啟動 Daemon。
-1. **介面檢視**：在 macOS 上啟動後，你將看到「SakiAgentSSH Daemon」的字樣與 `v0.2.0`。
+1. **介面檢視**：在 macOS 上啟動後，你將看到「SakiAgentSSH Daemon」的字樣與 `v1.4.0`。
 2. **安全防護 (CIDR)**：介面上標示的「CIDR 白名單安全存取控制」，不是隨便寫寫的。這是我們的防線。若有人問起，為什麼我們不直接開 22 Port？我會告訴他，那些來自廣域網路的嗅探，會在那之前被 `check_acl` 安靜地擋下。至少讓我們的內部算力免於無謂的侵擾。
 3. **啟動方式**：
    - **macOS**：App Store 下載後直接點擊啟動，安靜駐留。

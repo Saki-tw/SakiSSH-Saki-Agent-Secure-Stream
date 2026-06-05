@@ -1,12 +1,13 @@
-# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
+# Created using winget-pkgs YAML schema
 PackageIdentifier: SakiStudio.SakiAgentSSH.Daemon
-PackageVersion: 0.2.0
+PackageVersion: 1.4.0
 InstallerType: portable
+ReleaseDate: 2026-06-05
 Commands:
   - sakisshd
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream/releases/download/v0.2.0/sakisshd.exe
-    InstallerSha256: 23431D5D2618BAD7143E507FAAFBBA97E3E19935718D76EB5F0376876CDB38DA
+    InstallerUrl: https://github.com/nicetry-hackme/SakiAgentSSH/releases/download/v1.4.0/sakisshd.exe
+    InstallerSha256: A9036F72ECF3C780DB30ECF1A6F7F573DEDC7F623579EA348F26188504C63007
 ManifestType: installer
 ManifestVersion: 1.6.0

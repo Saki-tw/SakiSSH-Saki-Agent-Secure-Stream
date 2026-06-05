@@ -1,18 +1,31 @@
-# yaml-language-server: $schema=https://aka.ms/winget-manifest.locale.1.6.0.schema.json
+# Created using winget-pkgs YAML schema
 PackageIdentifier: SakiStudio.SakiAgentSSH.Daemon
-PackageVersion: 0.2.0
+PackageVersion: 1.4.0
 PackageLocale: zh-Hant
 Publisher: Saki Studio
 PackageName: SakiAgentSSH 守護進程
-ShortDescription: Agent 原生跨機器執行守護進程 (gRPC)
+ReleaseDate: 2026-06-05
+ShortDescription: Agent 原生跨機器執行守護進程 (gRPC)，支援完整回應映射
 Description: |-
   SakiAgentSSH Daemon 監聽來自 AI Agent 的 gRPC 指令，實現無需 SSH 的安全跨機器執行。
-  支援 CIDR 白名單存取控制、雙向 stdout/stderr 串流、零依賴可攜式二進位。
+  v1.4 新增「完整回應映射」完整擷取輸出與結構化中繼資料、「安全梯度」基於信任等級的
+  漸進式權限提升、以及「透明分支」平行執行路徑與自動合併。
+  支援 CIDR 白名單存取控制（含 IPv6）、雙向 stdout/stderr 串流、零依賴可攜式二進位。
   來自 SakiStudio.SakiVi (VI-SakiWin64) 同一開發者。
+ReleaseNotes: |-
+  v1.4.0 - 完整回應映射版本
+  - 完整回應映射：完整輸出擷取與結構化中繼資料
+  - 安全梯度：基於信任等級的漸進式權限提升
+  - 透明分支：平行執行路徑與自動合併
+  - 增強 CIDR ACL 支援 IPv6
+  - 改善 gRPC 串流效能
+ReleaseNotesUrl: https://github.com/nicetry-hackme/SakiAgentSSH/releases/tag/v1.4.0
 Tags:
   - agent
   - grpc
   - 遠端執行
   - daemon
+  - 完整回應映射
+  - 安全梯度
 ManifestType: locale
 ManifestVersion: 1.6.0

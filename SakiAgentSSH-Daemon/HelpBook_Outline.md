@@ -78,8 +78,8 @@ App 側 Info.plist 需加入：
 ### 2. installation.html — 安裝指南
 - **macOS**：App Store 安裝或直接下載
 - **Windows**：
-  - Daemon: `https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakisshd.exe`
-  - Client: `https://github.com/saki-tw/SakiAgentSSH/releases/download/v0.2.0/sakissh.exe`
+  - Daemon: `https://github.com/nicetry-hackme/SakiAgentSSH/releases/download/v1.4.0/sakisshd.exe`
+  - Client: `https://github.com/nicetry-hackme/SakiAgentSSH/releases/download/v1.4.0/sakissh.exe`
 - 系統需求（macOS 13+, Windows 10+ x64）
 - 安全設定（CIDR 白名單）
 

@@ -1,9 +1,12 @@
 package server
 
 import (
+	"context"
 	"crypto/rand"
+	"log"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	pb "github.com/sakistudio/sakissh-go/proto/sakissh"
 )
@@ -26,6 +29,11 @@ var (
 const (
 	MaxConcurrentTarpit = 32
 	ChunkSize           = 65536 // 64KB
+
+	// RFC Appendix C.3: 慢速串流參數
+	TotalTarpitBytes = 40 * 1024 * 1024 // 40 MiB
+	ChunkDelayMs     = 500              // 500ms chunk 間隔
+	SendTimeoutSecs  = 3                // 3s send timeout
 )
 
 func init() {
@@ -97,3 +105,70 @@ func GetStaticGarbage() []byte {
 	return staticGarbage
 }
 
+// EngulfStream 實現 RFC Appendix C.3 慢速串流
+// 對齊 Rust: TarpitGenerator::engulf()
+//
+// 行為:
+//   - 總負載 40 MiB (TotalTarpitBytes)
+//   - 每 chunk 64 KiB (ChunkSize)
+//   - chunk 間隔 500ms (ChunkDelayMs)
+//   - 總 640 chunks、~320 秒
+//   - 每次 send 帶 3 秒 timeout (SendTimeoutSecs)
+//   - 從 staticGarbage 讀取（零分配）
+func EngulfStream(stream pb.SakiSSH_ExecuteStreamServer) error {
+	// 1. 並行門控：防止並行自噬 DoS
+	if !AcquireTarpitSlot() {
+		log.Printf("[WARN] Tarpit 並行上限已達 %d，拒絕新的 engulf", MaxConcurrentTarpit)
+		return stream.Send(&pb.StreamResponse{
+			Source: pb.StreamResponse_STDERR,
+			Data:   []byte("Concurrent tarpit threshold exceeded. Connection dropped."),
+		})
+	}
+	defer ReleaseTarpitSlot()
+
+	totalChunks := TotalTarpitBytes / ChunkSize // 640
+
+	log.Printf("[INFO] Tarpit engulf 開始: %d chunks, %d bytes/chunk, 間隔 %dms",
+		totalChunks, ChunkSize, ChunkDelayMs)
+
+	for i := 0; i < totalChunks; i++ {
+		// 檢查 stream context 是否已取消（對方斷線）
+		if stream.Context().Err() != nil {
+			log.Printf("[INFO] Tarpit engulf 中斷: 對方斷線 (chunk %d/%d)", i, totalChunks)
+			return stream.Context().Err()
+		}
+
+		// 使用帶 timeout 的 context 執行 send
+		sendCtx, sendCancel := context.WithTimeout(stream.Context(), time.Duration(SendTimeoutSecs)*time.Second)
+
+		// 在帶 timeout 的 goroutine 中發送
+		errCh := make(chan error, 1)
+		go func() {
+			errCh <- stream.Send(&pb.StreamResponse{
+				Source: pb.StreamResponse_STDOUT,
+				Data:   staticGarbage, // 零分配：共享唯讀 buffer
+			})
+		}()
+
+		select {
+		case err := <-errCh:
+			sendCancel()
+			if err != nil {
+				log.Printf("[INFO] Tarpit engulf send 失敗 (chunk %d/%d): %v", i, totalChunks, err)
+				return err
+			}
+		case <-sendCtx.Done():
+			sendCancel()
+			log.Printf("[INFO] Tarpit engulf send timeout (chunk %d/%d)", i, totalChunks)
+			return sendCtx.Err()
+		}
+
+		// chunk 間隔延遲 500ms
+		time.Sleep(time.Duration(ChunkDelayMs) * time.Millisecond)
+	}
+
+	log.Printf("[INFO] Tarpit engulf 完成: 已發送 %d chunks (%d bytes)",
+		totalChunks, TotalTarpitBytes)
+
+	return nil
+}

@@ -1,21 +1,32 @@
-# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+# Created using winget-pkgs YAML schema
 PackageIdentifier: SakiStudio.SakiAgentSSH.Client
-PackageVersion: 0.2.0
+PackageVersion: 1.4.0
 PackageLocale: en-US
 Publisher: Saki Studio
-PublisherUrl: https://saki-studio.com.tw
-PublisherSupportUrl: https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream/issues
+PublisherUrl: http://saki-studio.com.tw
+PublisherSupportUrl: https://github.com/nicetry-hackme/SakiAgentSSH/issues
 Author: Chang Hua
 PackageName: SakiAgentSSH Client
-PackageUrl: https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream
+PackageUrl: https://github.com/nicetry-hackme/SakiAgentSSH
 License: Proprietary
-LicenseUrl: https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream/blob/main/release/LICENSE
-ShortDescription: Agent-native remote execution CLI over gRPC
+LicenseUrl: https://github.com/nicetry-hackme/SakiAgentSSH/blob/main/release/LICENSE
+ReleaseDate: 2026-06-05
+ShortDescription: Agent-native remote execution CLI over gRPC with Total Response Mapping
 Description: |-
   SakiAgentSSH Client connects to a SakiAgentSSH Daemon over gRPC to execute
-  commands on remote machines. Features bidirectional stdout/stderr streaming,
-  zero-dependency portable binary, and agent-native CLI design.
+  commands on remote machines. v1.4 introduces Total Response Mapping for complete
+  output capture, Safety Gradient for progressive permission control, and Transparent
+  Branching for parallel execution paths. Features bidirectional stdout/stderr
+  streaming, zero-dependency portable binary, and agent-native CLI design.
   From the same developer as SakiStudio.SakiVi (VI-SakiWin64).
+ReleaseNotes: |-
+  v1.4.0 - Total Response Mapping Release
+  - Total Response Mapping: complete output capture with structured metadata
+  - Safety Gradient: progressive permission control on client side
+  - Transparent Branching: parallel execution paths with automatic merging
+  - Enhanced connection reliability and retry logic
+  - Improved gRPC streaming performance
+ReleaseNotesUrl: https://github.com/nicetry-hackme/SakiAgentSSH/releases/tag/v1.4.0
 Tags:
   - agent
   - grpc
@@ -23,5 +34,7 @@ Tags:
   - client
   - ssh-alternative
   - cli
+  - total-response-mapping
+  - safety-gradient
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0
