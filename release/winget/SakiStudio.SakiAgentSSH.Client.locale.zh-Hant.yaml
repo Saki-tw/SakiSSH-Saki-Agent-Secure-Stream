@@ -3,23 +3,17 @@ PackageIdentifier: SakiStudio.SakiAgentSSH.Client
 PackageVersion: 0.2.0
 PackageLocale: zh-Hant
 Publisher: Saki Studio
-PublisherUrl: https://saki-studio.com.tw
-Author: Chang Hua
-PackageName: SakiAgentSSH Client
-PackageUrl: https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream
-License: Proprietary
-LicenseUrl: https://github.com/Saki-tw/SakiSSH-Saki-Agent-Secure-Stream/blob/main/release/LICENSE
-ShortDescription: 透過 gRPC 安全連線至遠端 SASS 守護行程的用戶端工具
+PackageName: SakiAgentSSH 用戶端
+ShortDescription: Agent 原生跨機器執行用戶端 (gRPC)
 Description: |-
-  SakiAgentSSH Client 透過 gRPC 與遠端 sakisshd 守護行程建立安全連線，
-  支援 AI Agent 跨機器遠端指令執行、串流 I/O 與檔案傳輸。
-  零依賴可攜式執行檔，支援 SASS 協議的完整功能集。
+  SakiAgentSSH Client 透過 gRPC 連接至 SakiAgentSSH Daemon，在遠端機器上執行指令。
+  支援雙向 stdout/stderr 串流、零依賴可攜式二進位、Agent 原生 CLI 設計。
+  來自 SakiStudio.SakiVi (VI-SakiWin64) 同一開發者。
 Tags:
   - agent
   - grpc
-  - remote-execution
+  - 遠端執行
   - client
-  - ssh-alternative
   - cli
 ManifestType: locale
 ManifestVersion: 1.6.0

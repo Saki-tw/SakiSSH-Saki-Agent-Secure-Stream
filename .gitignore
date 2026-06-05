@@ -1,13 +1,8 @@
-# OS
 .DS_Store
 Thumbs.db
-
-# 基礎防禦
 .env
 .env.local
 .agent/
-
-# 編譯產物
 build/
 build_out/
 target/
@@ -17,8 +12,6 @@ bin/
 obj/
 *.dSYM
 xcuserdata/
-*.xcuserstate
-ModuleCache*/
 *.o
 *.a
 *.dylib
@@ -28,6 +21,4 @@ ModuleCache*/
 *.log
 *.car
 *.dmg
-
-# 內部參考（不上傳）
 REBUILD_PROMPT.md

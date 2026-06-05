@@ -16,7 +16,7 @@
 
 ### 3. 多管道連接方案
 - 物理端口只有 19284 一個
-- Client 端實現 LAN ([SUBNET_INT].x) → Tailscale (100.x.x.x) Failover
+- Client 端實現 LAN ([INTERNAL_SUBNET]) → Tailscale (100.x.x.x) Failover
 - Daemon 端 bind `[::0]:19284` 無需修改
 - gRPC HTTP/2 天生支援串流多路復用
 
