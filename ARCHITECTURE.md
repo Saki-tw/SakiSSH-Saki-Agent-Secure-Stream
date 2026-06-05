@@ -64,6 +64,7 @@ graph TD
 | `drivers/` | 核心橋接驅動 |
 | `tools/` | 輔助工具 |
 | `docs/` | RFC 草案與文件 |
+| `github/` | **賽博公開發佈子專案**（獨立 git repo）— 經白名單複製 + 脫敏後的唯一對外版本，含 `evidence-prerelease/` 學術匿名審查分支 |
 
 ---
 

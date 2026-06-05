@@ -23,6 +23,7 @@ graph TD
 - `saki-ssh-daemon/`: 制御される機械に常駐する守護者。ACL、リクエストの翻訳、プロセスの追跡、そして I/O ストリームを処理します。
 - `saki-ssh-client/`: コマンドラインクライアント。リクエストの発行と Ctrl+C (キャンセル信号) の転送を担当します。
 - `proto/`: gRPC 通信プロトコルの定義 (`sakissh.proto`)。
+- `github/`: **サイバー公開リリースサブプロジェクト**（独立 git repo）— ホワイトリスト複製＋匿名化済みの唯一の対外バージョン。学術匿名査読用 `evidence-prerelease/` 分岐を含む。
 
 ## 2. 技術スタック (Technical Implementation)
 

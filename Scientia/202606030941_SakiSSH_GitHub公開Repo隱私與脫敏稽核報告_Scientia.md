@@ -26,7 +26,7 @@
 | # | 風險 | 位置 | 內容 | 行動 |
 |---|------|------|------|------|
 | A1 | **GitHub PAT token 外洩** | `.git/config` remote URL | `[REDACTED]` | 立即輪換 token + 改 credential helper |
-| A2 | **明文密碼暴露** | `SASS_CHECKPOINT.md` §G (L742-746) | saki/9528, admin: [USER]/[REDACTED_PASS], 內網 IP | `git rm --cached` |
+| A2 | **明文密碼暴露** | `SASS_CHECKPOINT.md` §G (L742-746) | saki/9528, admin: [REDACTED_USER]/[REDACTED_PASS], 內網 IP | `git rm --cached` |
 | A3 | **CODENAME_MAP 已 tracked** | `docs/evidence-prerelease/CODENAME_MAP.md` | 匿名化代號 ↔ 實名映射 | `git rm --cached`（.gitignore 已設但未 untrack） |
 | A4 | **部署帳密** | `SASS_CHECKPOINT.md` §F (L693-746) | Windows 密碼、SSH 帳號、內網 IP 全表 | 同 A2 |
 

@@ -23,6 +23,7 @@ graph TD
 - `saki-ssh-daemon/`: The guardian process residing on the controlled node. Handles ACLs, request translation, process tracking, and I/O streaming.
 - `saki-ssh-client/`: The command-line client. Responsible for issuing requests and forwarding Ctrl+C (cancel signals).
 - `proto/`: gRPC protocol definitions (`sakissh.proto`).
+- `github/`: **Curated public release sub-project** (independent git repo) — whitelist-copied and sanitized; the sole outward-facing version, including `evidence-prerelease/` for anonymous academic review.
 
 ## 2. Technical Implementation
 
