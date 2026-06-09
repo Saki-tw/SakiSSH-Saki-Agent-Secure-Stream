@@ -1,0 +1,61 @@
+# SASS Daemon — Linux systemd 部署範本
+# 版本: 1.4
+#
+# 安裝方式:
+#   sudo cp sakisshd.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now sakisshd
+#
+# 狀態確認:
+#   sudo systemctl status sakisshd
+#   sudo journalctl -u sakisshd -f
+#
+# © 2026 Saki Studio. All rights reserved.
+
+[Unit]
+Description=SASS SSH Daemon v1.4 (Saki Agent SSH Shield)
+Documentation=https://github.com/nicetry-hackme/SakiAgentSSH
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sass
+Group=sass
+
+ExecStart=/usr/local/bin/sakisshd --config /etc/sass/sakisshd.toml
+ExecReload=/bin/kill -HUP $MAINPID
+
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# 安全強化
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ReadWritePaths=/var/lib/sass /var/log/sass /tmp/sass_vol /tmp/sass_branches
+
+# 資源限制
+LimitNOFILE=4096
+LimitNPROC=256
+MemoryMax=512M
+
+# 環境變數
+Environment=SASS_LOG_LEVEL=info
+Environment=SASS_TLS_CERT=/etc/sass/tls/cert.pem
+Environment=SASS_TLS_KEY=/etc/sass/tls/key.pem
+
+# 日誌
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sakisshd
+
+[Install]
+WantedBy=multi-user.target

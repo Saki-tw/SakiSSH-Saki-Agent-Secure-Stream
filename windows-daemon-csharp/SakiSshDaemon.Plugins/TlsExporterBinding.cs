@@ -10,7 +10,7 @@
 //   - RFC 8446 §7.5: Exporters
 //   - draft-sakistudio-sass-05 Appendix C.2 (anchor: tls-exporter-binding)
 //
-// TLS Exporter Label: "EXPORTER-sakissh-chacha20-v14"
+// TLS Exporter Label: "EXPORTER-sakissh-chacha20-v15"
 // Context: Session UUID (16 bytes)
 // Length: 44 bytes (32-byte ChaCha20 key + 12-byte nonce)
 //
@@ -240,7 +240,7 @@ namespace SakiSshDaemon.Plugins
         /// <para>對齊 Rust: TLS_EXPORTER_LABEL 常量</para>
         /// <para>對齊 Go: TLSExporterLabel 常量</para>
         /// </summary>
-        public const string ExporterLabel = "EXPORTER-sakissh-chacha20-v14";
+        public const string ExporterLabel = "EXPORTER-sakissh-chacha20-v15";
 
         /// <summary>
         /// TLS Exporter 輸出長度 (44 bytes = 32 key + 12 nonce)。

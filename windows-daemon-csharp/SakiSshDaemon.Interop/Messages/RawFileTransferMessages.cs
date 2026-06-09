@@ -10,7 +10,7 @@
 // 注意：本專案不使用 protoc 自動產出，而是手動定義 POCO class。
 // 欄位名稱與編號對應 proto 定義，序列化由 Rust core 處理。
 //
-// 參考: draft-sakistudio-sass-05 §7.3
+// 參考: draft-sakistudio-sass-00 §7.3
 // Copyright (c) 2026 Saki Studio. All rights reserved.
 // =============================================================================
 

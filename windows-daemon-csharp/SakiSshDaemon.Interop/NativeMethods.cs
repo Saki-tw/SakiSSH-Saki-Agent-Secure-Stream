@@ -3,7 +3,7 @@
 // SASS (Saki Agent Secure Stream) — Rust FFI P/Invoke 宣告
 //
 // 對應 Rust cdylib: saki_ssh_core.dll
-// 參考: draft-sakistudio-sass-05 Appendix C
+// 參考: draft-sakistudio-sass-00 Appendix C
 // Copyright (c) 2026 Saki Studio. All rights reserved.
 // =============================================================================
 
@@ -24,7 +24,7 @@ namespace SakiSshDaemon.Interop
         // =====================================================================
         // ChaCha20-Poly1305 認知挑戰 (Plugin #1)
         // 對應 Rust: challenge_store.rs + threat_defense.rs
-        // RFC 參考: draft-sakistudio-sass-05 Appendix C.1
+        // RFC 參考: draft-sakistudio-sass-00 Appendix C.1
         // =====================================================================
 
         /// <summary>
@@ -69,12 +69,12 @@ namespace SakiSshDaemon.Interop
         // =====================================================================
         // TLS Exporter 通道綁定 (Plugin #2)
         // 對應 Rust: threat_defense.rs
-        // RFC 參考: draft-sakistudio-sass-05 Appendix C.2
+        // RFC 參考: draft-sakistudio-sass-00 Appendix C.2
         // =====================================================================
 
         /// <summary>
         /// 從 TLS session 推導 Exported Keying Material (EKM)。
-        /// Label = "EXPORTER-sakissh-chacha20-v14"，Length = 44 bytes。
+        /// Label = "EXPORTER-sakissh-chacha20-v15"，Length = 44 bytes。
         /// </summary>
         /// <param name="sessionUuid">16 bytes session UUID 作為 context</param>
         /// <param name="ekmOut">輸出 44 bytes EKM (32 key + 12 nonce)</param>
@@ -105,7 +105,7 @@ namespace SakiSshDaemon.Interop
         // =====================================================================
         // Ed25519 審計簽名 (Plugin #4)
         // 對應 Rust: audit.rs
-        // RFC 參考: draft-sakistudio-sass-05 Appendix C.4
+        // RFC 參考: draft-sakistudio-sass-00 Appendix C.4
         // =====================================================================
 
         /// <summary>

@@ -6,9 +6,9 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>SakiSshDaemon</RootNamespace>
     <AssemblyName>SakiSshDaemon</AssemblyName>
-    <Version>1.4.0</Version>
+    <Version>1.0.0</Version>
     <Authors>Saki Studio</Authors>
-    <Description>SASS Windows C# Plugins Daemon — Rust core wrapper (draft-sakistudio-sass-05)</Description>
+    <Description>SASS Windows C# Plugins Daemon — Rust core wrapper (draft-sakistudio-sass-00)</Description>
     <Copyright>Copyright (c) 2026 Saki Studio. All rights reserved.</Copyright>
   </PropertyGroup>
 

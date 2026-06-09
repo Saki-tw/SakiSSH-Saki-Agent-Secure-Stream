@@ -10,7 +10,7 @@ settings:
   base:
     DEVELOPMENT_TEAM: 36HPTNN8NU
     CODE_SIGN_STYLE: Automatic
-    MARKETING_VERSION: "1.4.0"
+    MARKETING_VERSION: "0.2.0"
     CURRENT_PROJECT_VERSION: "6"
     GENERATE_INFOPLIST_FILE: YES
     INFOPLIST_KEY_NSHumanReadableCopyright: "© 2026 Saki Studio. All rights reserved."
@@ -64,3 +64,17 @@ targets:
           cp "${SRCROOT}/Resources/AppIcon.icns" "${RES_DIR}/" 2>/dev/null || true
           cp "${SRCROOT}/Resources/avan.png" "${RES_DIR}/" 2>/dev/null || true
         basedOnDependencyAnalysis: false
+
+  SakiAgentSSHClientTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: SakiAgentSSHClient
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: tw.com.saki-studio.SakiAgentSSH-Client-Tests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_IDENTITY: ""
+        CODE_SIGNING_ALLOWED: "NO"

@@ -23,7 +23,7 @@ type HmacSha256 = Hmac<Sha256>;
 /// - RFC 5705: Keying Material Exporters for TLS
 /// - RFC 9266: Channel Bindings for TLS 1.3
 /// - RFC 8446 §7.5: Exporters
-pub const TLS_EXPORTER_LABEL: &str = "EXPORTER-sakissh-chacha20-v14";
+pub const TLS_EXPORTER_LABEL: &str = "EXPORTER-sakissh-chacha20-v15";
 
 /// TLS Exporter 輸出長度 (44 bytes = 32 key + 12 nonce)
 ///
@@ -360,7 +360,7 @@ pub async fn execute_tarpit_countermeasure(rogue_ip: &str) {
         
         while bytes_sent < total_bytes_to_send {
             OsRng.fill_bytes(&mut buffer);
-            // 全速發送，不刻意延遲，直到塞滿 40MB
+            // 根據 USER 指示：不刻意 sleep 放慢，能發多快就發多快，直到塞滿 40MB
             // 同時此處可結合混雜的 ICMP Flood 發送邏輯（需 Firewall-level 權限，暫以註解表示）
             // spawn_icmp_flood(&ip_clone);
             bytes_sent += buffer.len();
@@ -368,3 +368,161 @@ pub async fn execute_tarpit_countermeasure(rogue_ip: &str) {
         error!("Completed 40MB Tarpit transmission to {}", ip_clone);
     });
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ========================================
+    // C.2 TLS Exporter Binding 測試
+    // ========================================
+
+    #[test]
+    fn derive_ekm_returns_44_bytes() {
+        let session_uuid: [u8; 16] = [
+            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10,
+        ];
+        let ekm = derive_ekm_fallback(&session_uuid);
+
+        // EKM 必須為 44 bytes（32 key + 12 nonce）
+        assert_eq!(ekm.raw.len(), 44);
+        assert_eq!(ekm.chacha_key.len(), 32);
+        assert_eq!(ekm.chacha_nonce.len(), 12);
+    }
+
+    #[test]
+    fn derive_ekm_same_input_produces_same_output() {
+        let session_uuid: [u8; 16] = [
+            0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10,
+        ];
+        let ekm1 = derive_ekm_fallback(&session_uuid);
+        let ekm2 = derive_ekm_fallback(&session_uuid);
+
+        // 相同輸入應產生相同輸出
+        assert_eq!(ekm1.raw, ekm2.raw);
+    }
+
+    #[test]
+    fn derive_ekm_different_input_produces_different_output() {
+        let uuid1: [u8; 16] = [0x01; 16];
+        let uuid2: [u8; 16] = [0x02; 16];
+        let ekm1 = derive_ekm_fallback(&uuid1);
+        let ekm2 = derive_ekm_fallback(&uuid2);
+
+        assert_ne!(ekm1.raw, ekm2.raw);
+    }
+
+    #[test]
+    fn verify_ekm_hmac_valid_hmac_returns_true() {
+        let session_uuid: [u8; 16] = [0xAA; 16];
+        let ekm = derive_ekm_fallback(&session_uuid);
+        let plaintext = b"test-plaintext";
+
+        // 計算正確的 HMAC
+        let mut mac = <HmacSha256 as Mac>::new_from_slice(&ekm.raw)
+            .expect("EKM 作為 HMAC key");
+        mac.update(plaintext);
+        let correct_hmac = mac.finalize().into_bytes();
+
+        let result = verify_ekm_hmac(&ekm, plaintext, &correct_hmac);
+        assert!(result, "正確的 HMAC 應驗證成功");
+    }
+
+    #[test]
+    fn verify_ekm_hmac_invalid_hmac_returns_false() {
+        let session_uuid: [u8; 16] = [0xBB; 16];
+        let ekm = derive_ekm_fallback(&session_uuid);
+        let plaintext = b"test-plaintext";
+        let wrong_hmac = [0u8; 32]; // 全零的 HMAC
+
+        let result = verify_ekm_hmac(&ekm, plaintext, &wrong_hmac);
+        assert!(!result, "錯誤的 HMAC 應驗證失敗");
+    }
+
+    #[test]
+    fn exporter_label_matches_rfc() {
+        assert_eq!(TLS_EXPORTER_LABEL, "EXPORTER-sakissh-chacha20-v15");
+    }
+
+    #[test]
+    fn ekm_length_is_44() {
+        assert_eq!(TLS_EXPORTER_LENGTH, 44);
+    }
+
+    #[test]
+    fn ekm_from_raw_splits_key_and_nonce_correctly() {
+        let mut raw = vec![0u8; 44];
+        // 填充前 32 bytes 為 key pattern
+        for i in 0..32 { raw[i] = i as u8; }
+        // 填充後 12 bytes 為 nonce pattern
+        for i in 0..12 { raw[32 + i] = (0xA0 + i) as u8; }
+
+        let ekm = ExportedKeyingMaterial::from_raw(raw.clone(), true);
+
+        // 驗證 key 正確分割
+        for i in 0..32 {
+            assert_eq!(ekm.chacha_key[i], i as u8);
+        }
+        // 驗證 nonce 正確分割
+        for i in 0..12 {
+            assert_eq!(ekm.chacha_nonce[i], (0xA0 + i) as u8);
+        }
+        assert!(ekm.is_real_ekm);
+    }
+
+    #[test]
+    fn hmac_fallback_provider_produces_correct_length() {
+        let session_uuid: [u8; 16] = [0xCC; 16];
+        let provider = HmacFallbackProvider::new(session_uuid);
+        let result = provider.export_keying_material(
+            TLS_EXPORTER_LABEL.as_bytes(),
+            Some(&session_uuid),
+            TLS_EXPORTER_LENGTH,
+        );
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().len(), TLS_EXPORTER_LENGTH);
+    }
+
+    #[test]
+    fn rustls_exporter_provider_from_cached_validates_length() {
+        // 正確長度
+        let valid = vec![0u8; 44];
+        assert!(RustlsExporterProvider::from_cached(valid).is_ok());
+
+        // 錯誤長度
+        let invalid = vec![0u8; 32];
+        assert!(RustlsExporterProvider::from_cached(invalid).is_err());
+    }
+
+    #[test]
+    fn derive_ekm_with_provider_trait() {
+        let session_uuid: [u8; 16] = [0xDD; 16];
+        let provider = HmacFallbackProvider::new(session_uuid);
+
+        let ekm = derive_ekm(&provider, &session_uuid);
+        assert_eq!(ekm.raw.len(), 44);
+        assert_eq!(ekm.chacha_key.len(), 32);
+        assert_eq!(ekm.chacha_nonce.len(), 12);
+    }
+
+    // ========================================
+    // ChaCha20 挑戰產生器測試
+    // ========================================
+
+    #[test]
+    fn generate_chacha_challenge_returns_non_empty() {
+        let challenge = generate_chacha_challenge();
+        // nonce(12) + ciphertext(24 plaintext + 16 tag = 40) = 52
+        assert!(challenge.len() > 12, "挑戰資料應包含 nonce + ciphertext");
+    }
+
+    #[test]
+    fn generate_chacha_challenge_unique_each_call() {
+        let c1 = generate_chacha_challenge();
+        let c2 = generate_chacha_challenge();
+        assert_ne!(c1, c2);
+    }
+}
+

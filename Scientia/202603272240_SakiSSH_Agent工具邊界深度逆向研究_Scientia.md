@@ -41,7 +41,7 @@
 ```json
 {
   "/Users/[USER]/Saki_Studio/Claude": "claude",
-  "/Users/[USER]": "hc1034",
+  "/Users/[USER]": "[USER]",
   "/Users/[USER]/.ssh": "ssh"    // ⚠️ .ssh 被註冊為專案
 }
 ```
@@ -94,7 +94,7 @@ Gemini CLI 文件工具（view_file、replace_file_content 等）受 `rootDirect
 |--------|------|
 | 可執行檔 | `~/.local/bin/claude`（Mach-O 64-bit ARM64） |
 | 配置路徑 | `~/.claude/settings.json` + `~/.claude/projects/` |
-| 專案目錄 | 以路徑 slug 命名（`-Users-hc1034-Saki-Studio-Claude`） |
+| 專案目錄 | 以路徑 slug 命名（`-Users-[USER]-Saki-Studio-Claude`） |
 | Session 格式 | `.jsonl`（JSON Lines，明文） |
 
 ### 3.2 工具邊界機制

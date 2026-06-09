@@ -30,6 +30,7 @@ import (
 	"log"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/sakistudio/sakissh-go/internal/defense"
 	pb "github.com/sakistudio/sakissh-go/proto/sakissh"
@@ -146,7 +147,7 @@ func (s *SakiSshServer) ExecuteStreamV6(req *pb.ExecuteRequest, stream pb.SakiSS
 		LogCommandExecute(req.SessionId, "unknown", req.Command, req.Args, req.Cwd, false, "Tarpit engaged by 13Policy")
 
 		// 使用既有的 tarpit 機制
-		if tarpitResp, isTarpit := CheckPolicyAndTarpit(fullCommand); isTarpit {
+		if _, isTarpit := CheckPolicyAndTarpit(fullCommand); isTarpit {
 			if !AcquireTarpitSlot() {
 				stream.Send(&pb.StreamResponse{
 					Source: pb.StreamResponse_STDERR,
@@ -158,20 +159,25 @@ func (s *SakiSshServer) ExecuteStreamV6(req *pb.ExecuteRequest, stream pb.SakiSS
 
 			stream.Send(&pb.StreamResponse{
 				Source: pb.StreamResponse_STDERR,
-				Data:   tarpitResp.Stderr,
+				Data:   []byte("Tarpit engaged. Security violation.\n"),
 			})
 
+			// RFC C.3: 640 chunks × 64KiB = 40MiB, 500ms delay ≈ 320s
 			garbageChunk := GetStaticGarbage()
-			for i := 0; i < 320; i++ {
+			const tarpitChunks = 640     // RFC: 40MiB / 64KiB = 640
+			const tarpitDelay = 500       // RFC: 500ms inter-chunk delay
+			for i := 0; i < tarpitChunks; i++ {
 				if err := stream.Send(&pb.StreamResponse{
 					Source: pb.StreamResponse_STDOUT,
 					Data:   garbageChunk,
 				}); err != nil {
 					break
 				}
+				time.Sleep(time.Duration(tarpitDelay) * time.Millisecond)
 			}
+			exitCode := int32(-1)
 			stream.Send(&pb.StreamResponse{
-				ExitCode: &tarpitResp.ExitCode,
+				ExitCode: &exitCode,
 			})
 		}
 		return nil

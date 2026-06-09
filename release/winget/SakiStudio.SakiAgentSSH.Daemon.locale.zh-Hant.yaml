@@ -19,7 +19,7 @@ ReleaseNotes: |-
   - 透明分支：平行執行路徑與自動合併
   - 增強 CIDR ACL 支援 IPv6
   - 改善 gRPC 串流效能
-ReleaseNotesUrl: https://github.com/nicetry-hackme/SakiAgentSSH/releases/tag/v1.4.0
+ReleaseNotesUrl: https://github.com/saki-tw/SakiAgentSSH/releases/tag/v1.4.0
 Tags:
   - agent
   - grpc

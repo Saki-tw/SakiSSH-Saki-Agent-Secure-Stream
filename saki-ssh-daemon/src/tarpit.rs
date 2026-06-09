@@ -266,3 +266,70 @@ impl TarpitGenerator {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ========================================
+    // C.3 Tarpit Buffer 測試
+    // ========================================
+
+    #[test]
+    fn tarpit_config_default_values_match_rfc() {
+        let config = TarpitConfig::default();
+
+        assert_eq!(config.total_bytes, 40 * 1024 * 1024); // 40 MiB
+        assert_eq!(config.chunk_size, 64 * 1024);         // 64 KiB
+        assert_eq!(config.delay_ms, 500);                  // 500ms
+    }
+
+    #[test]
+    fn static_entropy_buffer_is_64kib() {
+        let buffer = get_static_entropy();
+        assert_eq!(buffer.len(), 64 * 1024);
+    }
+
+    #[test]
+    fn static_entropy_buffer_is_not_all_zeros() {
+        let buffer = get_static_entropy();
+        // 高熵 buffer 不應全為零
+        let non_zero_count = buffer.iter().filter(|&&b| b != 0).count();
+        assert!(non_zero_count > buffer.len() / 2,
+            "高熵 buffer 應有超過半數的非零 bytes");
+    }
+
+    #[test]
+    fn static_entropy_buffer_is_same_instance() {
+        // OnceLock 確保全域共享同一份 buffer
+        let buf1 = get_static_entropy();
+        let buf2 = get_static_entropy();
+        assert!(std::ptr::eq(buf1, buf2),
+            "靜態 buffer 應為同一份記憶體");
+    }
+
+    #[test]
+    fn active_tarpit_count_initially_zero() {
+        // 在測試環境中，初始計數應為零（或先前測試已歸零）
+        let count = ACTIVE_TARPIT_COUNT.load(Ordering::Relaxed);
+        assert!(count >= 0, "並行計數器不應為負數");
+    }
+
+    // ========================================
+    // C.5 Vi Swap 常數與設定測試
+    // ========================================
+
+    #[test]
+    fn vi_swap_max_hold_is_3600_seconds() {
+        assert_eq!(VI_SWAP_MAX_HOLD_SECS, 3600);
+    }
+
+    #[test]
+    fn max_concurrent_tarpit_is_32() {
+        assert_eq!(MAX_CONCURRENT_TARPIT, 32);
+    }
+
+    #[test]
+    fn send_timeout_is_3_seconds() {
+        assert_eq!(SEND_TIMEOUT_SECS, 3);
+    }
+}

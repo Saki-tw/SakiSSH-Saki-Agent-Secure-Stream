@@ -65,7 +65,7 @@
 | 類型 | 位置 | 說明 | 狀態 |
 |------|------|------|------|
 | 🔴 PAT token 外洩 | `.git/config` | `[REDACTED]` 在 remote URL | 待修 |
-| 🔴 明文密碼 | `SASS_CHECKPOINT.md` §G | saki/9528, [REDACTED_USER]/[REDACTED_PASS] | 待移除 |
+| 🔴 明文密碼 | `SASS_CHECKPOINT.md` §G | saki/[REDACTED_PASS], [REDACTED_USER]/[REDACTED_PASS] | 待移除 |
 | 🔴 CODENAME_MAP | `docs/evidence-prerelease/` | 已在 .gitignore 但未 untrack | 待移除 |
 | 🔴 部署帳密 | `SASS_CHECKPOINT.md` §F | Windows 密碼 + SSH | 待移除 |
 | 🟠 CHECKPOINT 全文 | `SASS_CHECKPOINT.md` | 38KB 內部狀態 + Reviewer 策略 | 待移出 |

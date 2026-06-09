@@ -189,4 +189,139 @@ impl ChallengeStore {
             }
         });
     }
+
+    /// 使用指定金鑰建立 ChallengeStore（測試用，避免檔案系統副作用）
+    #[cfg(test)]
+    pub fn new_with_key(default_ttl_secs: u64, key: [u8; 32]) -> Self {
+        Self {
+            entries: Arc::new(RwLock::new(HashMap::new())),
+            default_ttl: Duration::from_secs(default_ttl_secs),
+            static_key: key,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 建立測試用的 ChallengeStore（固定金鑰，不觸碰檔案系統）
+    fn test_store(ttl_secs: u64) -> ChallengeStore {
+        let key = [0x42u8; 32]; // 固定測試金鑰
+        ChallengeStore::new_with_key(ttl_secs, key)
+    }
+
+    #[tokio::test]
+    async fn generate_challenge_returns_nonce_and_ciphertext() {
+        let store = test_store(60);
+        let (nonce, ciphertext) = store.generate_challenge().await;
+
+        // Nonce 必須為 12 bytes（RFC 8439）
+        assert_eq!(nonce.len(), 12);
+
+        // Ciphertext = 64 bytes plaintext + 16 bytes Poly1305 tag = 80 bytes
+        assert_eq!(ciphertext.len(), 80);
+    }
+
+    #[tokio::test]
+    async fn generate_challenge_each_call_produces_unique_nonce() {
+        let store = test_store(60);
+        let (nonce1, _) = store.generate_challenge().await;
+        let (nonce2, _) = store.generate_challenge().await;
+
+        // 兩次產生的 nonce 不應相同
+        assert_ne!(nonce1, nonce2);
+    }
+
+    #[tokio::test]
+    async fn verify_response_correct_plaintext_returns_true() {
+        let store = test_store(60);
+        let (nonce, ciphertext) = store.generate_challenge().await;
+
+        // 解密取得正確的 plaintext
+        let key = chacha20poly1305::Key::from_slice(&[0x42u8; 32]);
+        let cipher = ChaCha20Poly1305::new(key);
+        let nonce_obj = Nonce::from_slice(&nonce);
+        let plaintext = cipher.decrypt(nonce_obj, ciphertext.as_ref())
+            .expect("解密不應失敗");
+
+        let result = store.verify_response(&nonce, &plaintext).await;
+        assert!(result, "正確的回應應該驗證成功");
+    }
+
+    #[tokio::test]
+    async fn verify_response_wrong_plaintext_returns_false() {
+        let store = test_store(60);
+        let (nonce, _ciphertext) = store.generate_challenge().await;
+
+        // 錯誤的回應
+        let wrong_response = vec![0xFF; 64];
+        let result = store.verify_response(&nonce, &wrong_response).await;
+        assert!(!result, "錯誤的回應應該驗證失敗");
+    }
+
+    #[tokio::test]
+    async fn try_verify_any_invalid_response_returns_false() {
+        let store = test_store(60);
+        let _ = store.generate_challenge().await;
+
+        // 錯誤的回應
+        let wrong_response = vec![0xFF; 64];
+        let result = store.try_verify_any(&wrong_response).await;
+        assert!(!result, "try_verify_any 應該對錯誤回應返回 false");
+    }
+
+    #[tokio::test]
+    async fn try_verify_any_correct_response_returns_true() {
+        let store = test_store(60);
+        let (nonce, ciphertext) = store.generate_challenge().await;
+
+        // 解密取得正確的 plaintext
+        let key = chacha20poly1305::Key::from_slice(&[0x42u8; 32]);
+        let cipher = ChaCha20Poly1305::new(key);
+        let nonce_obj = Nonce::from_slice(&nonce);
+        let plaintext = cipher.decrypt(nonce_obj, ciphertext.as_ref())
+            .expect("解密不應失敗");
+
+        let result = store.try_verify_any(&plaintext).await;
+        assert!(result, "try_verify_any 應該對正確回應返回 true");
+    }
+
+    #[tokio::test]
+    async fn verify_response_replay_attack_returns_false() {
+        let store = test_store(60);
+        let (nonce, ciphertext) = store.generate_challenge().await;
+
+        // 解密取得正確的 plaintext
+        let key = chacha20poly1305::Key::from_slice(&[0x42u8; 32]);
+        let cipher = ChaCha20Poly1305::new(key);
+        let nonce_obj = Nonce::from_slice(&nonce);
+        let plaintext = cipher.decrypt(nonce_obj, ciphertext.as_ref())
+            .expect("解密不應失敗");
+
+        // 第一次驗證應該成功
+        let result1 = store.verify_response(&nonce, &plaintext).await;
+        assert!(result1, "第一次驗證應成功");
+
+        // 第二次驗證（重放攻擊）應該失敗
+        let result2 = store.verify_response(&nonce, &plaintext).await;
+        assert!(!result2, "重放攻擊應被拒絕");
+    }
+
+    #[tokio::test]
+    async fn cleanup_expired_removes_stale_entries() {
+        // 使用 1 秒 TTL
+        let store = test_store(1);
+        let _ = store.generate_challenge().await;
+
+        // 等待 TTL 過期
+        tokio::time::sleep(Duration::from_secs(2)).await;
+
+        store.cleanup_expired().await;
+
+        // 所有挑戰都應被清理，任何回應都應失敗
+        let wrong = vec![0u8; 64];
+        let result = store.try_verify_any(&wrong).await;
+        assert!(!result, "過期後的挑戰應被清理");
+    }
 }

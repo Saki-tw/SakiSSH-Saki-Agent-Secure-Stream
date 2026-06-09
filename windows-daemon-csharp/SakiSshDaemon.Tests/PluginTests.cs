@@ -174,7 +174,7 @@ namespace SakiSshDaemon.Tests
         [Fact]
         public void ExporterLabel_MatchesRfc()
         {
-            Assert.Equal("EXPORTER-sakissh-chacha20-v14",
+            Assert.Equal("EXPORTER-sakissh-chacha20-v15",
                 TlsExporterBinding.ExporterLabel);
         }
 

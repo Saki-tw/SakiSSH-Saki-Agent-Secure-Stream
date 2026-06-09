@@ -194,3 +194,91 @@ async fn audit_writer(mut rx: mpsc::UnboundedReceiver<AuditEvent>, log_path: Pat
         previous_hash = current_hash;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ========================================
+    // C.4 AuditChain 測試
+    // ========================================
+
+    #[test]
+    fn noop_logger_does_not_panic() {
+        let logger = AuditLogger::noop();
+        logger.log(AuditEvent::AuthSuccess {
+            agent_name: "test-agent".to_string(),
+            session_id: "test-session-123".to_string(),
+            public_key_hex: "deadbeef".to_string(),
+        });
+        // noop logger 應該靜默丟棄事件而不 panic
+    }
+
+    #[test]
+    fn noop_logger_accepts_all_event_types() {
+        let logger = AuditLogger::noop();
+
+        logger.log(AuditEvent::AuthFailure {
+            agent_name: "rogue-agent".to_string(),
+            reason: "invalid key".to_string(),
+            remote_addr: "192.168.1.100".to_string(),
+        });
+
+        logger.log(AuditEvent::CommandExecute {
+            session_id: "sess-1".to_string(),
+            agent_name: "agent-1".to_string(),
+            command: "ls".to_string(),
+            args: vec!["-la".to_string()],
+            cwd: "/tmp".to_string(),
+            allowed: true,
+            deny_reason: None,
+        });
+
+        logger.log(AuditEvent::FileOperation {
+            session_id: "sess-2".to_string(),
+            agent_name: "agent-2".to_string(),
+            operation: "upload".to_string(),
+            path: "/tmp/test.txt".to_string(),
+            allowed: false,
+            deny_reason: Some("permission denied".to_string()),
+        });
+
+        logger.log(AuditEvent::SessionEvent {
+            session_id: "sess-3".to_string(),
+            agent_name: "agent-3".to_string(),
+            event: "created".to_string(),
+        });
+        // 所有事件類型都應被接受
+    }
+
+    #[test]
+    fn audit_event_serialization_auth_success() {
+        let event = AuditEvent::AuthSuccess {
+            agent_name: "test-agent".to_string(),
+            session_id: "sess-abc".to_string(),
+            public_key_hex: "0123456789abcdef".to_string(),
+        };
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("\"type\":\"AuthSuccess\""));
+        assert!(json.contains("\"agent_name\":\"test-agent\""));
+        assert!(json.contains("\"session_id\":\"sess-abc\""));
+    }
+
+    #[test]
+    fn audit_event_serialization_command_execute() {
+        let event = AuditEvent::CommandExecute {
+            session_id: "sess-cmd".to_string(),
+            agent_name: "cmd-agent".to_string(),
+            command: "rm".to_string(),
+            args: vec!["-rf".to_string(), "/tmp/test".to_string()],
+            cwd: "/home".to_string(),
+            allowed: false,
+            deny_reason: Some("13Policy violation".to_string()),
+        };
+        let json = serde_json::to_string(&event).unwrap();
+        assert!(json.contains("\"type\":\"CommandExecute\""));
+        assert!(json.contains("\"allowed\":false"));
+        assert!(json.contains("13Policy violation"));
+    }
+}
+

@@ -82,3 +82,78 @@ impl BranchMgr {
         Self::drop_branch(session_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ========================================
+    // C.6 BranchManager 測試
+    // ========================================
+
+    #[test]
+    fn create_micro_branch_nonexistent_dir_returns_none() {
+        let result = BranchMgr::create_micro_branch(
+            "test-session",
+            "/nonexistent/directory/12345",
+        );
+        assert!(result.is_none(), "不存在的目錄應回傳 None");
+    }
+
+    #[test]
+    fn create_micro_branch_existing_dir_returns_some() {
+        // 使用臨時目錄作為 target
+        let temp_dir = std::env::temp_dir().join(format!(
+            "sass_test_branch_{}",
+            uuid::Uuid::new_v4().to_string().split('-').next().unwrap()
+        ));
+        std::fs::create_dir_all(&temp_dir).unwrap();
+
+        // 在 temp_dir 下建立一些測試檔案
+        std::fs::write(temp_dir.join("test.txt"), "hello").unwrap();
+
+        let session_id = format!("test-{}", uuid::Uuid::new_v4().to_string().split('-').next().unwrap());
+        let branch_path = BranchMgr::create_micro_branch(
+            &session_id,
+            temp_dir.to_str().unwrap(),
+        );
+
+        assert!(branch_path.is_some(), "存在的目錄應回傳分支路徑");
+        let bp = branch_path.unwrap();
+        assert!(bp.exists(), "分支路徑應實際存在");
+
+        // 清理
+        let _ = BranchMgr::drop_branch(&session_id);
+        let _ = std::fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn drop_branch_nonexistent_does_not_panic() {
+        let result = BranchMgr::drop_branch("nonexistent-session-xyz");
+        assert!(result.is_ok(), "捨棄不存在的分支不應報錯");
+    }
+
+    #[test]
+    fn drop_branch_removes_directory() {
+        let session_id = format!("drop-test-{}", uuid::Uuid::new_v4().to_string().split('-').next().unwrap());
+        let branch_dir = PathBuf::from(format!("/tmp/sass_branches/{}", session_id));
+        std::fs::create_dir_all(&branch_dir).unwrap();
+        assert!(branch_dir.exists());
+
+        let result = BranchMgr::drop_branch(&session_id);
+        assert!(result.is_ok());
+        assert!(!branch_dir.exists(), "捨棄後分支目錄應被移除");
+    }
+
+    #[test]
+    fn merge_branch_removes_branch_dir() {
+        let session_id = format!("merge-test-{}", uuid::Uuid::new_v4().to_string().split('-').next().unwrap());
+        let branch_dir = PathBuf::from(format!("/tmp/sass_branches/{}", session_id));
+        std::fs::create_dir_all(&branch_dir).unwrap();
+
+        let result = BranchMgr::merge_branch(&session_id, "/tmp");
+        assert!(result.is_ok());
+        assert!(!branch_dir.exists(), "合併後分支目錄應被移除");
+    }
+}
+

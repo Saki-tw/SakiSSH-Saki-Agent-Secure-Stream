@@ -9,7 +9,7 @@
 //   - 輸出無可辨識模式（ChaCha20 stream cipher）
 //   - 混雜偽 ICMP 封包結構，讓 Agent 以為是網路流量
 //   - 結尾 Saki✰ 簽名
-package tarpit_payload
+package defense
 
 import (
 	"crypto/sha256"

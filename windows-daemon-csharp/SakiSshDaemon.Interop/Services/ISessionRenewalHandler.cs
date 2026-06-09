@@ -6,7 +6,7 @@
 // 此介面供 C# Plugin 層實作 Session 續期的業務邏輯。
 // 實際 gRPC 服務端由 Rust core 處理，C# 端透過此介面接收處理委派。
 //
-// 參考: draft-sakistudio-sass-05 §5.2
+// 參考: draft-sakistudio-sass-00 §5.2
 // Copyright (c) 2026 Saki Studio. All rights reserved.
 // =============================================================================
 

@@ -6,7 +6,7 @@
 //   "TLS Exporter Binding for Cognitive Challenge" — RFC 5705, RFC 9266
 //
 // 規格：
-//   Label:   "EXPORTER-sakissh-chacha20-v14"
+//   Label:   "EXPORTER-sakissh-chacha20-v15"
 //   Context: Session UUID (16 bytes)
 //   Length:  44 bytes (32-byte key + 12-byte nonce)
 //
@@ -32,7 +32,7 @@ final class TlsExporterBinding {
 
     /// TLS Exporter Label（RFC 5705）
     /// 對應 RFC 中定義的 label 字串
-    static let exporterLabel = "EXPORTER-sakissh-chacha20-v14"
+    static let exporterLabel = "EXPORTER-sakissh-chacha20-v15"
 
     /// 匯出金鑰材料長度（bytes）
     /// 32-byte ChaCha20 key + 12-byte nonce = 44 bytes

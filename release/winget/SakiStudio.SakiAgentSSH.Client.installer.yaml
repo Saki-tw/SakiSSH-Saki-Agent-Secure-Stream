@@ -7,7 +7,7 @@ Commands:
   - sakissh
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/nicetry-hackme/SakiAgentSSH/releases/download/v1.4.0/sakissh.exe
-    InstallerSha256: EB74B8531CFF1C0AA0A03430F11C759E1BC712244B67991FA69F8E1AA770356A
+    InstallerUrl: https://github.com/saki-tw/SakiAgentSSH/releases/download/v1.4.0/sakissh.exe
+    InstallerSha256: CC940EEC60CBDA039E3A17E17CAFF748E7B2780D956289B58DF9432B3164B94A
 ManifestType: installer
 ManifestVersion: 1.6.0

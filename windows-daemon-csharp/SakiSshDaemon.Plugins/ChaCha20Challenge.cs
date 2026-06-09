@@ -3,7 +3,7 @@
 // SASS Plugin #1: ChaCha20-Poly1305 認知挑戰
 //
 // 對應 Rust: challenge_store.rs + threat_defense.rs
-// RFC 參考: draft-sakistudio-sass-05 Appendix C.1 (anchor: chacha20-challenge)
+// RFC 參考: draft-sakistudio-sass-00 Appendix C.1 (anchor: chacha20-challenge)
 //
 // 實作流程:
 // 1. Daemon 產生隨機 32-byte key、12-byte nonce、64-byte plaintext
@@ -28,7 +28,7 @@ namespace SakiSshDaemon.Plugins
     /// <summary>
     /// SASS Plugin #1: ChaCha20-Poly1305 認知挑戰。
     /// <para>
-    /// RFC draft-sakistudio-sass-05 §C.1: 使用 ChaCha20-Poly1305 (RFC 8439)
+    /// RFC draft-sakistudio-sass-00 §C.1: 使用 ChaCha20-Poly1305 (RFC 8439)
     /// 作為認知挑戰機制。挑戰密文對缺乏共享金鑰的觀察者而言，
     /// 必須與隨機資料不可區分。
     /// </para>
