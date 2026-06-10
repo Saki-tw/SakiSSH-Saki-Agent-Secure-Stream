@@ -10,4 +10,4 @@ Installers:
     InstallerUrl: https://github.com/saki-tw/SakiAgentSSH/releases/download/v1.4.0/sakissh.exe
     InstallerSha256: CC940EEC60CBDA039E3A17E17CAFF748E7B2780D956289B58DF9432B3164B94A
 ManifestType: installer
-ManifestVersion: 1.6.0
+ManifestVersion: 1.12.0
