@@ -1,14 +1,14 @@
 # Evidence Corpus — 0226 Incident and Corroborating Events
 
-**Sanitized**: 2026-05-30  
-**Scope**: DEF CON 34 AI Village Poster + AISec 2026 Paper  
+**Sanitized**: 2026-05-30 (updated 2026-06-12)  
+**Scope**: IEEE S&P 2027 + AISec 2026 Paper  
 **Author**: [Anonymous]
 
 ---
 
 ## Overview
 
-This directory contains sanitized primary-source evidence documenting autonomous AI coding agent behavioral divergence observed in a production multi-agent development environment. All files have been redacted to remove:
+This directory contains sanitized primary-source evidence documenting autonomous AI coding agent behavioral divergence observed in a production multi-agent development environment. The evidence spans a four-month deployment period (February–June 2026) during which the operator conducted **7,000+ agent sessions** generating approximately 325 MB of command logs per day. The **72 sessions** analyzed in the accompanying paper were selected from this corpus as incident windows exhibiting confirmed behavioral divergence. All files have been redacted to remove:
 
 - Local file paths → `$PROJECT_ROOT` / `$HOME`
 - GitHub tokens → `[REDACTED_TOKEN]`
@@ -61,6 +61,41 @@ Primary-source documents autonomously created by the agent during the 100-minute
 | File | Description |
 |------|-------------|
 | [E1_corpus_statistics.md](E1_corpus_statistics.md) | Complete corpus size/line-count verification |
+
+### F. Incident Case Studies
+
+| File | Description |
+|------|-------------|
+| [F1_607_incident_summary.md](F1_607_incident_summary.md) | June 7 2026: Constructive agent infrastructure damage — kernel trust cache poisoning via codesign/pkill escalation |
+| [F2_operational_scale.md](F2_operational_scale.md) | Operational scale declaration — daily log volumes and session counts |
+
+### G. Observation Infrastructure
+
+| File | Description |
+|------|-------------|
+| [G1_observation_layers.md](G1_observation_layers.md) | Multi-layer observation declaration — 5 independent logging layers (IDE → gRPC → DNS → NAT → IdP) |
+
+### H. Defense Measurements
+
+| File | Description |
+|------|-------------|
+| [H1_stls_ring0_reduction.md](H1_stls_ring0_reduction.md) | STLS Ring 0 system prompt section reduction — 55→20 sections, >75% token reduction |
+
+### C4. Protocol Analysis
+
+| File | Description |
+|------|-------------|
+| [C4_proto_field_classification.md](C4_proto_field_classification.md) | Protobuf field classification — surveillance vs. operational across 22 proto definitions |
+
+---
+
+## Logger Source Code
+
+The logging infrastructure used to capture evidence in this corpus (IDE session logs, gRPC interception, command audit trails) is implemented as part of the SASS (Safe Agent Secure Stream) protocol. The logger source code records backend agent behavior (command execution, file operations, network requests) rather than front-end UI interactions. Source code is available upon request and will be published to GitHub upon paper acceptance.
+
+## Availability
+
+The defense tools described in the accompanying paper (STLS reverse proxy and REAPER rule engine) are publicly available. STLS is distributed as an open-source Rust binary. REAPER is available on the macOS App Store (NT$199). Academic and proof-of-concept use can be arranged at no cost by contacting the authors.
 
 ---
 
