@@ -12,8 +12,8 @@
 
 ## 二、文件確認
 
-- [ ] `draft-sakistudio-sass-00.txt` 已存在於本目錄
-- [ ] 確認文件標題為 `SASS: SSH Agent Signature Scheme`
+- [ ] `draft-sakistudio-sass-07.txt` 已存在於本目錄
+- [ ] 確認文件標題為 `SakiAgentSSH Secure Protocol Specification`
 - [ ] 確認文件中的作者姓名與 `AUTHOR_INFO.md` 一致
 - [ ] 確認文件中的 email 與 `AUTHOR_INFO.md` 一致
 
@@ -28,7 +28,7 @@
 
 - [ ] 前往 <https://datatracker.ietf.org/submit/>
 - [ ] 選擇 **"Upload a new Internet-Draft"**
-- [ ] 上傳 `draft-sakistudio-sass-00.txt`
+- [ ] 上傳 `draft-sakistudio-sass-07.txt`
 - [ ] 選擇 **"Individual submission"**
 - [ ] 確認作者資訊正確
 - [ ] 點擊提交

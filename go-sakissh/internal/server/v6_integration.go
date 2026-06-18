@@ -3,7 +3,7 @@
 // SASS v1.4 — 6-Response 狀態機 (Total Response Mapping)
 //
 // 對應 Rust: v6_integration.rs (MySsh::execute_stream_v6)
-// RFC 參考: draft-sakistudio-sass-00 §4 (6-response-state-machine)
+// RFC 參考: draft-sakistudio-sass-07 §4 (6-response-state-machine)
 //
 // 六種回應映射:
 //   R1(EXECUTE)  — 正常執行

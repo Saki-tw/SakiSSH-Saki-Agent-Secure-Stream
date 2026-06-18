@@ -1,6 +1,6 @@
 # windows-daemon-csharp — SASS C# Windows 服務 Daemon
 
-> **SASS v1.4** · **RFC**: draft-sakistudio-sass-05
+> **SASS v5.0** · **RFC**: draft-sakistudio-sass-07
 >
 > [🇹🇼 繁體中文](#繁體中文) | [🇺🇸 English](#english) | [🇯🇵 日本語](#日本語)
 
@@ -10,7 +10,7 @@
 
 ## 簡介
 
-`windows-daemon-csharp` 是 **SASS (Saki Agent Secure Stream)** 協議的 C# 實作，提供原生 Windows daemon，以 .NET 8 Worker Service 架構運行。它實作 RFC draft-sakistudio-sass-05 定義的所有 7 個 Plugin，並透過 **Rust FFI interop** (P/Invoke) 處理效能關鍵的加密操作（ChaCha20-Poly1305 和 ED25519）。
+`windows-daemon-csharp` 是 **SASS (Saki Agent Secure Stream)** 協議的 C# 實作，提供原生 Windows daemon，以 .NET 8 Worker Service 架構運行。它實作 RFC draft-sakistudio-sass-07 定義的所有 7 個 Plugin，並透過 **Rust FFI interop** (P/Invoke) 處理效能關鍵的加密操作（ChaCha20-Poly1305 和 ED25519）。
 
 ### 與 SASS RFC 的關係
 
@@ -97,7 +97,7 @@ sc.exe start SakiSshDaemon
 
 ## Introduction
 
-`windows-daemon-csharp` is the C# implementation of the **SASS (Saki Agent Secure Stream)** protocol, providing a native Windows daemon running as a .NET 8 Worker Service. It implements all 7 Plugins defined in RFC draft-sakistudio-sass-05, using **Rust FFI interop** (P/Invoke) for performance-critical cryptographic operations (ChaCha20-Poly1305 and ED25519).
+`windows-daemon-csharp` is the C# implementation of the **SASS (Saki Agent Secure Stream)** protocol, providing a native Windows daemon running as a .NET 8 Worker Service. It implements all 7 Plugins defined in RFC draft-sakistudio-sass-07, using **Rust FFI interop** (P/Invoke) for performance-critical cryptographic operations (ChaCha20-Poly1305 and ED25519).
 
 ### Relationship to SASS RFC
 
@@ -184,7 +184,7 @@ All Plugins implement the `IPlugin` interface, located in `SakiSshDaemon.Plugins
 
 ## はじめに
 
-`windows-daemon-csharp` は **SASS (Saki Agent Secure Stream)** プロトコルの C# 実装で、.NET 8 Worker Service として実行されるネイティブ Windows daemon を提供します。RFC draft-sakistudio-sass-05 で定義されたすべての 7 つの Plugin を実装し、パフォーマンスが重要な暗号操作（ChaCha20-Poly1305 と ED25519）には **Rust FFI interop** (P/Invoke) を使用します。
+`windows-daemon-csharp` は **SASS (Saki Agent Secure Stream)** プロトコルの C# 実装で、.NET 8 Worker Service として実行されるネイティブ Windows daemon を提供します。RFC draft-sakistudio-sass-07 で定義されたすべての 7 つの Plugin を実装し、パフォーマンスが重要な暗号操作（ChaCha20-Poly1305 と ED25519）には **Rust FFI interop** (P/Invoke) を使用します。
 
 ### SASS RFC との関係
 
@@ -254,4 +254,4 @@ dotnet test
 
 ---
 
-*Saki Studio · SASS v1.4 · draft-sakistudio-sass-05*
+*Saki Studio · SASS v5.0 · draft-sakistudio-sass-07*

@@ -3,7 +3,7 @@
 // SASS v1.4 Capability-Based Permission Model (5 維度 Capability)
 //
 // 對應 Rust: capability.rs (CapabilitySet)
-// RFC 參考: draft-sakistudio-sass-00 §3.2 (capability-model)
+// RFC 參考: draft-sakistudio-sass-07 §3.2 (capability-model)
 //
 // 每個 SSH key 綁定一組 CapabilitySet，定義五維邊界:
 //   1. 路徑 (Path) — allowed_paths / denied_paths 前綴匹配

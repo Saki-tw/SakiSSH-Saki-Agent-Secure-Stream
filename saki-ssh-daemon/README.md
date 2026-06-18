@@ -1,6 +1,6 @@
 # saki-ssh-daemon — SASS Rust 參考實作
 
-> **SASS v1.4** · **RFC**: draft-sakistudio-sass-05
+> **SASS v5.0** · **RFC**: draft-sakistudio-sass-07
 >
 > [🇹🇼 繁體中文](#繁體中文) | [🇺🇸 English](#english) | [🇯🇵 日本語](#日本語)
 
@@ -10,7 +10,7 @@
 
 ## 簡介
 
-`saki-ssh-daemon` 是 **SASS (Saki Agent Secure Stream)** 協議的主要參考實作，使用 Rust 編寫。它同時包含 daemon 和 client，實作 RFC draft-sakistudio-sass-05 定義的所有 7 個 Plugin，是 SASS 生態系中涵蓋最完整的實作。
+`saki-ssh-daemon` 是 **SASS (Saki Agent Secure Stream)** 協議的主要參考實作，使用 Rust 編寫。它同時包含 daemon 和 client，實作 RFC draft-sakistudio-sass-07 定義的所有 7 個 Plugin，是 SASS 生態系中涵蓋最完整的實作。
 
 本目錄為 Cargo workspace，包含：
 - **Daemon** (`sakisshd`)：守護進程，部署於運算端
@@ -101,7 +101,7 @@ cargo test --workspace
 
 ## Introduction
 
-`saki-ssh-daemon` is the primary reference implementation of the **SASS (Saki Agent Secure Stream)** protocol, written in Rust. It includes both daemon and client, implementing all 7 Plugins defined in RFC draft-sakistudio-sass-05 — the most complete implementation in the SASS ecosystem.
+`saki-ssh-daemon` is the primary reference implementation of the **SASS (Saki Agent Secure Stream)** protocol, written in Rust. It includes both daemon and client, implementing all 7 Plugins defined in RFC draft-sakistudio-sass-07 — the most complete implementation in the SASS ecosystem.
 
 This directory is a Cargo workspace containing:
 - **Daemon** (`sakisshd`): deployed on the compute plane
@@ -161,7 +161,7 @@ cargo test --workspace
 
 ## はじめに
 
-`saki-ssh-daemon` は **SASS (Saki Agent Secure Stream)** プロトコルの主要な参照実装であり、Rust で書かれています。daemon と client の両方を含み、RFC draft-sakistudio-sass-05 で定義されたすべての 7 つの Plugin を実装しています。
+`saki-ssh-daemon` は **SASS (Saki Agent Secure Stream)** プロトコルの主要な参照実装であり、Rust で書かれています。daemon と client の両方を含み、RFC draft-sakistudio-sass-07 で定義されたすべての 7 つの Plugin を実装しています。
 
 このディレクトリは Cargo ワークスペースであり、以下を含みます：
 - **Daemon** (`sakisshd`)：計算プレーンにデプロイ
@@ -208,4 +208,4 @@ cargo test --workspace
 
 ---
 
-*Saki Studio · SASS v1.4 · draft-sakistudio-sass-05*
+*Saki Studio · SASS v5.0 · draft-sakistudio-sass-07*

@@ -1,7 +1,7 @@
 # SakiAgentSSH 文檔索引 (DOC_INDEX)
 
-> **更新時間**：2026-03-06
-> **專案版本**：v1.4.0（架構報告 v2.0）
+> **更新時間**：2026-06-16
+> **專案版本**：v5.0.0（draft-sakistudio-sass-07）
 
 ## 專案概述
 
@@ -16,6 +16,8 @@ SakiAgentSSH — 基於 gRPC 的跨機 Agent 執行橋樑，取代傳統 SSH，�
 | [BUILDING.md](../../BUILDING.md) | 編譯指南 (EN) | ✅ |
 | [BUILDING_zh-TW.md](../../BUILDING_zh-TW.md) | 編譯指南 (繁中) | ✅ |
 | [BUILDING_ja.md](../../BUILDING_ja.md) | 編譯指南 (日文) | ✅ |
+| [CONTEXT_MAP.md](CONTEXT_MAP.md) | 專案上下文地圖 | ✅ 新增 |
+| [CreatioExNihilo.md](CreatioExNihilo.md) | 專案引導提示詞 | ✅ 新增 |
 
 ## 多語系文檔
 

@@ -221,7 +221,7 @@ mod tests {
         logger.log(AuditEvent::AuthFailure {
             agent_name: "rogue-agent".to_string(),
             reason: "invalid key".to_string(),
-            remote_addr: "192.168.1.100".to_string(),
+            remote_addr: "192.168.1.x".to_string(),
         });
 
         logger.log(AuditEvent::CommandExecute {

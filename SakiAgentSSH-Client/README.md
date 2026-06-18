@@ -1,6 +1,6 @@
 # SakiAgentSSH-Client — SASS Swift macOS 客戶端
 
-> **SASS v1.4** · **RFC**: draft-sakistudio-sass-05
+> **SASS v5.0** · **RFC**: draft-sakistudio-sass-07
 >
 > [🇹🇼 繁體中文](#繁體中文) | [🇺🇸 English](#english) | [🇯🇵 日本語](#日本語)
 
@@ -286,4 +286,4 @@ xcodebuild test -project SakiAgentSSHClient.xcodeproj \
 
 ---
 
-*Saki Studio · SASS v1.4 · draft-sakistudio-sass-05*
+*Saki Studio · SASS v5.0 · draft-sakistudio-sass-07*

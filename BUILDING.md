@@ -1,6 +1,6 @@
 # SASS 建置指南 / SASS Building Guide
 
-> **SASS v1.4** · **RFC**: draft-sakistudio-sass-05
+> **SASS v5.0** · **RFC**: draft-sakistudio-sass-07
 >
 > [🇹🇼 繁體中文](#繁體中文) | [🇺🇸 English](#english)
 
@@ -312,10 +312,10 @@ hdiutil create -volname "SakiAgentSSH Daemon" \
 
 ```bash
 # 編譯 RFC Internet-Draft
-xml2rfc docs/ietf-submission/draft-sakistudio-sass-05.xml --text --html
+xml2rfc docs/ietf-submission/draft-sakistudio-sass-07.xml --text --html
 
 # 格式檢查
-idnits docs/ietf-submission/draft-sakistudio-sass-05.txt
+idnits docs/ietf-submission/draft-sakistudio-sass-07.txt
 ```
 
 ---
@@ -608,8 +608,8 @@ xcodebuild test -project SakiAgentSSHClient.xcodeproj \
 ## RFC Compilation & Validation
 
 ```bash
-xml2rfc docs/ietf-submission/draft-sakistudio-sass-05.xml --text --html
-idnits docs/ietf-submission/draft-sakistudio-sass-05.txt
+xml2rfc docs/ietf-submission/draft-sakistudio-sass-07.xml --text --html
+idnits docs/ietf-submission/draft-sakistudio-sass-07.txt
 ```
 
 ---
@@ -647,4 +647,4 @@ idnits docs/ietf-submission/draft-sakistudio-sass-05.txt
 
 ---
 
-*Saki Studio · SASS v1.4 · draft-sakistudio-sass-05*
+*Saki Studio · SASS v5.0 · draft-sakistudio-sass-07*

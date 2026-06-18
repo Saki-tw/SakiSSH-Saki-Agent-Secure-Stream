@@ -23,7 +23,7 @@ pub mod sakissh {
 )]
 struct Cli {
     /// Remote address(es), comma-separated for failover
-    /// e.g. "http://[HOST_C]:19284,http://100.64.0.1:19284"
+    /// e.g. "http://[HOST_C]:19284,http://100.64.x.x:19284"
     #[arg(short, long, env = "SAKISSH_ADDR")]
     addr: String,
 

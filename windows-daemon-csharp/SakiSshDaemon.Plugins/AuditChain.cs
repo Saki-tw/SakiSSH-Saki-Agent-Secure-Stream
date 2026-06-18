@@ -3,7 +3,7 @@
 // SASS Plugin #4: ED25519 Hash Chain Audit Log
 //
 // 對應 Rust: audit.rs (AuditLogger + audit_writer)
-// RFC 參考: draft-sakistudio-sass-05 Appendix C.4 (anchor: ed25519-audit)
+// RFC 參考: draft-sakistudio-sass-07 Appendix C.4 (anchor: ed25519-audit)
 //
 // Hash Chain 結構:
 // - timestamp: RFC 3339 timestamp
@@ -110,7 +110,7 @@ namespace SakiSshDaemon.Plugins
     /// <summary>
     /// SASS Plugin #4: ED25519 Hash Chain Audit Log。
     /// <para>
-    /// RFC draft-sakistudio-sass-05 §C.4: 使用 ED25519 (RFC 8032) 簽名
+    /// RFC draft-sakistudio-sass-07 §C.4: 使用 ED25519 (RFC 8032) 簽名
     /// 搭配 SHA256 hash chain，實現前向安全的審計日誌。
     /// 創世記錄的 chain_hash 使用種子 "SASS_GENESIS_BLOCK"。
     /// </para>

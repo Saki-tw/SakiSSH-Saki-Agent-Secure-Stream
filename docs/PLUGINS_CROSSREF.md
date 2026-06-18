@@ -1,6 +1,6 @@
 # SASS Plugins — RFC Cross-Reference
 
-> **RFC**: draft-sakistudio-sass-05, Appendix C
+> **RFC**: draft-sakistudio-sass-07, Appendix C
 >
 > **最後審查**: 2026-06-05
 >
@@ -90,7 +90,7 @@
 | AuditVerifier: Curve25519.Signing | ✅ `Curve25519.Signing.PublicKey` | |
 | AuditVerifier: genesis seed | ✅ `"SASS_GENESIS_BLOCK"` | |
 | EnvInjectorClient: 重導向表 | ✅ 6 筆完整對應 RFC | |
-| RFC 版本引用 | ✅ `draft-sakistudio-sass-05` | 2026-06-05 修正 |
+| RFC 版本引用 | ✅ `draft-sakistudio-sass-07` | 2026-06-05 修正 |
 
 ### ✅ C# (Windows Daemon) — 合規
 
@@ -111,7 +111,7 @@
 | TlsExporterBinding: UUID 16B | ✅ `SessionUuidLength = 16` | |
 | TlsExporterBinding: .NET EKM | ⚠️ HMAC fallback | .NET 8 無 SslStream EKM API |
 | IPlugin 介面 | ✅ 7 plugins 全部實作 | |
-| RFC 版本引用 | ✅ `draft-sakistudio-sass-05` | 2026-06-05 修正 |
+| RFC 版本引用 | ✅ `draft-sakistudio-sass-07` | 2026-06-05 修正 |
 
 ### 已知限制 (Known Limitations)
 

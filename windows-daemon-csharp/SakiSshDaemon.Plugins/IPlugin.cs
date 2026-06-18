@@ -3,7 +3,7 @@
 // SASS (Saki Agent Secure Stream) — Plugin 介面定義
 //
 // 所有 7 個 Plugins 必須實作此介面。
-// 參考: draft-sakistudio-sass-05 Appendix C
+// 參考: draft-sakistudio-sass-07 Appendix C
 // Copyright (c) 2026 Saki Studio. All rights reserved.
 // =============================================================================
 
@@ -16,7 +16,7 @@ namespace SakiSshDaemon.Plugins
     /// <summary>
     /// SASS Plugin 統一介面。
     /// <para>
-    /// 對應 RFC draft-sakistudio-sass-05 Appendix C 定義的 7 個 Plugins：
+    /// 對應 RFC draft-sakistudio-sass-07 Appendix C 定義的 7 個 Plugins：
     /// <list type="number">
     ///   <item><description>ChaCha20-Poly1305 Cognitive Challenge (§C.1)</description></item>
     ///   <item><description>TLS Exporter Binding (§C.2)</description></item>

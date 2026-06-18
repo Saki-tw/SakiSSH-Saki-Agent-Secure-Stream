@@ -8,7 +8,7 @@
 //   - RFC 5705: Keying Material Exporters for TLS
 //   - RFC 9266: Channel Bindings for TLS 1.3
 //   - RFC 8446 §7.5: Exporters
-//   - draft-sakistudio-sass-05 Appendix C.2 (anchor: tls-exporter-binding)
+//   - draft-sakistudio-sass-07 Appendix C.2 (anchor: tls-exporter-binding)
 //
 // TLS Exporter Label: "EXPORTER-sakissh-chacha20-v15"
 // Context: Session UUID (16 bytes)
@@ -224,7 +224,7 @@ namespace SakiSshDaemon.Plugins
     /// <summary>
     /// SASS Plugin #2: TLS Exporter Binding。
     /// <para>
-    /// RFC draft-sakistudio-sass-05 §C.2: 從 TLS session 推導 Keying Material，
+    /// RFC draft-sakistudio-sass-07 §C.2: 從 TLS session 推導 Keying Material，
     /// 用於通道綁定 (Channel Binding)。確保認知挑戰在同一 TLS session 中完成。
     /// </para>
     /// <para>

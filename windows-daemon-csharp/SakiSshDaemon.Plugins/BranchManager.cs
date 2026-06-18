@@ -3,7 +3,7 @@
 // SASS Plugin #6: Transparent Branching via Symlink Tree
 //
 // 對應 Rust: branch_mgr.rs (BranchMgr)
-// RFC 參考: draft-sakistudio-sass-05 Appendix C.6 (anchor: symlink-tree)
+// RFC 參考: draft-sakistudio-sass-07 Appendix C.6 (anchor: symlink-tree)
 //
 // 分支結構:
 // /tmp/sass_branches/{session_id}/
@@ -34,7 +34,7 @@ namespace SakiSshDaemon.Plugins
     /// <summary>
     /// SASS Plugin #6: Transparent Branching via Symlink Tree。
     /// <para>
-    /// RFC draft-sakistudio-sass-05 §C.6: 在 Agent 執行修改前，
+    /// RFC draft-sakistudio-sass-07 §C.6: 在 Agent 執行修改前，
     /// 將目標目錄動態隔離。Agent 的所有寫入都會進入容量極小的高層分支，
     /// 而不會污染底層系統。
     /// </para>

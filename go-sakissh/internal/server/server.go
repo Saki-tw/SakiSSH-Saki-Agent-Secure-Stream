@@ -26,8 +26,8 @@ func (s *SakiSshServer) Ping(ctx context.Context, req *pb.PingRequest) (*pb.Ping
 	}, nil
 }
 
-func (s *SakiSshServer) Auth(ctx context.Context, req *pb.AuthRequest) (*pb.AuthResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Auth not implemented")
+func (s *SakiSshServer) Authenticate(ctx context.Context, req *pb.AuthRequest) (*pb.AuthResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Authenticate not implemented")
 }
 
 // NOTE: GetAuditPublicKey RPC 已從 proto 移除，此方法暫時停用

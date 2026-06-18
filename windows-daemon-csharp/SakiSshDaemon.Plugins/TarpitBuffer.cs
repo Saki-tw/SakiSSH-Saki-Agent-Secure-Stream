@@ -4,7 +4,7 @@
 //
 // 對應 Rust: tarpit_payload.rs (SakiTarpitGenerator)
 // 對應 Go:   tarpit_payload.go (SakiTarpitGenerator)
-// RFC 參考: draft-sakistudio-sass-05 Appendix C.3 (anchor: tarpit-buffer)
+// RFC 參考: draft-sakistudio-sass-07 Appendix C.3 (anchor: tarpit-buffer)
 //           + C.3.1 Pseudo-ICMP Payload Generation (anchor: tarpit-icmp-gen)
 //
 // 串流參數:
@@ -234,7 +234,7 @@ namespace SakiSshDaemon.Plugins
     /// <summary>
     /// SASS Plugin #3: Zero-Allocation Tarpit Static Buffer with Pseudo-ICMP。
     /// <para>
-    /// RFC draft-sakistudio-sass-05 §C.3 + §C.3.1: 全域共用 64 KiB 靜態高熵 Buffer，
+    /// RFC draft-sakistudio-sass-07 §C.3 + §C.3.1: 全域共用 64 KiB 靜態高熵 Buffer，
     /// 所有連線共享，空間開銷為 O(1)。
     /// 以慢速回傳 40 MiB 偽 ICMP 封包結構的垃圾資料，強制反向耗竭 Agent 的
     /// Token Context、V8 記憶體與 API 預算。

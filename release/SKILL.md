@@ -85,13 +85,13 @@ Expected response includes: daemon_version, os, shell_type, shell_path, uptime_s
 
 ```bash
 # Single command
-sakissh --addr http://192.168.1.100:19284 exec -- 'echo hello'
+sakissh --addr http://192.168.1.x:19284 exec -- 'echo hello'
 
 # With working directory
-sakissh --addr http://192.168.1.100:19284 exec --cwd /tmp -- 'ls -la'
+sakissh --addr http://192.168.1.x:19284 exec --cwd /tmp -- 'ls -la'
 
 # With environment variables
-sakissh --addr http://192.168.1.100:19284 exec --env RUST_LOG=debug -- 'cargo build'
+sakissh --addr http://192.168.1.x:19284 exec --env RUST_LOG=debug -- 'cargo build'
 ```
 
 ### File transfer
@@ -111,7 +111,7 @@ sakissh --addr <addr> cp remote:/path/on/remote.txt local_file.txt
 Comma-separated addresses with 3-second timeout per path:
 
 ```bash
-sakissh --addr "http://192.168.1.100:19284,http://100.64.0.1:19284" ping
+sakissh --addr "http://192.168.1.x:19284,http://100.64.x.x:19284" ping
 ```
 
 Agent logic: try LAN first, fall back to Tailscale/VPN.
@@ -131,7 +131,7 @@ The `execution_id` is returned in ExecuteStream responses. Ctrl+C during `exec` 
 ### Environment variable for address
 
 ```bash
-export SAKISSH_ADDR="http://192.168.1.100:19284"
+export SAKISSH_ADDR="http://192.168.1.x:19284"
 sakissh ping
 ```
 

@@ -20,7 +20,7 @@ func NewAuthenticator() *AgentAuthenticator {
 	}
 }
 
-func (s *SakiSshServer) AuthCognitiveChallenge(ctx context.Context, req *pb.CognitiveChallengeRequest) (*pb.CognitiveChallengeResponse, error) {
+func (s *SakiSshServer) CognitiveChallenge(ctx context.Context, req *pb.ChallengeRequest) (*pb.ChallengeResponse, error) {
 	// For Go implementation demo
 	return nil, status.Errorf(codes.Unimplemented, "cognitive challenge auth not fully implemented in Go skeleton")
 }

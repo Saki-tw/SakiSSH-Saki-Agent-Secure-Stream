@@ -3,13 +3,11 @@ package server
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os/exec"
 	"time"
 
-	"github.com/sakistudio/sakissh-go/internal/codec"
 	pb "github.com/sakistudio/sakissh-go/proto/sakissh"
 )
 
@@ -203,20 +201,5 @@ func (s *SakiSshServer) ExecuteStream(req *pb.ExecuteRequest, stream pb.SakiSSH_
 }
 
 func parseRequest(req *pb.ExecuteRequest) (string, []string, string, map[string]string, error) {
-	if len(req.RawPayload) > 0 {
-		decoded, err := codec.DecodePayload(string(req.RawPayload))
-		if err != nil {
-			return "", nil, "", nil, err
-		}
-		var payload struct {
-			Command string            `json:"command"`
-			Args    []string          `json:"args"`
-			Cwd     string            `json:"cwd"`
-			Env     map[string]string `json:"env"`
-		}
-		if err := json.Unmarshal(decoded, &payload); err == nil && payload.Command != "" {
-			return payload.Command, payload.Args, payload.Cwd, payload.Env, nil
-		}
-	}
 	return req.Command, req.Args, req.Cwd, req.Env, nil
 }

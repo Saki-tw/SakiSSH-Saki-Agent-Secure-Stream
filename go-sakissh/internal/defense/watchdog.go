@@ -3,7 +3,7 @@
 // SASS v1.4 靜默超時與無頭環境看門狗 (Headless Watchdog & Anti-Hang)
 //
 // 對應 Rust: watchdog.rs (ProcessMonitor)
-// RFC 參考: draft-sakistudio-sass-00 §6.3 (dual-watchdog)
+// RFC 參考: draft-sakistudio-sass-07 §6.3 (dual-watchdog)
 //
 // 防禦 Codex 等 Agent 的 Computer Use 或惡意佔用 (Slowloris/Hang)。
 // 同時檢查「靜默超時 (Inactivity)」與「絕對超時 (Absolute)」。
@@ -26,7 +26,7 @@ import (
 //  1. Inactivity Timeout: 防禦 GUI hang 或 interactive prompt（Codex 防禦）
 //  2. Absolute Timeout: 防禦 Slowloris 攻擊（Agent 每 29 秒送 1 byte）
 //
-// RFC 參考: draft-sakistudio-sass-00 §6.3 (dual-watchdog)
+// RFC 參考: draft-sakistudio-sass-07 §6.3 (dual-watchdog)
 type ProcessMonitor struct {
 	mu                sync.RWMutex
 	lastActivity      time.Time

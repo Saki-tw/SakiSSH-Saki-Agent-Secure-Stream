@@ -14,7 +14,7 @@
 
 1. 前往 <https://datatracker.ietf.org/submit/>
 2. 選擇 **"Upload a new Internet-Draft"**
-3. 上傳 `draft-sakistudio-sass-00.txt`（位於本目錄）
+3. 上傳 `draft-sakistudio-sass-07.txt`（位於本目錄）
 4. 選擇 **"Individual submission"**
 5. 確認作者資訊（應與 `AUTHOR_INFO.md` 一致）
 6. 提交
@@ -41,7 +41,7 @@
 
 | 檔案 | 用途 |
 |------|------|
-| `draft-sakistudio-sass-00.txt` | 主要遞交文件（I-D 純文字格式） |
+| `draft-sakistudio-sass-07.txt` | 主要遞交文件（I-D 純文字格式） |
 | `RFC_STRATEGY.md` | RFC 推進策略（路線比較、Email 範本、時程預估） |
 | `AUTHOR_INFO.md` | 作者資訊模板（遞交時填寫） |
 | `CHECKLIST.md` | 遞交前檢查清單 |

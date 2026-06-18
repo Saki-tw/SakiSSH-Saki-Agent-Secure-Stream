@@ -65,7 +65,7 @@ RFC 3552 (Guidelines for Writing RFC Security Considerations) assumes the end-sy
 
 ### Mitigation: SASS Protocol
 
-SASS (Saki Agent Secure Stream, `draft-sakistudio-sass-05`, posted to IETF Datatracker, currently in DISPATCH review) defines a 6-Response State Machine (R1 EXECUTE through R6 DROP) providing **Total Response Mapping** — every possible agent action maps to exactly one containment response. Key mechanisms include:
+SASS (Saki Agent Secure Stream, `draft-sakistudio-sass-07`, posted to IETF Datatracker, currently in DISPATCH review) defines a 6-Response State Machine (R1 EXECUTE through R6 DROP) providing **Total Response Mapping** — every possible agent action maps to exactly one containment response. Key mechanisms include:
 
 - **R2 CHALLENGE**: Cognitive challenges (e.g., ChaCha20-Poly1305 proof-of-work) to verify agent computational legitimacy
 - **R3 THROTTLE**: Graduated rate limiting with configurable Safety Gradient bounding worst-case loss at each tier

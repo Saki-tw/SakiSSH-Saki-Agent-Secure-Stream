@@ -35,27 +35,29 @@ SASS 屬於 **Security Area (SEC)**，需聯繫 SEC Area Director。
 ### Email 範本
 
 ```
-Subject: New Individual I-D: draft-sakistudio-sass-00 (SSH Agent Signature Scheme)
+Subject: New Individual I-D: draft-sakistudio-sass-07 (SakiAgentSSH Secure Protocol Specification)
 
 Dear [SEC Area Director Name],
 
-I have submitted an Individual Internet-Draft titled "SASS: SSH Agent 
-Signature Scheme" (draft-sakistudio-sass-00) and would appreciate your 
-guidance on the appropriate venue for its progression.
+I have submitted an Individual Internet-Draft titled "SakiAgentSSH
+Secure Protocol Specification" (draft-sakistudio-sass-07) and would
+appreciate your guidance on the appropriate venue for its progression.
 
-SASS defines a signature scheme that leverages existing SSH Agent 
-infrastructure (RFC 4253 key pairs) for general-purpose document and 
-message signing, without requiring additional key management overhead. 
-The protocol introduces an envelope format with domain separation, 
-timestamp binding, and algorithm agility while maintaining backward 
-compatibility with existing SSH deployments.
+SASS (Saki Agent Secure Stream protocol, version 5.0) is an
+application-layer overlay protocol specifically designed for
+authenticated remote command execution between autonomous AI agents.
+The protocol introduces Total Response Mapping, a Safety Gradient
+with 7-layer loss bounding, and active defense mechanisms while
+addressing the Rogue Agent threat model.
 
 Key aspects:
-- Extends SSH Agent Protocol (draft-miller-ssh-agent) for signing 
-  arbitrary data
-- Provides domain separation to prevent cross-protocol signature reuse
-- Supports Ed25519, ECDSA (P-256/P-384), and RSA key types
-- Defines a compact binary envelope format
+- Total Response Mapping: 6-state deterministic response machine
+  covering every possible agent behavior
+- Safety Gradient: 7-layer loss bounding with independent integrity
+  guarantees per layer
+- Active defense: Vi Swap and Zero-Allocation Tarpit mechanisms
+- Control-Transport Decoupling: transport-agnostic SAMM core with
+  pluggable profiles (gRPC/h2, WebSocket, raw TCP/CBOR)
 
 I believe this draft would be most appropriate for the secsh Working 
 Group, as it directly extends SSH Agent functionality. However, I am 
@@ -85,25 +87,27 @@ Saki Studio
 ### 步驟 2：在郵件列表發布 Draft
 
 ```
-Subject: [curdle] New I-D: draft-sakistudio-sass-00 (SSH Agent Signature Scheme)
+Subject: [curdle] New I-D: draft-sakistudio-sass-07 (SakiAgentSSH Secure Protocol Specification)
 
 Hi all,
 
-I'd like to introduce a new Individual I-D that defines a signature 
-scheme leveraging existing SSH Agent infrastructure.
+I'd like to introduce a new Individual I-D that defines a security
+framework for authenticated remote command execution between
+autonomous AI agents.
 
-draft-sakistudio-sass-00: SASS: SSH Agent Signature Scheme
+draft-sakistudio-sass-07: SakiAgentSSH Secure Protocol Specification
 https://datatracker.ietf.org/doc/draft-sakistudio-sass/
 
 Problem statement:
-SSH key pairs are already widely deployed and managed, but there is no 
-standardized way to use SSH Agent for general-purpose signing beyond 
-SSH authentication. Users who want to sign documents or messages must 
-maintain a separate key management infrastructure (GPG, etc.).
+The proliferation of autonomous AI-powered coding agents operating on
+remote machines introduces a critical threat model — the Rogue Agent.
+Existing protocols (SSH, Mosh, etc.) lack the fine-grained capability
+controls, active defenses, and deterministic response guarantees
+required for non-human operator management.
 
-SASS addresses this by defining a protocol for SSH Agent-based signing 
-with proper domain separation, timestamp binding, and a compact 
-envelope format.
+SASS (Saki Agent Secure Stream, v5.0) addresses this by defining an
+application-layer overlay protocol with Total Response Mapping, Safety
+Gradient, and active defense mechanisms.
 
 I welcome any feedback and would be interested in whether the WG 
 considers this in scope for adoption.
@@ -163,12 +167,12 @@ Thanks,
 ### 理想路線（secsh WG 採納）
 
 ```
-Month 0     ──  提交 I-D (draft-sakistudio-sass-00)
+Month 0     ──  提交 I-D (draft-sakistudio-sass-07)
 Month 1-2   ──  郵件列表討論、收集反饋
 Month 3     ──  參加 IETF Meeting，做 presentation
-Month 4-6   ──  根據反饋更新 Draft (-01)
+Month 4-6   ──  根據反饋更新 Draft (-08)
 Month 6-8   ──  WG Adoption Call
-Month 8-14  ──  WG 內部 review 與修訂 (-02, -03, ...)
+Month 8-14  ──  WG 內部 review 與修訂 (-09, -10, ...)
 Month 14-16 ──  WG Last Call
 Month 16-18 ──  IESG Review + IETF Last Call
 Month 18-22 ──  RFC Editor 排程與編輯

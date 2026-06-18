@@ -5,7 +5,7 @@
 // 使用 .NET 8 Worker Service 模板，作為 Windows Service 運行。
 // 核心加密走 Rust FFI，Plugin 邏輯由 C# 管理。
 //
-// 參考: draft-sakistudio-sass-05 Appendix C
+// 參考: draft-sakistudio-sass-07 Appendix C
 // Copyright (c) 2026 Saki Studio. All rights reserved.
 // =============================================================================
 

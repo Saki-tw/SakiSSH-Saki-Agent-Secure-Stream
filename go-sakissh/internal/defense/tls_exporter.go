@@ -7,7 +7,7 @@
 //   - RFC 5705: Keying Material Exporters for TLS
 //   - RFC 9266: Channel Bindings for TLS 1.3
 //   - RFC 8446 §7.5: Exporters
-//   - draft-sakistudio-sass-00 Appendix C.2 (anchor: tls-exporter-binding)
+//   - draft-sakistudio-sass-07 Appendix C.2 (anchor: tls-exporter-binding)
 //
 // TLS Exporter Label: "EXPORTER-sakissh-chacha20-v15"
 // Context: Session UUID (16 bytes)

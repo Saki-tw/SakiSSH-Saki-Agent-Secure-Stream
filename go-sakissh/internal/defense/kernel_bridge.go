@@ -3,7 +3,7 @@
 // SASS v1.4 Kernel Bridge - Ring-0 防禦通訊層 (Stub)
 //
 // 對應 Rust: kernel_bridge.rs (KernelBridge)
-// RFC 參考: draft-sakistudio-sass-00 §9.1 (kernel-defense-bridge)
+// RFC 參考: draft-sakistudio-sass-07 §9.1 (kernel-defense-bridge)
 //
 // 提供 SASS Daemon 統一的跨平台介面，與底層的 OS Driver 溝通。
 // 負責將 Spawn 產生的 Agent PID 註冊進系統核心中，物理閹割其權限。

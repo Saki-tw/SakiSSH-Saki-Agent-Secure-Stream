@@ -3,7 +3,7 @@
 // SASS v1.4 資源配額與排隊管理器 (Resource Quota & Queuing Manager)
 //
 // 對應 Rust: quota.rs (ResourceQuotaManager)
-// RFC 參考: draft-sakistudio-sass-00 §5.2 (resource-quota)
+// RFC 參考: draft-sakistudio-sass-07 §5.2 (resource-quota)
 //
 // 防禦 Agent Teams 高併發請求，避免 OS 資源耗盡。
 // 加入 Queue 深度上限，防禦記憶體爆破 (OOM Attack)。
@@ -38,7 +38,7 @@ type IdentityQuota struct {
 //   - 超過配額時進入佇列等待
 //   - 佇列深度有上限，防禦 DDoS 記憶體耗盡攻擊
 //
-// RFC 參考: draft-sakistudio-sass-00 §5.2 (resource-quota)
+// RFC 參考: draft-sakistudio-sass-07 §5.2 (resource-quota)
 type ResourceQuotaManager struct {
 	mu             sync.Mutex
 	quotas         map[string]*IdentityQuota

@@ -1,6 +1,6 @@
 # SASS Plugins API 參考 / SASS Plugins API Reference / SASS プラグイン API リファレンス
 
-> **SASS v1.4** · **RFC**: draft-sakistudio-sass-05, Appendix C
+> **SASS v5.0** · **RFC**: draft-sakistudio-sass-07, Appendix C
 >
 > [🇹🇼 繁體中文](#繁體中文) | [🇺🇸 English](#english) | [🇯🇵 日本語](#日本語)
 
@@ -10,7 +10,7 @@
 
 ## 概述
 
-本文件為 SASS RFC draft-sakistudio-sass-05 Appendix C 所定義的 7 個 Plugin 之 API 參考手冊。這些 Plugin 均為 **OPTIONAL**（可選）且 **INFORMATIVE**（資訊性），用於 Saki Studio 的參考實作。
+本文件為 SASS RFC draft-sakistudio-sass-07 Appendix C 所定義的 7 個 Plugin 之 API 參考手冊。這些 Plugin 均為 **OPTIONAL**（可選）且 **INFORMATIVE**（資訊性），用於 Saki Studio 的參考實作。
 
 ### 部署模型
 
@@ -287,7 +287,7 @@ signature  = ED25519_Sign(daemon_private_key, chain_hash)
 
 ## Overview
 
-This document serves as the API reference for the 7 Plugins defined in SASS RFC draft-sakistudio-sass-05 Appendix C. All Plugins are **OPTIONAL** and **INFORMATIVE**, specific to the Saki Studio reference implementation.
+This document serves as the API reference for the 7 Plugins defined in SASS RFC draft-sakistudio-sass-07 Appendix C. All Plugins are **OPTIONAL** and **INFORMATIVE**, specific to the Saki Studio reference implementation.
 
 ### Deployment Model
 
@@ -553,7 +553,7 @@ signature  = ED25519_Sign(daemon_private_key, chain_hash)
 
 ## 概要
 
-本ドキュメントは、SASS RFC draft-sakistudio-sass-05 Appendix C で定義された 7 つの Plugin の API リファレンスマニュアルです。すべての Plugin は **OPTIONAL**（任意）かつ **INFORMATIVE**（参考情報）であり、Saki Studio の参照実装に特化しています。
+本ドキュメントは、SASS RFC draft-sakistudio-sass-07 Appendix C で定義された 7 つの Plugin の API リファレンスマニュアルです。すべての Plugin は **OPTIONAL**（任意）かつ **INFORMATIVE**（参考情報）であり、Saki Studio の参照実装に特化しています。
 
 ### デプロイメントモデル
 
@@ -745,4 +745,4 @@ signature  = ED25519_Sign(daemon_private_key, chain_hash)
 
 ---
 
-*Saki Studio · SASS v1.4 · draft-sakistudio-sass-05*
+*Saki Studio · SASS v5.0 · draft-sakistudio-sass-07*

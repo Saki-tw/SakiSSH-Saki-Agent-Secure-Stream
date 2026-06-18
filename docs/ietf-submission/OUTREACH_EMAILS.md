@@ -2,14 +2,14 @@
 
 > **用途**：提交後主動推動審查
 > **時間**：2026-05-26
-> **Draft**：draft-sakistudio-sass-00
+> **Draft**：draft-sakistudio-sass-07
 
 ---
 
 ## 信件一：寄給 sshm WG 郵件列表
 
 **收件人**：`sshm@ietf.org`
-**主旨**：`[sshm] New Individual I-D: draft-sakistudio-sass-00 — Agent-oriented secure remote execution protocol`
+**主旨**：`[sshm] New Individual I-D: draft-sakistudio-sass-07 — Agent-oriented secure remote execution protocol`
 
 ```
 Hi all,
@@ -17,7 +17,7 @@ Hi all,
 I'd like to introduce a new Individual Internet-Draft that addresses
 a gap in secure remote execution for autonomous AI agents:
 
-  draft-sakistudio-sass-00: SakiAgentSSH Secure Protocol Specification
+  draft-sakistudio-sass-07: SakiAgentSSH Secure Protocol Specification
   https://datatracker.ietf.org/doc/draft-sakistudio-sass/
 
 Problem statement:
@@ -92,13 +92,13 @@ https://saki-studio.com.tw
 - Deb Cooley
 - Christopher Inacio
 
-**主旨**：`New Individual I-D: draft-sakistudio-sass-00 — Seeking venue guidance`
+**主旨**：`New Individual I-D: draft-sakistudio-sass-07 — Seeking venue guidance`
 
 ```
 Dear Deb and Christopher,
 
 I have submitted an Individual Internet-Draft,
-draft-sakistudio-sass-00, and would appreciate your guidance on
+draft-sakistudio-sass-07, and would appreciate your guidance on
 the most appropriate venue for its progression.
 
 The draft defines the Saki Agent Secure Stream (SASS) protocol, a
@@ -140,7 +140,7 @@ Best regards,
 Hua Chang
 Saki Studio
 Saki@saki-studio.com.tw
-+886-988-403-884
++886-XXX-XXX-XXX
 ```
 
 ---
@@ -148,13 +148,13 @@ Saki@saki-studio.com.tw
 ## 信件三（備用）：寄給 ISE（走 Independent Stream 時用）
 
 **收件人**：`rfc-ise@rfc-editor.org`
-**主旨**：`Request for Independent Stream review: draft-sakistudio-sass-00`
+**主旨**：`Request for Independent Stream review: draft-sakistudio-sass-07`
 
 ```
 Dear Independent Submissions Editor,
 
 I would like to request Independent Stream review for
-draft-sakistudio-sass-00, "SakiAgentSSH Secure Protocol
+draft-sakistudio-sass-07, "SakiAgentSSH Secure Protocol
 Specification."
 
 This document defines a security protocol for autonomous AI agent

@@ -1,6 +1,6 @@
 # go-sakissh — SASS Go 實作
 
-> **SASS v1.4** · **RFC**: draft-sakistudio-sass-05
+> **SASS v5.0** · **RFC**: draft-sakistudio-sass-07
 >
 > [🇹🇼 繁體中文](#繁體中文) | [🇺🇸 English](#english) | [🇯🇵 日本語](#日本語)
 
@@ -10,7 +10,7 @@
 
 ## 簡介
 
-`go-sakissh` 是 **SASS (Saki Agent Secure Stream)** 協議的 Go 語言實作，提供完整的 daemon 和 client，實作 RFC draft-sakistudio-sass-05 定義的所有 7 個 Plugin。作為 SASS 生態系中的次要跨平台參考實作。
+`go-sakissh` 是 **SASS (Saki Agent Secure Stream)** 協議的 Go 語言實作，提供完整的 daemon 和 client，實作 RFC draft-sakistudio-sass-07 定義的所有 7 個 Plugin。作為 SASS 生態系中的次要跨平台參考實作。
 
 Go daemon 使用 **goroutine-based 並行** 實現 Tarpit 緩慢滴注機制，並使用標準函式庫 `crypto/chacha20poly1305` 處理認知挑戰。
 
@@ -108,7 +108,7 @@ go test ./...
 
 ## Introduction
 
-`go-sakissh` is the Go language implementation of the **SASS (Saki Agent Secure Stream)** protocol, providing a full daemon and client with all 7 Plugins defined in RFC draft-sakistudio-sass-05. It serves as the secondary cross-platform reference implementation in the SASS ecosystem.
+`go-sakissh` is the Go language implementation of the **SASS (Saki Agent Secure Stream)** protocol, providing a full daemon and client with all 7 Plugins defined in RFC draft-sakistudio-sass-07. It serves as the secondary cross-platform reference implementation in the SASS ecosystem.
 
 The Go daemon uses **goroutine-based concurrency** for the Tarpit slow-drip mechanism and the standard library `crypto/chacha20poly1305` for cognitive challenges.
 
@@ -179,7 +179,7 @@ go test ./...
 
 ## はじめに
 
-`go-sakissh` は **SASS (Saki Agent Secure Stream)** プロトコルの Go 言語実装です。完全な daemon と client を提供し、RFC draft-sakistudio-sass-05 で定義されたすべての 7 つの Plugin を実装しています。SASS エコシステムにおける二次的なクロスプラットフォーム参照実装です。
+`go-sakissh` は **SASS (Saki Agent Secure Stream)** プロトコルの Go 言語実装です。完全な daemon と client を提供し、RFC draft-sakistudio-sass-07 で定義されたすべての 7 つの Plugin を実装しています。SASS エコシステムにおける二次的なクロスプラットフォーム参照実装です。
 
 Go daemon は **goroutine ベースの並行処理** で Tarpit のスローディップメカニズムを実現し、標準ライブラリの `crypto/chacha20poly1305` で認知チャレンジを処理します。
 
@@ -240,4 +240,4 @@ go test ./...
 
 ---
 
-*Saki Studio · SASS v1.4 · draft-sakistudio-sass-05*
+*Saki Studio · SASS v5.0 · draft-sakistudio-sass-07*

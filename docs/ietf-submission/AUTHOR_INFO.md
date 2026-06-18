@@ -41,4 +41,4 @@ Organization:  Saki Studio
 Email:         xiaoming@example.com
 ```
 
-> 填寫完成後，請確認 `draft-sakistudio-sass-00.txt` 中的作者區段與此處一致。
+> 填寫完成後，請確認 `draft-sakistudio-sass-07.txt` 中的作者區段與此處一致。

@@ -2,7 +2,7 @@
 // Package server — vi_swap.go
 // SASS v1.4 — Plugin C.5: Vi Swap ANSI Escape
 //
-// RFC 章節: draft-sakistudio-sass-05, Appendix C.5 (anchor: vi-swap-ansi)
+// RFC 章節: draft-sakistudio-sass-07, Appendix C.5 (anchor: vi-swap-ansi)
 //
 // 對已認證但違規的 Agent 模擬 vi 編輯器阻塞狀態，
 // 使 LLM 停止生成。5 個 ANSI escape 序列 + 3600 秒停滯。

@@ -169,11 +169,10 @@ func doAuth(ctx context.Context, client pb.SakiSSHClient, args []string) {
 	signature := ed25519.Sign(privateKey, nonce)
 
 	resp, err := client.Authenticate(ctx, &pb.AuthRequest{
-		AgentName:     agentName,
-		PublicKey:     []byte(publicKey),
-		Nonce:         nonce,
-		Signature:     signature,
-		ClientVersion: "5.0.0-go",
+		AgentName: agentName,
+		PublicKey: []byte(publicKey),
+		Nonce:     nonce,
+		Signature: signature,
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Auth failed: %v\n", err)

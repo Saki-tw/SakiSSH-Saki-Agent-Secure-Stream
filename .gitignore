@@ -24,3 +24,45 @@ xcuserdata/
 REBUILD_PROMPT.md
 docs/evidence-prerelease/
 GEMINI.md
+TaskLog/
+WalkthroughLog/
+ImplementationLog/
+docs/IETF_SELF_REVIEW.md
+
+# === 隱私稽核 20260603 新增 ===
+
+# 內部狀態檔案
+SASS_CHECKPOINT.md
+SASS_CONTEXT_MAP.Promissrum
+
+# 內部 Agent 提示詞
+*.Promissrum
+
+# 內部交接文件
+*交棒*
+*handoff*
+
+# Scientia — 含內網 IP / 部署腳本 / 代號映射
+Scientia/20260303_1118_*
+Scientia/20260303_2045_*
+Scientia/20260224_*
+Scientia/20260225_SakiSSH_Windows_Setup_Backup.ps1
+Scientia/*創世提示詞*
+Scientia/*遙測代號*
+Scientia/*Historical_Archeology*
+
+# Scientia — 內部事件分析 / 逆向工程研究
+Scientia/202602280622_SakiSSH_TargetAnalysis_Scientia.md
+Scientia/202603272221_SakiSSH_Agent儲存邊界限制跨平台研究_Scientia.md
+Scientia/202603272240_SakiSSH_Agent工具邊界深度逆向研究_Scientia.md
+Scientia/202605250402_Abdixere_322之亂深度剖析與防禦研究.md
+Scientia/202605250413_Abdixere_322之亂深度剖析與防禦研究_Claude版.md
+Scientia/202605311556_Antigravity三層架構拆解_Scientia.md
+Scientia/202605311735_Antigravity遙測深層分析_過度收集與反向控制_Scientia.md
+Scientia/202605311830_C2事件窗口週期分析_Scientia.md
+Scientia/202605312025_SASS_核心架構報告與全防禦鏈安全實踐研究_Scientia.md
+Scientia/202605312100_SASS_0226事件RogueAI叛變實錄與SASS安全革命市場白皮書_Scientia.md
+Scientia/202606010030_SASS_GeminiFlash鬼話安全事件分析與遺毒判定_Scientia.md
+
+# Scientia — 稽核報告本身（含已脫敏引用）
+Scientia/202606030941_SakiSSH_GitHub公開Repo隱私與脫敏稽核報告_Scientia.md

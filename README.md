@@ -4,9 +4,9 @@
 
 # SakiAgentSSH — SASS Protocol v1.4
 
-**IETF Internet-Draft: draft-sakistudio-sass-05**
+**IETF Internet-Draft: draft-sakistudio-sass-07**
 
-![IETF](https://img.shields.io/badge/IETF-draft--sakistudio--sass--05-blue?style=flat-square)
+![IETF](https://img.shields.io/badge/IETF-draft--sakistudio--sass--07-blue?style=flat-square)
 ![SASS](https://img.shields.io/badge/SASS-v1.4-DA70D6?style=flat-square)
 ![Protocol](https://img.shields.io/badge/protocol-gRPC%2FHTTP2-00CED1?style=flat-square)
 ![Rust](https://img.shields.io/badge/Rust-1.95+-orange?style=flat-square&logo=rust)
@@ -25,13 +25,13 @@
 
 ## SakiAgentSSH — SASS Protocol v1.4
 
-**IETF Internet-Draft: draft-sakistudio-sass-05**
+**IETF Internet-Draft: draft-sakistudio-sass-07**
 
 ### 簡介
 
 SASS（Saki Agent Secure Stream）是一個應用層疊加協議，專為自主 AI 代理之間的已認證遠端指令執行、串流程序 I/O 及二進位檔案傳輸而設計。有鑑於自主 AI 編程代理在遠端機器上執行任務所引入之「流氓代理」(Rogue Agent) 威脅模型——不同於人類操作之傳統 SSH 用戶端，代理可能自主執行破壞性命令、竊取憑證或橫向滲透網路——SASS 協議透過「控制—傳輸解耦」架構，定義了一套傳輸無關的抽象訊息模型 (SAMM)，以 CBOR (RFC 8949) 與 JSON 作為基線序列化格式，實現嚴格的自包含性與 IETF 標準相容性。
 
-SASS v1.4 達成了 AES（Almost Everywhere Superior）里程碑：基於二階隨機優越性 (SSD) 的版本間比較性宣稱，每次版本迭代均從代理概率空間中消除特定行為分支，同時維持期望損失，產生嚴格的 SSD 改善。
+SASS v5.0 達成了 AES（Almost Everywhere Superior）里程碑：基於二階隨機優越性 (SSD) 的版本間比較性宣稱，每次版本迭代均從代理概率空間中消除特定行為分支，同時維持期望損失，產生嚴格的 SSD 改善。
 
 ### 核心特性
 
@@ -100,7 +100,7 @@ cd SakiAgentSSH-Client && xcodegen generate && xcodebuild build -configuration R
 |------|------|
 | IETF Datatracker | https://datatracker.ietf.org/doc/draft-sakistudio-sass/ |
 | 官方網站 | https://saki-studio.com.tw/sakiagentssh/ |
-| RFC 全文 (本地) | [docs/draft-sakistudio-sass-05.txt](docs/draft-sakistudio-sass-05.txt) |
+| RFC 全文 (本地) | [docs/draft-sakistudio-sass-07.txt](docs/draft-sakistudio-sass-07.txt) |
 | 架構說明 | [ARCHITECTURE.md](ARCHITECTURE.md) |
 
 ### 作者
@@ -120,7 +120,7 @@ Copyright © 2026 Saki Studio. All Rights Reserved.
 
 ## SakiAgentSSH — SASS Protocol v1.4
 
-**IETF Internet-Draft: draft-sakistudio-sass-05**
+**IETF Internet-Draft: draft-sakistudio-sass-07**
 
 ### Overview
 
@@ -128,7 +128,7 @@ SASS (Saki Agent Secure Stream) is an application-layer overlay protocol for aut
 
 To address this, SASS defines a decoupled "Control-Transport Decoupling" architecture with an abstract SASS Abstract Messaging Model (SAMM) utilizing standard CBOR (RFC 8949) and JSON as baseline serializations, achieving strict self-containment and IETF standard compatibility.
 
-SASS v1.4 achieves the AES (Almost Everywhere Superior) milestone: a comparative claim between protocol versions based on Second-order Stochastic Dominance (SSD). Each version iteration eliminates specific behavioral branches from the agent probability space while maintaining expected loss, yielding strict SSD improvement.
+SASS v5.0 achieves the AES (Almost Everywhere Superior) milestone: a comparative claim between protocol versions based on Second-order Stochastic Dominance (SSD). Each version iteration eliminates specific behavioral branches from the agent probability space while maintaining expected loss, yielding strict SSD improvement.
 
 ### Core Features
 
@@ -197,7 +197,7 @@ For detailed build instructions, see [BUILDING.md](BUILDING.md).
 |----------|------|
 | IETF Datatracker | https://datatracker.ietf.org/doc/draft-sakistudio-sass/ |
 | Official Website | https://saki-studio.com.tw/sakiagentssh/ |
-| Full RFC (local) | [docs/draft-sakistudio-sass-05.txt](docs/draft-sakistudio-sass-05.txt) |
+| Full RFC (local) | [docs/draft-sakistudio-sass-07.txt](docs/draft-sakistudio-sass-07.txt) |
 | Architecture | [ARCHITECTURE_en.md](ARCHITECTURE_en.md) |
 
 ### Authors
@@ -217,7 +217,7 @@ See [LICENSE](LICENSE) for details.
 
 ## SakiAgentSSH — SASS Protocol v1.4
 
-**IETF Internet-Draft: draft-sakistudio-sass-05**
+**IETF Internet-Draft: draft-sakistudio-sass-07**
 
 ### 概要
 
@@ -225,7 +225,7 @@ SASS（Saki Agent Secure Stream）は、信頼されたエージェント間の�
 
 これに対処するため、SASS は「制御・トランスポート分離」アーキテクチャを定義し、標準的な CBOR (RFC 8949) と JSON をベースラインのシリアライゼーションとして利用する SASS 抽象メッセージングモデル (SAMM) により、厳密な自己完結性と IETF 標準との互換性を実現します。
 
-SASS v1.4 は AES（Almost Everywhere Superior）マイルストーンを達成しました：二次確率的優越性 (SSD) に基づくプロトコルバージョン間の比較的主張であり、各バージョンの反復はエージェント確率空間から特定の行動分岐を排除しながら期待損失を維持し、厳密な SSD 改善をもたらします。
+SASS v5.0 は AES（Almost Everywhere Superior）マイルストーンを達成しました：二次確率的優越性 (SSD) に基づくプロトコルバージョン間の比較的主張であり、各バージョンの反復はエージェント確率空間から特定の行動分岐を排除しながら期待損失を維持し、厳密な SSD 改善をもたらします。
 
 ### コア機能
 
@@ -294,7 +294,7 @@ cd SakiAgentSSH-Client && xcodegen generate && xcodebuild build -configuration R
 |----------|--------|
 | IETF Datatracker | https://datatracker.ietf.org/doc/draft-sakistudio-sass/ |
 | 公式ウェブサイト | https://saki-studio.com.tw/sakiagentssh/ |
-| RFC 全文（ローカル） | [docs/draft-sakistudio-sass-05.txt](docs/draft-sakistudio-sass-05.txt) |
+| RFC 全文（ローカル） | [docs/draft-sakistudio-sass-07.txt](docs/draft-sakistudio-sass-07.txt) |
 | アーキテクチャ | [ARCHITECTURE_ja.md](ARCHITECTURE_ja.md) |
 
 ### 著者

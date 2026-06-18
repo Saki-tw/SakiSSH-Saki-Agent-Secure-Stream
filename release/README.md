@@ -75,18 +75,18 @@ chmod +x sakisshd-darwin-arm64
 
 ```bash
 # Ping — 確認目標存活
-sakissh --addr http://192.168.1.100:19284 ping
+sakissh --addr http://192.168.1.x:19284 ping
 
 # Execute — 遠端執行
-sakissh --addr http://192.168.1.100:19284 exec -- 'echo hello'
+sakissh --addr http://192.168.1.x:19284 exec -- 'echo hello'
 
 # File Transfer — 檔案傳輸（remote: 前綴標記遠端路徑）
-sakissh --addr http://192.168.1.100:19284 cp local.txt remote:/path/file.txt
-sakissh --addr http://192.168.1.100:19284 cp remote:/path/file.txt local.txt
+sakissh --addr http://192.168.1.x:19284 cp local.txt remote:/path/file.txt
+sakissh --addr http://192.168.1.x:19284 cp remote:/path/file.txt local.txt
 
 # Process Control
-sakissh --addr http://192.168.1.100:19284 cancel <execution_id>
-sakissh --addr http://192.168.1.100:19284 signal <execution_id> SIGTERM
+sakissh --addr http://192.168.1.x:19284 cancel <execution_id>
+sakissh --addr http://192.168.1.x:19284 signal <execution_id> SIGTERM
 ```
 
 **方式 B：gRPC Direct**（有 HTTP/2 能力的 Agent）
@@ -102,13 +102,13 @@ sakissh --addr http://192.168.1.100:19284 signal <execution_id> SIGTERM
 逗號分隔地址，每條路徑 3 秒超時。Agent 邏輯：先試 LAN，退回到 Tailscale/VPN：
 
 ```bash
-sakissh --addr "http://192.168.1.100:19284,http://100.64.0.1:19284" exec -- 'hostname'
+sakissh --addr "http://192.168.1.x:19284,http://100.64.x.x:19284" exec -- 'hostname'
 ```
 
 ### 4. 環境變數 / Environment Variable
 
 ```bash
-export SAKISSH_ADDR="http://192.168.1.100:19284"
+export SAKISSH_ADDR="http://192.168.1.x:19284"
 sakissh ping
 ```
 

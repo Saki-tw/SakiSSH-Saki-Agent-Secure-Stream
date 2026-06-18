@@ -3,7 +3,7 @@
 // SASS v1.4 Sandboxless Safety (SBS) - OS 級別快照管理器
 //
 // 對應 Rust: snapshot.rs (SnapshotMgr)
-// RFC 參考: draft-sakistudio-sass-00 §8.1 (sandboxless-safety)
+// RFC 參考: draft-sakistudio-sass-07 §8.1 (sandboxless-safety)
 //
 // 透過底層檔案系統 (APFS, Btrfs, ZFS) 的快照能力，提供 Agent 無沙盒執行環境。
 // 若發生非預期行為，可透過快照回滾，確保系統零損失。

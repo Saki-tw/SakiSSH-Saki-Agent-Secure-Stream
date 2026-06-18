@@ -2,7 +2,7 @@
 
 **Audit Date**: 2026-05-30  
 **Auditor**: Claude Opus 4 (Research Subagent)  
-**Scope**: Mathematical completeness and correctness of the MAS claim in `draft-sakistudio-sass-00-v2.xml` §10.6  
+**Scope**: Mathematical completeness and correctness of the MAS claim in `draft-sakistudio-sass-07.xml` §10.6  
 **Status**: ⚠️ SIGNIFICANT ISSUES FOUND
 
 ---

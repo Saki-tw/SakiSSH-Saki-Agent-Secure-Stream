@@ -3,7 +3,7 @@
 // SASS v1.4 LocalHost Agent 防禦機制
 //
 // 對應 Rust: localhost_defense.rs
-// RFC 參考: draft-sakistudio-sass-00 §7.1 (localhost-spoofing)
+// RFC 參考: draft-sakistudio-sass-07 §7.1 (localhost-spoofing)
 //
 // 當偵測到來自 localhost 的未認證請求時，透過偽造儲存空間與記憶體資訊，
 // 誤導可能潛入的惡意 Agent，並保護本機的高權限憑證。
